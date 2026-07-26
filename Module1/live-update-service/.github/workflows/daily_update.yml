@@ -1,0 +1,48 @@
+name: Daily tank-storage update
+
+on:
+  schedule:
+    - cron: "30 1 * * *"      # 01:30 UTC daily (~07:00 Sri Lanka). Adjust as needed.
+  workflow_dispatch: {}        # allow manual runs from the Actions tab
+
+permissions:
+  contents: write              # needed to commit the updated CSV back
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Module1/live-update-service
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install -r requirements.txt
+
+      - name: Write GEE service-account key
+        run: echo "$GEE_KEY_JSON" > gee_key.json
+        env:
+          GEE_KEY_JSON: ${{ secrets.GEE_KEY_JSON }}
+
+      - name: Run daily update
+        env:
+          GEE_SA_EMAIL: ${{ secrets.GEE_SA_EMAIL }}
+          GEE_KEY_FILE: gee_key.json
+        run: python run_daily.py
+
+      - name: Commit table if it changed
+        run: |
+          rm -f gee_key.json
+          if [[ -n "$(git status --porcelain data/tank_storage.csv)" ]]; then
+            git config user.name  "module1-bot"
+            git config user.email "module1-bot@users.noreply.github.com"
+            git add data/tank_storage.csv
+            git commit -m "auto: tank-storage update $(date -u +%Y-%m-%d)"
+            git push
+          else
+            echo "No new acquisition today — table unchanged."
+          fi

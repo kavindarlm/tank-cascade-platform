@@ -1,0 +1,103 @@
+// ══════════════════════════════════════════════════════════════════
+// FIX — Mosaic same-date Sentinel-2 tiles BEFORE water detection
+// Eliminates the duplicate-row / spurious-zero bug at its source
+// ══════════════════════════════════════════════════════════════════
+
+var tanks = ee.FeatureCollection(
+  'projects/gee-water-monitoring/assets/nachchaduwa-32-final');
+var studyArea = tanks.geometry().bounds();
+
+var tanksWithArea = tanks.map(function(tank) {
+  return tank.set('calc_area_ha', tank.geometry().area().divide(10000));
+});
+var largeTanks = tanksWithArea.filter(ee.Filter.gt('calc_area_ha', 50));
+
+function maskS2Clouds(image) {
+  var qa = image.select('QA60');
+  var mask = qa.bitwiseAnd(1 << 10).eq(0).and(qa.bitwiseAnd(1 << 11).eq(0));
+  return image.updateMask(mask)
+              .select(['B3','B8','B11'])
+              .divide(10000)
+              .clip(studyArea)
+              .copyProperties(image, ['system:time_start', 'CLOUDY_PIXEL_PERCENTAGE']);
+}
+
+var s2Raw = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
+  .filterBounds(studyArea)
+  .filterDate('2021-01-01', '2025-12-31')
+  .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 20))
+  .map(maskS2Clouds);
+
+// ── THE FIX: group by calendar date, mosaic same-day tiles ───────
+var s2WithDateStr = s2Raw.map(function(img) {
+  return img.set('date_str', img.date().format('YYYY-MM-dd'));
+});
+var uniqueDates = s2WithDateStr.aggregate_array('date_str').distinct();
+print('Unique dates after dedup:', uniqueDates.size());
+print('Raw images before dedup :', s2Raw.size());
+
+var s2Mosaicked = ee.ImageCollection(uniqueDates.map(function(d) {
+  var dayImages = s2WithDateStr.filter(ee.Filter.eq('date_str', d));
+  var mosaic = dayImages.mosaic();  // merges same-day tiles, fills gaps correctly
+  return mosaic
+    .set('system:time_start', ee.Date(d).millis())
+    .set('date_str', d);
+}));
+
+// ── Compute water area with a validity check (no silent zeros) ────
+var s2Records = ee.FeatureCollection(
+  s2Mosaicked.map(function(image) {
+    var date = image.get('date_str');
+    var mndwi = image.normalizedDifference(['B3','B11']);
+
+    return largeTanks.map(function(tank) {
+      var geom = tank.geometry();
+      var totalHa = ee.Number(tank.get('calc_area_ha'));
+
+      // Count valid (non-masked) pixels — catches leftover cloud/edge gaps
+      var validCount = image.select('B3').reduceRegion({
+        reducer: ee.Reducer.count(), geometry: geom, scale: 10,
+        maxPixels: 1e8, bestEffort: true
+      }).get('B3');
+
+      var waterMask = mndwi.gt(0).clip(geom).rename('water');
+      var waterPixels = waterMask.multiply(ee.Image.pixelArea())
+        .reduceRegion({reducer: ee.Reducer.sum(), geometry: geom,
+                       scale: 10, maxPixels: 1e8, bestEffort: true});
+      var waterHa = ee.Number(waterPixels.get('water')).divide(10000);
+
+      // Expected pixel count for this tank at 10m resolution
+      var expectedPixels = totalHa.multiply(100); // 1 ha = 100 pixels at 10m
+
+      return ee.Feature(null, {
+        'pond_name': tank.get('pond_name'),
+        'date': date,
+        'water_ha': waterHa,
+        'total_ha': totalHa,
+        'fill_pct': waterHa.divide(totalHa).multiply(100),
+        'valid_pixel_count': validCount,
+        'expected_pixel_count': expectedPixels,
+        'valid_fraction': ee.Number(validCount).divide(expectedPixels)
+      });
+    });
+  }).flatten()
+);
+
+// Only keep results where at least 50% of expected pixels were valid
+// (drops the spurious near-empty-tile rows instead of recording zeros)
+var s2RecordsClean = s2Records.filter(ee.Filter.gt('valid_fraction', 0.5));
+
+print('Records before validity filter:', s2Records.size());
+print('Records after validity filter :', s2RecordsClean.size());
+
+Export.table.toDrive({
+  collection: s2RecordsClean,
+  description: 'Module1_S2_LargeTanks_FIXED',
+  folder: 'GEE_Module1_Outputs',
+  fileNamePrefix: 'Module1_S2_LargeTanks_FIXED',
+  fileFormat: 'CSV',
+  selectors: ['pond_name','date','water_ha','total_ha','fill_pct',
+              'valid_pixel_count','expected_pixel_count','valid_fraction']
+});
+
+print('Export submitted — go to Tasks tab, click Run');

@@ -1,0 +1,104 @@
+// STEP 2 — Adaptive Otsu threshold for the 7 LARGE tanks
+// Replaces the fixed -16dB SAR threshold
+
+var tanks = ee.FeatureCollection(
+  'projects/gee-water-monitoring/assets/nachchaduwa-32-final');
+var studyArea = tanks.geometry().bounds();
+
+var tanksWithArea = tanks.map(function(tank) {
+  return tank.set('calc_area_ha', tank.geometry().area().divide(10000));
+});
+var largeTanks = tanksWithArea.filter(ee.Filter.gt('calc_area_ha', 50));
+print('Large tanks:', largeTanks.aggregate_array('pond_name'));
+
+function otsuThreshold(histogram) {
+  var counts = ee.Array(ee.Dictionary(histogram).get('histogram'));
+  var means  = ee.Array(ee.Dictionary(histogram).get('bucketMeans'));
+  var size   = means.length().get([0]);
+  var total  = counts.reduce(ee.Reducer.sum(), [0]).get([0]);
+  var sum    = means.multiply(counts).reduce(ee.Reducer.sum(), [0]).get([0]);
+  var mean   = sum.divide(total);
+  var indices = ee.List.sequence(1, size);
+  var bss = indices.map(function(i) {
+    var aCount = counts.slice(0,0,i).reduce(ee.Reducer.sum(),[0]).get([0]);
+    var aSum   = means.slice(0,0,i).multiply(counts.slice(0,0,i))
+                      .reduce(ee.Reducer.sum(),[0]).get([0]);
+    var aMean  = aSum.divide(aCount);
+    var bCount = total.subtract(aCount);
+    var bSum   = sum.subtract(aSum);
+    var bMean  = bSum.divide(bCount);
+    return aCount.multiply(aMean.subtract(mean).pow(2))
+      .add(bCount.multiply(bMean.subtract(mean).pow(2)));
+  });
+  return means.sort(bss).get([-1]);
+}
+
+function applySpeckleFilter(image) {
+  return image.focal_mean(30, 'circle', 'meters')
+              .clip(studyArea)
+              .copyProperties(image, ['system:time_start']);
+}
+
+var s1Clean = ee.ImageCollection('COPERNICUS/S1_GRD')
+  .filterBounds(studyArea)
+  .filterDate('2021-01-01', '2025-12-31')
+  .filter(ee.Filter.eq('instrumentMode', 'IW'))
+  .filter(ee.Filter.listContains('transmitterReceiverPolarisation', 'VV'))
+  .filter(ee.Filter.eq('orbitProperties_pass', 'DESCENDING'))
+  .select('VV')
+  .map(applySpeckleFilter);
+
+print('S1 images:', s1Clean.size());
+
+var s1LargeTankRecords = ee.FeatureCollection(
+  s1Clean.map(function(image) {
+    var date = image.date().format('YYYY-MM-dd');
+
+    return largeTanks.map(function(tank) {
+      var geom = tank.geometry();
+      var totalHa = ee.Number(tank.get('calc_area_ha'));
+
+      var hist = image.reduceRegion({
+        reducer: ee.Reducer.histogram(255, 0.5),
+        geometry: geom, scale: 10, maxPixels: 1e8, bestEffort: true
+      });
+
+      var threshold = ee.Algorithms.If(
+        hist.contains('VV'),
+        ee.Algorithms.If(
+          ee.Dictionary(hist.get('VV')).contains('bucketMeans'),
+          otsuThreshold(hist.get('VV')),
+          -16
+        ),
+        -16
+      );
+
+      var waterMask = image.lt(ee.Number(threshold)).clip(geom).rename('water');
+      var waterPixels = waterMask.multiply(ee.Image.pixelArea())
+        .reduceRegion({reducer: ee.Reducer.sum(), geometry: geom,
+                       scale: 10, maxPixels: 1e8, bestEffort: true});
+      var waterHa = ee.Number(waterPixels.get('water')).divide(10000);
+
+      return ee.Feature(null, {
+        'pond_name': tank.get('pond_name'),
+        'date': date,
+        'water_ha': waterHa,
+        'total_ha': totalHa,
+        'fill_pct': waterHa.divide(totalHa).multiply(100),
+        'threshold_used': threshold,
+        'sensor': 'S1_SAR_Otsu'
+      });
+    });
+  }).flatten()
+);
+
+Export.table.toDrive({
+  collection: s1LargeTankRecords,
+  description: 'Module1_S1_LargeTanks_OtsuAdaptive',
+  folder: 'GEE_Module1_Outputs',
+  fileNamePrefix: 'Module1_S1_LargeTanks_OtsuAdaptive',
+  fileFormat: 'CSV',
+  selectors: ['pond_name','date','water_ha','total_ha','fill_pct','threshold_used','sensor']
+});
+
+print('Export submitted — go to Tasks tab, click Run, wait for green tick');

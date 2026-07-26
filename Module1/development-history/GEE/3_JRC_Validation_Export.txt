@@ -1,0 +1,90 @@
+// ══════════════════════════════════════════════════════════════════
+// MODULE 1 — JRC GLOBAL SURFACE WATER VALIDATION EXPORT
+// Compares your 32 tank boundaries against the independent
+// JRC Landsat-derived surface water archive (1984-2021)
+// ══════════════════════════════════════════════════════════════════
+
+// ── Load your 32 tank boundaries ─────────────────────────────────
+var tanks = ee.FeatureCollection(
+  'projects/gee-water-monitoring/assets/nachchaduwa-32-final');
+var studyArea = tanks.geometry().bounds();
+
+print('Total tanks:', tanks.size()); // expect 32
+
+// ── Load JRC Global Surface Water dataset ────────────────────────
+var jrc = ee.Image('JRC/GSW1_4/GlobalSurfaceWater');
+
+// occurrence = % of years 1984-2021 that pixel was water
+var occurrence = jrc.select('occurrence').clip(studyArea);
+
+// max_extent = 1 if pixel was EVER classified as water
+var maxExtent = jrc.select('max_extent').clip(studyArea);
+
+// ── Calculate JRC-derived water area per tank ────────────────────
+var jrcValidation = tanks.map(function(tank) {
+  var geom    = tank.geometry();
+  var totalHa = ee.Number(geom.area()).divide(10000);
+
+  // Permanent water: pixels classified as water >75% of the time
+  var permanentWater = occurrence.gt(75).clip(geom);
+  var permArea = permanentWater
+    .multiply(ee.Image.pixelArea())
+    .reduceRegion({
+      reducer: ee.Reducer.sum(),
+      geometry: geom,
+      scale: 30,
+      maxPixels: 1e8,
+      bestEffort: true
+    });
+  var permHa = ee.Number(permArea.get('occurrence')).divide(10000);
+
+  // Maximum extent: largest area ever observed as water by Landsat
+  var maxWater = maxExtent.clip(geom);
+  var maxArea = maxWater
+    .multiply(ee.Image.pixelArea())
+    .reduceRegion({
+      reducer: ee.Reducer.sum(),
+      geometry: geom,
+      scale: 30,
+      maxPixels: 1e8,
+      bestEffort: true
+    });
+  var maxHa = ee.Number(maxArea.get('max_extent')).divide(10000);
+
+  return ee.Feature(null, {
+    'pond_name':    tank.get('pond_name'),
+    'total_ha':     totalHa,
+    'jrc_perm_ha':  permHa,
+    'jrc_max_ha':   maxHa,
+    'jrc_perm_pct': permHa.divide(totalHa).multiply(100),
+    'jrc_max_pct':  maxHa.divide(totalHa).multiply(100)
+  });
+});
+
+// ── Print a quick check in the console ───────────────────────────
+jrcValidation.evaluate(function(fc) {
+  print('─── JRC Validation per tank ───');
+  fc.features.forEach(function(f) {
+    var p = f.properties;
+    print(p.pond_name
+      + ' | JRC permanent: ' + p.jrc_perm_ha.toFixed(1) + ' ha'
+      + ' | JRC max ever: '  + p.jrc_max_ha.toFixed(1)  + ' ha'
+      + ' | Your polygon: '  + p.total_ha.toFixed(1)    + ' ha');
+  });
+});
+
+// ── Export to Google Drive ────────────────────────────────────────
+Export.table.toDrive({
+  collection: jrcValidation,
+  description: 'Module1_JRC_Validation_PerTank',
+  folder: 'GEE_Module1_Outputs',
+  fileNamePrefix: 'Module1_JRC_Validation_PerTank',
+  fileFormat: 'CSV',
+  selectors: [
+    'pond_name', 'total_ha',
+    'jrc_max_ha', 'jrc_perm_ha',
+    'jrc_max_pct', 'jrc_perm_pct'
+  ]
+});
+
+print('Export task submitted — go to the Tasks tab and click Run');

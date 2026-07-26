@@ -1,0 +1,270 @@
+// ══════════════════════════════════════════════════════════════════
+// MODULE 1 — SMART SENSOR 6-DAY TIME-SERIES (FIXED)
+// Fix 1: area calculated from geometry not column
+// Fix 2: removed memory-heavy aggregate counts
+// ══════════════════════════════════════════════════════════════════
+
+// ── STEP 1: Load tank boundaries ──────────────────────────────────
+var tanks = ee.FeatureCollection(
+  'projects/gee-water-monitoring/assets/nachchaduwa-32-final');
+var studyArea = tanks.geometry().bounds();
+
+// ── FIX 1: Calculate area from geometry directly ──────────────────
+// Do NOT use st_area(sh column — it is in degrees not hectares
+// Instead calculate area from geometry in GEE (always correct)
+var tanksWithArea = tanks.map(function(tank) {
+  var areaHa = tank.geometry().area().divide(10000);
+  return tank.set('calc_area_ha', areaHa);
+});
+
+// Large tanks > 50 ha — S2 preferred when clear sky
+var largeTanks = tanksWithArea.filter(
+  ee.Filter.gt('calc_area_ha', 50));
+
+// Small tanks <= 50 ha — S1 always
+var smallTanks = tanksWithArea.filter(
+  ee.Filter.lte('calc_area_ha', 50));
+
+print('═══ TANK SPLIT ════════════════════════');
+print('Large tanks >50 ha  (S2 preferred):', largeTanks.size());
+// Expected: 7
+print('Small tanks <=50 ha (S1 always)   :', smallTanks.size());
+// Expected: 25
+print('Total                             :', tanks.size());
+// Expected: 32
+
+// Check large tank names
+print('Large tank names:', largeTanks.aggregate_array('pond_name'));
+
+Map.centerObject(tanks, 12);
+
+// ── STEP 2: Load S1 DESCENDING ────────────────────────────────────
+function applySpeckleFilter(image) {
+  return image
+    .focal_mean(30, 'circle', 'meters')
+    .clip(studyArea)
+    .copyProperties(image,
+      ['system:time_start', 'orbitProperties_pass']);
+}
+
+var s1Desc = ee.ImageCollection('COPERNICUS/S1_GRD')
+  .filterBounds(studyArea)
+  .filterDate('2021-01-01', '2025-12-31')
+  .filter(ee.Filter.eq('instrumentMode', 'IW'))
+  .filter(ee.Filter.listContains(
+    'transmitterReceiverPolarisation', 'VV'))
+  .filter(ee.Filter.eq('orbitProperties_pass', 'DESCENDING'))
+  .select('VV')
+  .map(applySpeckleFilter);
+
+// ── STEP 3: Load S1 ASCENDING ─────────────────────────────────────
+var s1Asc = ee.ImageCollection('COPERNICUS/S1_GRD')
+  .filterBounds(studyArea)
+  .filterDate('2021-01-01', '2025-12-31')
+  .filter(ee.Filter.eq('instrumentMode', 'IW'))
+  .filter(ee.Filter.listContains(
+    'transmitterReceiverPolarisation', 'VV'))
+  .filter(ee.Filter.eq('orbitProperties_pass', 'ASCENDING'))
+  .select('VV')
+  .map(applySpeckleFilter);
+
+// ── STEP 4: Merge both S1 orbits ──────────────────────────────────
+var s1Combined = s1Desc.merge(s1Asc).sort('system:time_start');
+
+print('═══ SENTINEL-1 ════════════════════════');
+print('S1 DESCENDING :', s1Desc.size());
+print('S1 ASCENDING  :', s1Asc.size());
+print('S1 COMBINED   :', s1Combined.size());
+
+// ── STEP 5: Load S2 ───────────────────────────────────────────────
+function maskS2Clouds(image) {
+  var qa = image.select('QA60');
+  var mask = qa.bitwiseAnd(1 << 10).eq(0)
+               .and(qa.bitwiseAnd(1 << 11).eq(0));
+  return image.updateMask(mask)
+              .select(['B3','B8','B11'])
+              .divide(10000)
+              .clip(studyArea)
+              .copyProperties(image,
+                ['system:time_start',
+                 'CLOUDY_PIXEL_PERCENTAGE']);
+}
+
+var s2Clean = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
+  .filterBounds(studyArea)
+  .filterDate('2021-01-01', '2025-12-31')
+  .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 20))
+  .map(maskS2Clouds);
+
+print('═══ SENTINEL-2 ════════════════════════');
+print('S2 clear sky images:', s2Clean.size());
+
+// ── STEP 6: Water detection functions ────────────────────────────
+function getWaterS1(s1Img, geom) {
+  var waterMask = s1Img.lt(-16).clip(geom).rename('water');
+  var result = waterMask
+    .multiply(ee.Image.pixelArea())
+    .reduceRegion({
+      reducer: ee.Reducer.sum(),
+      geometry: geom,
+      scale: 10,
+      maxPixels: 1e8,
+      bestEffort: true
+    });
+  return ee.Number(result.get('water')).divide(10000);
+}
+
+function getWaterS2(s2Img, geom) {
+  var mndwi = s2Img.normalizedDifference(['B3','B11']);
+  var waterMask = mndwi.gt(0).clip(geom).rename('water');
+  var result = waterMask
+    .multiply(ee.Image.pixelArea())
+    .reduceRegion({
+      reducer: ee.Reducer.sum(),
+      geometry: geom,
+      scale: 10,
+      maxPixels: 1e8,
+      bestEffort: true
+    });
+  return ee.Number(result.get('water')).divide(10000);
+}
+
+// ── STEP 7: Process ALL S1 images — ALL 32 tanks ─────────────────
+var s1Records = ee.FeatureCollection(
+  s1Combined.map(function(image) {
+    var date  = image.date().format('YYYY-MM-dd');
+    var year  = image.date().get('year');
+    var month = image.date().get('month');
+    var orbit = image.get('orbitProperties_pass');
+
+    return tanksWithArea.map(function(tank) {
+      var geom    = tank.geometry();
+      var totalHa = ee.Number(tank.get('calc_area_ha'));
+      var waterHa = getWaterS1(image, geom);
+      var fillPct = waterHa.divide(totalHa).multiply(100);
+
+      return ee.Feature(null, {
+        'pond_name': tank.get('pond_name'),
+        'pond_type': tank.get('pond_type'),
+        'date':      date,
+        'year':      year,
+        'month':     month,
+        'water_ha':  waterHa,
+        'total_ha':  totalHa,
+        'fill_pct':  fillPct,
+        'sensor':    'S1_SAR',
+        'orbit':     orbit,
+        'cloud_pct': -1
+      });
+    });
+  }).flatten()
+);
+
+// ── STEP 8: Process S2 — large tanks only ────────────────────────
+var s2Records = ee.FeatureCollection(
+  s2Clean.map(function(image) {
+    var date     = image.date().format('YYYY-MM-dd');
+    var year     = image.date().get('year');
+    var month    = image.date().get('month');
+    var cloudPct = image.get('CLOUDY_PIXEL_PERCENTAGE');
+
+    return largeTanks.map(function(tank) {
+      var geom    = tank.geometry();
+      var totalHa = ee.Number(tank.get('calc_area_ha'));
+      var waterHa = getWaterS2(image, geom);
+      var fillPct = waterHa.divide(totalHa).multiply(100);
+
+      return ee.Feature(null, {
+        'pond_name': tank.get('pond_name'),
+        'pond_type': tank.get('pond_type'),
+        'date':      date,
+        'year':      year,
+        'month':     month,
+        'water_ha':  waterHa,
+        'total_ha':  totalHa,
+        'fill_pct':  fillPct,
+        'sensor':    'S2_MNDWI',
+        'orbit':     'N/A',
+        'cloud_pct': cloudPct
+      });
+    });
+  }).flatten()
+);
+
+// ── STEP 9: FIX 2 — Export without memory-heavy counts ───────────
+// Do NOT call .size() or aggregate on merged collection
+// Go straight to export — GEE handles large exports via Tasks
+
+print('═══ SUBMITTING EXPORTS ════════════════');
+
+// Export 1 — S1 all tanks (main dataset — all 32 tanks 6-day)
+Export.table.toDrive({
+  collection: s1Records,
+  description: 'Module1_S1_AllTanks_6day_2021_2025',
+  folder: 'GEE_Module1_Outputs',
+  fileNamePrefix: 'Module1_S1_AllTanks_6day_2021_2025',
+  fileFormat: 'CSV',
+  selectors: [
+    'pond_name','pond_type','date','year','month',
+    'water_ha','total_ha','fill_pct','sensor','orbit','cloud_pct'
+  ]
+});
+
+// Export 2 — S2 large tanks only (supplement for large tanks)
+Export.table.toDrive({
+  collection: s2Records,
+  description: 'Module1_S2_LargeTanks_2021_2025',
+  folder: 'GEE_Module1_Outputs',
+  fileNamePrefix: 'Module1_S2_LargeTanks_2021_2025',
+  fileFormat: 'CSV',
+  selectors: [
+    'pond_name','pond_type','date','year','month',
+    'water_ha','total_ha','fill_pct','sensor','orbit','cloud_pct'
+  ]
+});
+
+// Export 3 — S1 descending only (for orbit consistency check)
+var s1DescRecords = s1Records.filter(
+  ee.Filter.eq('orbit', 'DESCENDING'));
+Export.table.toDrive({
+  collection: s1DescRecords,
+  description: 'Module1_S1_Descending_2021_2025',
+  folder: 'GEE_Module1_Outputs',
+  fileNamePrefix: 'Module1_S1_Descending_2021_2025',
+  fileFormat: 'CSV',
+  selectors: [
+    'pond_name','date','year','month',
+    'water_ha','total_ha','fill_pct','sensor','orbit'
+  ]
+});
+
+print('3 export tasks submitted to Tasks tab');
+print('Click RUN on each task in the Tasks tab');
+print('Files will appear in Google Drive folder:');
+print('  GEE_Module1_Outputs/');
+
+// ── STEP 10: Visualise ────────────────────────────────────────────
+var testDesc = s1Desc.filterDate('2021-11-01','2021-11-30').first();
+var testAsc  = s1Asc.filterDate('2021-11-01','2021-11-30').first();
+var testS2   = s2Clean.filterDate('2021-11-01','2021-11-30').first();
+
+Map.addLayer(testDesc.clip(studyArea),
+  {min:-25, max:0}, 'S1 Descending Nov 2021', false);
+Map.addLayer(testAsc.clip(studyArea),
+  {min:-25, max:0}, 'S1 Ascending Nov 2021', false);
+Map.addLayer(
+  testDesc.lt(-16).selfMask().clip(studyArea),
+  {palette:['blue']}, 'Water — S1 Descending');
+Map.addLayer(
+  testAsc.lt(-16).selfMask().clip(studyArea),
+  {palette:['darkblue']}, 'Water — S1 Ascending', false);
+Map.addLayer(
+  testS2.normalizedDifference(['B3','B11'])
+        .gt(0).selfMask().clip(studyArea),
+  {palette:['cyan']}, 'Water — S2 MNDWI', false);
+Map.addLayer(
+  ee.Image().paint(largeTanks, 0, 3),
+  {palette:['yellow']}, 'Large tanks — S2 preferred (7)');
+Map.addLayer(
+  ee.Image().paint(smallTanks, 0, 2),
+  {palette:['orange']}, 'Small tanks — S1 always (25)');
