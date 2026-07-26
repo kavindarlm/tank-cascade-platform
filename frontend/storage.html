@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Satellite water storage - Tank Cascade Platform</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-brand">Tank Cascade Platform</div>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="storage.html" class="active">Satellite water storage</a></li>
+    <!-- Future tabs go here, e.g.: -->
+    <!-- <li><a href="cascade.html">Cascade network</a></li> -->
+    <!-- <li><a href="interpolation.html">Interpolation</a></li> -->
+  </ul>
+</nav>
+
+<main class="container">
+  <h1>Satellite-based water storage</h1>
+  <p class="subtitle">
+    Tank storage table, updated daily from Sentinel-1/2 detections.
+    Read directly from <code>data/tank_storage.csv</code>.
+  </p>
+
+  <section class="filters">
+    <div class="filter-group">
+      <label for="filter-tank">Tank</label>
+      <select id="filter-tank"><option value="">All tanks</option></select>
+    </div>
+    <div class="filter-group">
+      <label for="filter-from">From date</label>
+      <input type="date" id="filter-from">
+    </div>
+    <div class="filter-group">
+      <label for="filter-to">To date</label>
+      <input type="date" id="filter-to">
+    </div>
+    <div class="filter-group">
+      <label for="filter-sensor">Sensor</label>
+      <select id="filter-sensor"><option value="">All sensors</option></select>
+    </div>
+    <div class="filter-group">
+      <label for="filter-status">Status</label>
+      <select id="filter-status"><option value="">All</option></select>
+    </div>
+    <button id="btn-clear" class="btn-secondary" type="button">Clear filters</button>
+    <button id="btn-download" class="btn-primary" type="button">Download CSV</button>
+  </section>
+
+  <div id="table-info" class="table-info">Loading table…</div>
+
+  <div class="table-wrapper">
+    <table id="data-table">
+      <thead>
+        <tr>
+          <th>Tank ID</th>
+          <th>Pond name</th>
+          <th>Date</th>
+          <th>Water (ha)</th>
+          <th>Total (ha)</th>
+          <th>Fill %</th>
+          <th>Sensor used</th>
+          <th>S2 date</th>
+          <th>Day gap</th>
+          <th>Volume (MCM)</th>
+          <th>Confidence</th>
+          <th>Status</th>
+          <th>Last updated</th>
+        </tr>
+      </thead>
+      <tbody id="table-body">
+        <tr class="empty-row"><td colspan="13">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination">
+    <button id="btn-prev" type="button">Prev</button>
+    <span id="page-indicator">Page 1</span>
+    <button id="btn-next" type="button">Next</button>
+    <select id="page-size">
+      <option value="25">25 / page</option>
+      <option value="50" selected>50 / page</option>
+      <option value="100">100 / page</option>
+    </select>
+  </div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
