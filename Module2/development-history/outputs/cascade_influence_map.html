@@ -1,0 +1,127 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 750px;
+                 background-color: #f9f9f7;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#EF9F27", "id": "Tawalanhalmillewa Wewa", "label": "Tawalanhalmillewa Wewa", "shape": "dot", "size": 23.333333333333332, "title": "Score: 0.333"}, {"color": "#EF9F27", "id": "Settikulama  Wewa", "label": "Settikulama  Wewa", "shape": "dot", "size": 23.333333333333332, "title": "Score: 0.333"}, {"color": "#EF9F27", "id": "Pansala Wewa", "label": "Pansala Wewa", "shape": "dot", "size": 28.402920578294367, "title": "Score: 0.460"}, {"color": "#1D9E75", "id": "Kudaittikattiya Wewa", "label": "Kudaittikattiya Wewa", "shape": "dot", "size": 21.428571428571427, "title": "Score: 0.286"}, {"color": "#EF9F27", "id": "Maha Ittikattiya Wewa", "label": "Maha Ittikattiya Wewa", "shape": "dot", "size": 22.534793622480517, "title": "Score: 0.313"}, {"color": "#EF9F27", "id": "Ulankulama Wewa", "label": "Ulankulama Wewa", "shape": "dot", "size": 28.367798063212277, "title": "Score: 0.459"}, {"color": "#1D9E75", "id": "Amane Wewa", "label": "Amane Wewa", "shape": "dot", "size": 19.523809523809522, "title": "Score: 0.238"}, {"color": "#1D9E75", "id": "Ihala Amanakkattuwa Wewa", "label": "Ihala Amanakkattuwa Wewa", "shape": "dot", "size": 20.153841241528134, "title": "Score: 0.254"}, {"color": "#1D9E75", "id": "Ethiniwetuna Wewa", "label": "Ethiniwetuna Wewa", "shape": "dot", "size": 19.523809523809522, "title": "Score: 0.238"}, {"color": "#EF9F27", "id": "Pahala Amanakkattuwa Wewa", "label": "Pahala Amanakkattuwa Wewa", "shape": "dot", "size": 23.85421642114077, "title": "Score: 0.346"}, {"color": "#1D9E75", "id": "Walagambahuwa Wewa", "label": "Walagambahuwa Wewa", "shape": "dot", "size": 17.61904761904762, "title": "Score: 0.190"}, {"color": "#1D9E75", "id": "Wendarakulama Wewa", "label": "Wendarakulama Wewa", "shape": "dot", "size": 17.61904761904762, "title": "Score: 0.190"}, {"color": "#1D9E75", "id": "Marikkaragama Wewa", "label": "Marikkaragama Wewa", "shape": "dot", "size": 17.61904761904762, "title": "Score: 0.190"}, {"color": "#E24B4A", "id": "Periyakulama Wewa", "label": "Periyakulama Wewa", "shape": "dot", "size": 34.82380499352451, "title": "Score: 0.621"}, {"color": "#1D9E75", "id": "Mawatha Wewa", "label": "Mawatha Wewa", "shape": "dot", "size": 15.714285714285714, "title": "Score: 0.143"}, {"color": "#1D9E75", "id": "Meegassegama Wewa", "label": "Meegassegama Wewa", "shape": "dot", "size": 17.772888860575755, "title": "Score: 0.194"}, {"color": "#EF9F27", "id": "Mahakanumulla Wewa", "label": "Mahakanumulla Wewa", "shape": "dot", "size": 22.845637082067608, "title": "Score: 0.321"}, {"color": "#EF9F27", "id": "Manakkulama Wewa", "label": "Manakkulama Wewa", "shape": "dot", "size": 31.063705413681348, "title": "Score: 0.527"}, {"color": "#1D9E75", "id": "Kuda Kanumulla Wewa", "label": "Kuda Kanumulla Wewa", "shape": "dot", "size": 10.315015858859306, "title": "Score: 0.008"}, {"color": "#1D9E75", "id": "Wagayakulama Wewa", "label": "Wagayakulama Wewa", "shape": "dot", "size": 15.714285714285714, "title": "Score: 0.143"}, {"color": "#1D9E75", "id": "Wagayakulama", "label": "Wagayakulama", "shape": "dot", "size": 15.714285714285714, "title": "Score: 0.143"}, {"color": "#1D9E75", "id": "Alittana Wewa", "label": "Alittana Wewa", "shape": "dot", "size": 16.879867271417826, "title": "Score: 0.172"}, {"color": "#EF9F27", "id": "Wannanmaduwa Wewa", "label": "Wannanmaduwa Wewa", "shape": "dot", "size": 27.92585318608607, "title": "Score: 0.448"}, {"color": "#1D9E75", "id": "Wellamaduwa Wewa", "label": "Wellamaduwa Wewa", "shape": "dot", "size": 13.80952380952381, "title": "Score: 0.095"}, {"color": "#1D9E75", "id": "Sembukulama Wewa", "label": "Sembukulama Wewa", "shape": "dot", "size": 19.797761555143204, "title": "Score: 0.245"}, {"color": "#1D9E75", "id": "Hammillakulama Wewa", "label": "Hammillakulama Wewa", "shape": "dot", "size": 11.904761904761905, "title": "Score: 0.048"}, {"color": "#1D9E75", "id": "Tirappane Wewa", "label": "Tirappane Wewa", "shape": "dot", "size": 14.954029495045805, "title": "Score: 0.124"}, {"color": "#1D9E75", "id": "Todamaduwa Wewa", "label": "Todamaduwa Wewa", "shape": "dot", "size": 21.676891377232543, "title": "Score: 0.292"}, {"color": "#1D9E75", "id": "Galwaduwawa Wewa", "label": "Galwaduwawa Wewa", "shape": "dot", "size": 11.904761904761905, "title": "Score: 0.048"}, {"color": "#1D9E75", "id": "Galkulama Wewa", "label": "Galkulama Wewa", "shape": "dot", "size": 13.010984098670995, "title": "Score: 0.075"}, {"color": "#EF9F27", "id": "Nachchaduwa Wewa", "label": "Nachchaduwa Wewa", "shape": "dot", "size": 23.333333333333336, "title": "Score: 0.333"}, {"color": "#1D9E75", "id": "Irahandaketu Wewa", "label": "Irahandaketu Wewa", "shape": "dot", "size": 13.80952380952381, "title": "Score: 0.095"}]);
+                  edges = new vis.DataSet([{"arrows": "to", "color": "#185FA5", "from": "Tawalanhalmillewa Wewa", "title": "slope=0.0041", "to": "Pansala Wewa", "width": 4.061999999999999}, {"arrows": "to", "color": "#185FA5", "from": "Settikulama  Wewa", "title": "slope=0.0056", "to": "Pansala Wewa", "width": 5.624}, {"arrows": "to", "color": "#185FA5", "from": "Pansala Wewa", "title": "slope=0.0033", "to": "Ulankulama Wewa", "width": 3.285}, {"arrows": "to", "color": "#185FA5", "from": "Kudaittikattiya Wewa", "title": "slope=0.0047", "to": "Maha Ittikattiya Wewa", "width": 4.734999999999999}, {"arrows": "to", "color": "#185FA5", "from": "Maha Ittikattiya Wewa", "title": "slope=0.0023", "to": "Periyakulama Wewa", "width": 2.339}, {"arrows": "to", "color": "#185FA5", "from": "Ulankulama Wewa", "title": "slope=0.0017", "to": "Periyakulama Wewa", "width": 1.6520000000000001}, {"arrows": "to", "color": "#185FA5", "from": "Amane Wewa", "title": "slope=0.0056", "to": "Ihala Amanakkattuwa Wewa", "width": 5.590999999999999}, {"arrows": "to", "color": "#185FA5", "from": "Ihala Amanakkattuwa Wewa", "title": "slope=0.0024", "to": "Pahala Amanakkattuwa Wewa", "width": 2.379}, {"arrows": "to", "color": "#185FA5", "from": "Ethiniwetuna Wewa", "title": "slope=0.0036", "to": "Periyakulama Wewa", "width": 3.61}, {"arrows": "to", "color": "#185FA5", "from": "Pahala Amanakkattuwa Wewa", "title": "slope=0.0018", "to": "Mahakanumulla Wewa", "width": 1.761}, {"arrows": "to", "color": "#185FA5", "from": "Walagambahuwa Wewa", "title": "slope=0.0019", "to": "Pahala Amanakkattuwa Wewa", "width": 1.8860000000000001}, {"arrows": "to", "color": "#185FA5", "from": "Wendarakulama Wewa", "title": "slope=0.0042", "to": "Meegassegama Wewa", "width": 4.248}, {"arrows": "to", "color": "#185FA5", "from": "Marikkaragama Wewa", "title": "slope=0.0011", "to": "Pahala Amanakkattuwa Wewa", "width": 1.0510000000000002}, {"arrows": "to", "color": "#185FA5", "from": "Periyakulama Wewa", "title": "slope=0.0012", "to": "Manakkulama Wewa", "width": 1.227}, {"arrows": "to", "color": "#185FA5", "from": "Mawatha Wewa", "title": "slope=0.0036", "to": "Mahakanumulla Wewa", "width": 3.6159999999999997}, {"arrows": "to", "color": "#185FA5", "from": "Meegassegama Wewa", "title": "slope=0.0027", "to": "Alittana Wewa", "width": 2.713}, {"arrows": "to", "color": "#185FA5", "from": "Mahakanumulla Wewa", "title": "slope=0.0012", "to": "Sembukulama Wewa", "width": 1.212}, {"arrows": "to", "color": "#185FA5", "from": "Manakkulama Wewa", "title": "slope=0.0014", "to": "Wannanmaduwa Wewa", "width": 1.3639999999999999}, {"arrows": "to", "color": "#185FA5", "from": "Wagayakulama Wewa", "title": "slope=0.0009", "to": "Kuda Kanumulla Wewa", "width": 0.856}, {"arrows": "to", "color": "#185FA5", "from": "Wagayakulama Wewa", "title": "slope=0.0033", "to": "Sembukulama Wewa", "width": 3.334}, {"arrows": "to", "color": "#185FA5", "from": "Wagayakulama", "title": "slope=0.0022", "to": "Wannanmaduwa Wewa", "width": 2.173}, {"arrows": "to", "color": "#185FA5", "from": "Alittana Wewa", "title": "slope=0.0025", "to": "Tirappane Wewa", "width": 2.519}, {"arrows": "to", "color": "#185FA5", "from": "Wannanmaduwa Wewa", "title": "slope=0.0016", "to": "Todamaduwa Wewa", "width": 1.639}, {"arrows": "to", "color": "#185FA5", "from": "Wellamaduwa Wewa", "title": "slope=0.0018", "to": "Sembukulama Wewa", "width": 1.772}, {"arrows": "to", "color": "#185FA5", "from": "Wellamaduwa Wewa", "title": "slope=0.0008", "to": "Nachchaduwa Wewa", "width": 0.8260000000000001}, {"arrows": "to", "color": "#185FA5", "from": "Sembukulama Wewa", "title": "slope=0.0005", "to": "Nachchaduwa Wewa", "width": 0.505}, {"arrows": "to", "color": "#185FA5", "from": "Hammillakulama Wewa", "title": "slope=0.0005", "to": "Nachchaduwa Wewa", "width": 0.488}, {"arrows": "to", "color": "#185FA5", "from": "Tirappane Wewa", "title": "slope=0.0011", "to": "Nachchaduwa Wewa", "width": 1.053}, {"arrows": "to", "color": "#185FA5", "from": "Todamaduwa Wewa", "title": "slope=0.0007", "to": "Nachchaduwa Wewa", "width": 0.721}, {"arrows": "to", "color": "#185FA5", "from": "Galwaduwawa Wewa", "title": "slope=0.0020", "to": "Nachchaduwa Wewa", "width": 1.977}, {"arrows": "to", "color": "#185FA5", "from": "Galkulama Wewa", "title": "slope=0.0008", "to": "Nachchaduwa Wewa", "width": 0.847}, {"arrows": "to", "color": "#185FA5", "from": "Irahandaketu Wewa", "title": "slope=0.0060", "to": "Galkulama Wewa", "width": 6.001}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {"physics": {"enabled": true, "hierarchicalRepulsion": {"nodeDistance": 150}}, "layout": {"hierarchical": {"enabled": true, "direction": "UD", "sortMethod": "directed"}}};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

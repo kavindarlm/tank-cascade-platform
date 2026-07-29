@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tank connectivity - Tank Cascade Platform</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .steps-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 10px 0 20px;
+  }
+
+  .step-item {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 8px 14px;
+    border: 1px solid #cfd6e2;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #334155;
+    font: 600 14px/1 "Segoe UI", Arial, sans-serif;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  }
+
+  .step-item:hover {
+    border-color: #2b6cb0;
+    color: #1d4f91;
+    box-shadow: 0 3px 10px rgba(43, 108, 176, 0.14);
+  }
+
+  .step-item.active {
+    background: #7bcb58;
+    border-color: #6bcf40;
+    color: #ffffff;
+    box-shadow: 0 6px 14px rgba(108, 198, 68, 0.26);
+  }
+
+  .step-item:focus-visible {
+    outline: 3px solid rgba(43, 108, 176, 0.28);
+    outline-offset: 2px;
+  }
+
+  .view-header {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid #e2e5eb;
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin: 18px 0 14px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+  }
+
+  .view-kicker {
+    margin: 0 0 6px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6b7280;
+  }
+
+  .view-header h2 {
+    margin: 0;
+    font-size: 20px;
+    line-height: 1.2;
+    color: #132238;
+  }
+
+  .view-description {
+    margin: 6px 0 0;
+    color: #5b6272;
+    font-size: 14px;
+    max-width: 900px;
+  }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-brand">Tank Cascade Platform</div>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="storage.html">Satellite water storage</a></li>
+    <li><a href="connectivity.html" class="active">Tank connectivity</a></li>
+    <!-- Future tabs go here, e.g.: -->
+    <!-- <li><a href="interpolation.html">Interpolation</a></li> -->
+  </ul>
+</nav>
+
+<main class="container">
+  <h1 id="page-title">Cascade edge table</h1>
+  <p id="page-description" class="subtitle">
+    Browse the tank-to-tank connections, filter the records, and export the current subset.
+  </p>
+<nav class="steps-nav" aria-label="Cascade views">
+    <button type="button" class="step-item active" id="step-table" data-target="table" data-title="Cascade edge table">
+      <span class="step-label">Cascade edge table</span>
+    </button>
+    <button type="button" class="step-item" id="step-flowmap" data-target="flowmap" data-title="Tank system flow map">
+      <span class="step-label">Tank system flow map</span>
+    </button>
+    <button type="button" class="step-item" id="step-graph" data-target="graph" data-title="Tank connectivity graph">
+      <span class="step-label">Tank connectivity graph</span>
+    </button>
+  </nav>
+
+  <section class="view-header" aria-live="polite">
+    <p class="view-kicker">Active view</p>
+    <h2 id="active-view-title">Cascade edge table</h2>
+    <p id="active-view-description" class="view-description">
+      Browse the tank-to-tank connections, filter the records, and export the current subset.
+    </p>
+  </section>
+
+  <section id="panel-table" class="view-panel">
+    <section class="filters">
+      <div class="filter-group">
+        <label for="filter-from-tank">From tank</label>
+        <select id="filter-from-tank"><option value="">All tanks</option></select>
+      </div>
+      <div class="filter-group">
+        <label for="filter-to-tank">To tank</label>
+        <select id="filter-to-tank"><option value="">All tanks</option></select>
+      </div>
+      <button id="btn-clear" class="btn-secondary" type="button">Clear filters</button>
+      <button id="btn-download" class="btn-primary" type="button">Download CSV</button>
+    </section>
+
+    <div id="table-info" class="table-info">Loading table…</div>
+
+    <div class="table-wrapper">
+      <table id="data-table">
+        <thead>
+          <tr>
+            <th>From tank</th>
+            <th>To tank</th>
+            <th>Stream path length (m)</th>
+            <th>Slope (m/m)</th>
+            <th>Effective length (m)</th>
+            <th>Alpha (water transfer coefficient)</th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <tr class="empty-row"><td colspan="6">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <button id="btn-prev" type="button">Prev</button>
+      <span id="page-indicator">Page 1</span>
+      <button id="btn-next" type="button">Next</button>
+      <select id="page-size">
+        <option value="25" selected>25 / page</option>
+        <option value="50">50 / page</option>
+        <option value="100">100 / page</option>
+      </select>
+    </div>
+  </section>
+
+  <section id="panel-flowmap" class="view-panel" hidden>
+    <div class="viz-wrapper">
+      <iframe id="frame-flowmap" class="viz-frame" title="Tank system flow map" loading="lazy"
+        width="100%" height="900" style="width:100%; height:900px; border:none; display:block;"></iframe>
+    </div>
+  </section>
+
+  <section id="panel-graph" class="view-panel" hidden>
+    <div class="viz-wrapper">
+      <iframe id="frame-graph" class="viz-frame" title="Tank connectivity graph" loading="lazy"
+        width="100%" height="900" style="width:100%; height:900px; border:none; display:block;"></iframe>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="connectivity.js"></script>
+</body>
+</html>
