@@ -1,0 +1,5 @@
+model,edge_features,auc,spearman,stability_std,silhouette
+GAT,True,0.5102,0.2372,4.2113,0.4077
+GAT,False,0.6735,0.4488,4.9573,0.3182
+GATv2,False,0.6531,0.1095,4.6852,0.3613
+GATv2,True,0.6735,0.3631,5.0623,0.3788

@@ -1,0 +1,141 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 950px;
+                 background-color: #f9f9f7;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+<div style="font-family:sans-serif; padding:16px 20px 4px 20px;">
+  <h1 style="margin:0; font-size:26px;">Cascade Tank Network - Combined Influence and Physical Conveyance Map</h1>
+</div>
+
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"borderWidth": 1, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Tawalanhalmillewa Wewa", "label": "Tawalanhalmillewa Wewa", "shape": "dot", "size": 24.590103700757027, "title": "Rank #6 | Final Score: 0.324\nRank stability: stable"}, {"borderWidth": 1, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Settikulama  Wewa", "label": "Settikulama  Wewa", "shape": "dot", "size": 23.027643524110317, "title": "Rank #10 | Final Score: 0.290\nRank stability: stable"}, {"borderWidth": 1, "color": "#EF9F27", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Pansala Wewa", "label": "Pansala Wewa", "shape": "dot", "size": 26.75563611893358, "title": "Rank #4 | Final Score: 0.372\nRank stability: stable"}, {"borderWidth": 1, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Kudaittikattiya Wewa", "label": "Kudaittikattiya Wewa", "shape": "dot", "size": 22.972071106944767, "title": "Rank #11 | Final Score: 0.288\nRank stability: stable"}, {"borderWidth": 1, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Maha Ittikattiya Wewa", "label": "Maha Ittikattiya Wewa", "shape": "dot", "size": 23.51788886293025, "title": "Rank #8 | Final Score: 0.300\nRank stability: stable"}, {"borderWidth": 1, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Ulankulama Wewa", "label": "Ulankulama Wewa", "shape": "dot", "size": 25.547861270450227, "title": "Rank #5 | Final Score: 0.346\nRank stability: stable"}, {"borderWidth": 1, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Amane Wewa", "label": "Amane Wewa", "shape": "dot", "size": 19.86676065517323, "title": "Rank #14 | Final Score: 0.219\nRank stability: stable"}, {"borderWidth": 1, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Ihala Amanakkattuwa Wewa", "label": "Ihala Amanakkattuwa Wewa", "shape": "dot", "size": 19.745832196062175, "title": "Rank #15 | Final Score: 0.217\nRank stability: stable"}, {"borderWidth": 3, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Ethiniwetuna Wewa", "label": "Ethiniwetuna Wewa", "shape": "diamond", "size": 17.355081292667556, "title": "Rank #20 | Final Score: 0.163\nRank stability: UNSTABLE (std=10.71)"}, {"borderWidth": 1, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Pahala Amanakkattuwa Wewa", "label": "Pahala Amanakkattuwa Wewa", "shape": "dot", "size": 21.836702088542395, "title": "Rank #13 | Final Score: 0.263\nRank stability: stable"}, {"borderWidth": 1, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Walagambahuwa Wewa", "label": "Walagambahuwa Wewa", "shape": "dot", "size": 18.70569936398949, "title": "Rank #17 | Final Score: 0.193\nRank stability: stable"}, {"borderWidth": 3, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Wendarakulama Wewa", "label": "Wendarakulama Wewa", "shape": "diamond", "size": 15.721901929272072, "title": "Rank #23 | Final Score: 0.127\nRank stability: UNSTABLE (std=9.27)"}, {"borderWidth": 1, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Marikkaragama Wewa", "label": "Marikkaragama Wewa", "shape": "dot", "size": 17.812258558613912, "title": "Rank #19 | Final Score: 0.174\nRank stability: stable"}, {"borderWidth": 3, "color": "#EF9F27", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Periyakulama Wewa", "label": "Periyakulama Wewa", "shape": "diamond", "size": 29.729585814715005, "title": "Rank #3 | Final Score: 0.438\nRank stability: UNSTABLE (std=9.86)"}, {"borderWidth": 1, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Mawatha Wewa", "label": "Mawatha Wewa", "shape": "dot", "size": 17.109342707054957, "title": "Rank #21 | Final Score: 0.158\nRank stability: stable"}, {"borderWidth": 1, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Meegassegama Wewa", "label": "Meegassegama Wewa", "shape": "dot", "size": 15.427862175631747, "title": "Rank #25 | Final Score: 0.121\nRank stability: stable"}, {"borderWidth": 3, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Mahakanumulla Wewa", "label": "Mahakanumulla Wewa", "shape": "diamond", "size": 19.64692692030639, "title": "Rank #16 | Final Score: 0.214\nRank stability: UNSTABLE (std=9.35)"}, {"borderWidth": 1, "color": "#EF9F27", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Manakkulama Wewa", "label": "Manakkulama Wewa", "shape": "dot", "size": 33.623651636285004, "title": "Rank #2 | Final Score: 0.525\nRank stability: stable"}, {"borderWidth": 3, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Kuda Kanumulla Wewa", "label": "Kuda Kanumulla Wewa", "shape": "diamond", "size": 11.230551198004086, "title": "Rank #32 | Final Score: 0.027\nRank stability: UNSTABLE (std=9.67)"}, {"borderWidth": 3, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Wagayakulama Wewa", "label": "Wagayakulama Wewa", "shape": "diamond", "size": 14.012044748025282, "title": "Rank #30 | Final Score: 0.089\nRank stability: UNSTABLE (std=10.12)"}, {"borderWidth": 1, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Wagayakulama", "label": "Wagayakulama", "shape": "dot", "size": 15.054788203643902, "title": "Rank #26 | Final Score: 0.112\nRank stability: stable"}, {"borderWidth": 3, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Alittana Wewa", "label": "Alittana Wewa", "shape": "diamond", "size": 13.869925340172527, "title": "Rank #31 | Final Score: 0.086\nRank stability: UNSTABLE (std=10.99)"}, {"borderWidth": 1, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Wannanmaduwa Wewa", "label": "Wannanmaduwa Wewa", "shape": "dot", "size": 23.281514525358705, "title": "Rank #9 | Final Score: 0.295\nRank stability: stable"}, {"borderWidth": 1, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Wellamaduwa Wewa", "label": "Wellamaduwa Wewa", "shape": "dot", "size": 14.822866746357509, "title": "Rank #27 | Final Score: 0.107\nRank stability: stable"}, {"borderWidth": 3, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Sembukulama Wewa", "label": "Sembukulama Wewa", "shape": "diamond", "size": 16.571846417502318, "title": "Rank #22 | Final Score: 0.146\nRank stability: UNSTABLE (std=9.37)"}, {"borderWidth": 1, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Hammillakulama Wewa", "label": "Hammillakulama Wewa", "shape": "dot", "size": 22.44280925818852, "title": "Rank #12 | Final Score: 0.277\nRank stability: stable"}, {"borderWidth": 1, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Tirappane Wewa", "label": "Tirappane Wewa", "shape": "dot", "size": 15.497658033589982, "title": "Rank #24 | Final Score: 0.122\nRank stability: stable"}, {"borderWidth": 1, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Todamaduwa Wewa", "label": "Todamaduwa Wewa", "shape": "dot", "size": 23.667388109860237, "title": "Rank #7 | Final Score: 0.304\nRank stability: stable"}, {"borderWidth": 1, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Galwaduwawa Wewa", "label": "Galwaduwawa Wewa", "shape": "dot", "size": 18.157242078866275, "title": "Rank #18 | Final Score: 0.181\nRank stability: stable"}, {"borderWidth": 1, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Galkulama Wewa", "label": "Galkulama Wewa", "shape": "dot", "size": 14.421057143672247, "title": "Rank #29 | Final Score: 0.098\nRank stability: stable"}, {"borderWidth": 1, "color": "#E24B4A", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Nachchaduwa Wewa", "label": "Nachchaduwa Wewa", "shape": "dot", "size": 40.0, "title": "Rank #1 | Final Score: 0.667\nRank stability: stable"}, {"borderWidth": 1, "color": "#1D9E75", "font": {"background": "rgba(255,255,255,0.75)", "size": 14}, "id": "Irahandaketu Wewa", "label": "Irahandaketu Wewa", "shape": "dot", "size": 14.790991542062589, "title": "Rank #28 | Final Score: 0.106\nRank stability: stable"}]);
+                  edges = new vis.DataSet([{"arrows": "to", "color": "#bc3587", "dashes": false, "from": "Tawalanhalmillewa Wewa", "title": "GNN influence: 0.2314\nalpha (water transfer): 0.951\nType: direct", "to": "Pansala Wewa", "width": 11.409986004009397}, {"arrows": "to", "color": "#bf3984", "dashes": false, "from": "Settikulama  Wewa", "title": "GNN influence: 0.2376\nalpha (water transfer): 0.975\nType: direct", "to": "Pansala Wewa", "width": 11.694483316963728}, {"arrows": "to", "color": "#c8437b", "dashes": false, "from": "Pansala Wewa", "title": "GNN influence: 0.2543\nalpha (water transfer): 0.922\nType: direct", "to": "Ulankulama Wewa", "width": 11.06776021728697}, {"arrows": "to", "color": "#feb72d", "dashes": false, "from": "Kudaittikattiya Wewa", "title": "GNN influence: 0.4229\nalpha (water transfer): 0.961\nType: direct", "to": "Maha Ittikattiya Wewa", "width": 11.528794255457056}, {"arrows": "to", "color": "#5c01a6", "dashes": false, "from": "Maha Ittikattiya Wewa", "title": "GNN influence: 0.1020\nalpha (water transfer): 0.841\nType: direct", "to": "Periyakulama Wewa", "width": 10.09271517205508}, {"arrows": "to", "color": "#6600a7", "dashes": false, "from": "Ulankulama Wewa", "title": "GNN influence: 0.1131\nalpha (water transfer): 0.850\nType: direct", "to": "Periyakulama Wewa", "width": 10.205544007676902}, {"arrows": "to", "color": "#f3854b", "dashes": false, "from": "Amane Wewa", "title": "GNN influence: 0.3585\nalpha (water transfer): 0.949\nType: direct", "to": "Ihala Amanakkattuwa Wewa", "width": 11.391632096660445}, {"arrows": "to", "color": "#9613a1", "dashes": false, "from": "Ihala Amanakkattuwa Wewa", "title": "GNN influence: 0.1743\nalpha (water transfer): 0.945\nType: direct", "to": "Pahala Amanakkattuwa Wewa", "width": 11.343868035704308}, {"arrows": "to", "color": "#a72197", "dashes": false, "from": "Ethiniwetuna Wewa", "title": "GNN influence: 0.1987\nalpha (water transfer): 0.914\nType: direct", "to": "Periyakulama Wewa", "width": 10.96419363554062}, {"arrows": "to", "color": "#9410a2", "dashes": false, "from": "Pahala Amanakkattuwa Wewa", "title": "GNN influence: 0.1713\nalpha (water transfer): 0.863\nType: direct", "to": "Mahakanumulla Wewa", "width": 10.357675101060691}, {"arrows": "to", "color": "#7a02a8", "dashes": false, "from": "Walagambahuwa Wewa", "title": "GNN influence: 0.1368\nalpha (water transfer): 0.899\nType: direct", "to": "Pahala Amanakkattuwa Wewa", "width": 10.790517462678153}, {"arrows": "to", "color": "#f0f921", "dashes": false, "from": "Wendarakulama Wewa", "title": "GNN influence: 0.4972\nalpha (water transfer): 0.924\nType: direct", "to": "Meegassegama Wewa", "width": 11.093268838488813}, {"arrows": "to", "color": "#6f00a8", "dashes": false, "from": "Marikkaragama Wewa", "title": "GNN influence: 0.1239\nalpha (water transfer): 0.826\nType: direct", "to": "Pahala Amanakkattuwa Wewa", "width": 9.908446397668863}, {"arrows": "to", "color": "#b83289", "dashes": false, "from": "Periyakulama Wewa", "title": "GNN influence: 0.2261\nalpha (water transfer): 0.702\nType: direct", "to": "Manakkulama Wewa", "width": 8.420399448264577}, {"arrows": "to", "color": "#8f0da4", "dashes": false, "from": "Mawatha Wewa", "title": "GNN influence: 0.1656\nalpha (water transfer): 0.932\nType: direct", "to": "Mahakanumulla Wewa", "width": 11.188474049557684}, {"arrows": "to", "color": "#a11b9b", "dashes": false, "from": "Meegassegama Wewa", "title": "GNN influence: 0.1892\nalpha (water transfer): 0.912\nType: direct", "to": "Alittana Wewa", "width": 10.941249620157805}, {"arrows": "to", "color": "#130789", "dashes": false, "from": "Mahakanumulla Wewa", "title": "GNN influence: 0.0286\nalpha (water transfer): 0.697\nType: direct", "to": "Sembukulama Wewa", "width": 8.364408205813533}, {"arrows": "to", "color": "#e66c5c", "dashes": false, "from": "Manakkulama Wewa", "title": "GNN influence: 0.3204\nalpha (water transfer): 0.841\nType: direct", "to": "Wannanmaduwa Wewa", "width": 10.097064633938142}, {"arrows": "to", "color": "#c7427c", "dashes": false, "from": "Wagayakulama Wewa", "title": "GNN influence: 0.2524\nalpha (water transfer): 0.454\nType: direct", "to": "Kuda Kanumulla Wewa", "width": 5.447322734826531}, {"arrows": "to", "color": "#6c00a8", "dashes": false, "from": "Wagayakulama Wewa", "title": "GNN influence: 0.1206\nalpha (water transfer): 0.526\nType: direct", "to": "Sembukulama Wewa", "width": 6.312677265173468}, {"arrows": "to", "color": "#a62098", "dashes": false, "from": "Wagayakulama", "title": "GNN influence: 0.1965\nalpha (water transfer): 0.898\nType: direct", "to": "Wannanmaduwa Wewa", "width": 10.77802098093892}, {"arrows": "to", "color": "#9a169f", "dashes": false, "from": "Alittana Wewa", "title": "GNN influence: 0.1795\nalpha (water transfer): 0.871\nType: direct", "to": "Tirappane Wewa", "width": 10.456694360317536}, {"arrows": "to", "color": "#5801a4", "dashes": false, "from": "Wannanmaduwa Wewa", "title": "GNN influence: 0.0963\nalpha (water transfer): 0.795\nType: direct", "to": "Todamaduwa Wewa", "width": 9.540034387657506}, {"arrows": "to", "color": "#3f049c", "dashes": false, "from": "Wellamaduwa Wewa", "title": "GNN influence: 0.0689\nalpha (water transfer): 0.737\nType: direct", "to": "Sembukulama Wewa", "width": 8.83951188320423}, {"arrows": "to", "color": "#1d068e", "dashes": false, "from": "Wellamaduwa Wewa", "title": "GNN influence: 0.0351\nalpha (water transfer): 0.243\nType: direct", "to": "Nachchaduwa Wewa", "width": 2.920488116795771}, {"arrows": "to", "color": "#19068c", "dashes": false, "from": "Sembukulama Wewa", "title": "GNN influence: 0.0315\nalpha (water transfer): 0.215\nType: direct", "to": "Nachchaduwa Wewa", "width": 2.585894452843902}, {"arrows": "to", "color": "#260591", "dashes": false, "from": "Hammillakulama Wewa", "title": "GNN influence: 0.0429\nalpha (water transfer): 0.298\nType: direct", "to": "Nachchaduwa Wewa", "width": 3.5720684205905044}, {"arrows": "to", "color": "#0d0887", "dashes": false, "from": "Tirappane Wewa", "title": "GNN influence: 0.0239\nalpha (water transfer): 0.640\nType: direct", "to": "Nachchaduwa Wewa", "width": 7.685899288648562}, {"arrows": "to", "color": "#350498", "dashes": false, "from": "Todamaduwa Wewa", "title": "GNN influence: 0.0574\nalpha (water transfer): 0.509\nType: direct", "to": "Nachchaduwa Wewa", "width": 6.113966919867146}, {"arrows": "to", "color": "#20068f", "dashes": false, "from": "Galwaduwawa Wewa", "title": "GNN influence: 0.0377\nalpha (water transfer): 0.800\nType: direct", "to": "Nachchaduwa Wewa", "width": 9.603920085782619}, {"arrows": "to", "color": "#20068f", "dashes": false, "from": "Galkulama Wewa", "title": "GNN influence: 0.0383\nalpha (water transfer): 0.643\nType: direct", "to": "Nachchaduwa Wewa", "width": 7.718344990893399}, {"arrows": "to", "color": "#9e199d", "dashes": false, "from": "Irahandaketu Wewa", "title": "GNN influence: 0.1865\nalpha (water transfer): 0.937\nType: direct", "to": "Galkulama Wewa", "width": 11.23912382013776}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {"layout": {"hierarchical": {"enabled": true, "direction": "UD", "sortMethod": "directed", "levelSeparation": 180, "nodeSpacing": 220, "treeSpacing": 260}}, "physics": {"enabled": false}, "edges": {"smooth": {"type": "cubicBezier", "forceDirection": "vertical"}}};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    
+<div style="font-family:sans-serif; font-size:13px; line-height:1.6;
+            padding:14px 20px; border-top:1px solid #ccc; background:white;">
+  <b>Legend</b><br>
+  <b>Node colour</b> - Final importance score: High (&gt;0.6) | Medium (0.35-0.6) | Low (&lt;0.35) &nbsp;&nbsp;
+  <b>Node shape</b> - Diamond = unstable ranking (top 25% by seed variance) | Circle = stable &nbsp;&nbsp;
+  <b>Edge width</b> - alpha (physical water-transfer fraction) &nbsp;&nbsp;
+  <b>Edge colour</b> - GNN influence (perturbation sensitivity), dark purple (low) to yellow (high) &nbsp;&nbsp;
+  <b>Edge style</b> - Solid = direct channel, dashed = indirect/derived path
+</div>
+</body>
+</html>

@@ -1,0 +1,14 @@
+pandas
+numpy
+networkx
+scikit-learn
+matplotlib
+seaborn
+torch
+torch-geometric
+pyvis
+jupyter
+nbconvert
+nbformat
+nbclient
+scipy

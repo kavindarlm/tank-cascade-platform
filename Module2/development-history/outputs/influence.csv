@@ -1,0 +1,56 @@
+rank,from_tank,to_tank,gnn_influence_value,connection_type,hops,flow_path
+1,Wendarakulama Wewa,Meegassegama Wewa,0.497242,direct,1,Wendarakulama Wewa  Meegassegama Wewa
+2,Kudaittikattiya Wewa,Maha Ittikattiya Wewa,0.422929,direct,1,Kudaittikattiya Wewa  Maha Ittikattiya Wewa
+3,Amane Wewa,Ihala Amanakkattuwa Wewa,0.358455,direct,1,Amane Wewa  Ihala Amanakkattuwa Wewa
+4,Manakkulama Wewa,Wannanmaduwa Wewa,0.320402,direct,1,Manakkulama Wewa  Wannanmaduwa Wewa
+5,Pansala Wewa,Ulankulama Wewa,0.254257,direct,1,Pansala Wewa  Ulankulama Wewa
+6,Wagayakulama Wewa,Kuda Kanumulla Wewa,0.252448,direct,1,Wagayakulama Wewa  Kuda Kanumulla Wewa
+7,Settikulama  Wewa,Pansala Wewa,0.237606,direct,1,Settikulama  Wewa  Pansala Wewa
+8,Tawalanhalmillewa Wewa,Pansala Wewa,0.231423,direct,1,Tawalanhalmillewa Wewa  Pansala Wewa
+9,Periyakulama Wewa,Manakkulama Wewa,0.22606,direct,1,Periyakulama Wewa  Manakkulama Wewa
+10,Ethiniwetuna Wewa,Periyakulama Wewa,0.198698,direct,1,Ethiniwetuna Wewa  Periyakulama Wewa
+11,Wagayakulama,Wannanmaduwa Wewa,0.196534,direct,1,Wagayakulama  Wannanmaduwa Wewa
+12,Meegassegama Wewa,Alittana Wewa,0.18925,direct,1,Meegassegama Wewa  Alittana Wewa
+13,Irahandaketu Wewa,Galkulama Wewa,0.186466,direct,1,Irahandaketu Wewa  Galkulama Wewa
+14,Alittana Wewa,Tirappane Wewa,0.179475,direct,1,Alittana Wewa  Tirappane Wewa
+15,Ihala Amanakkattuwa Wewa,Pahala Amanakkattuwa Wewa,0.174312,direct,1,Ihala Amanakkattuwa Wewa  Pahala Amanakkattuwa Wewa
+16,Pahala Amanakkattuwa Wewa,Mahakanumulla Wewa,0.171346,direct,1,Pahala Amanakkattuwa Wewa  Mahakanumulla Wewa
+17,Mawatha Wewa,Mahakanumulla Wewa,0.16564,direct,1,Mawatha Wewa  Mahakanumulla Wewa
+18,Wagayakulama,Todamaduwa Wewa,0.160505,indirect,2,Wagayakulama  Wannanmaduwa Wewa  Todamaduwa Wewa
+19,Wendarakulama Wewa,Alittana Wewa,0.155196,indirect,2,Wendarakulama Wewa  Meegassegama Wewa  Alittana Wewa
+20,Walagambahuwa Wewa,Pahala Amanakkattuwa Wewa,0.136815,direct,1,Walagambahuwa Wewa  Pahala Amanakkattuwa Wewa
+21,Marikkaragama Wewa,Pahala Amanakkattuwa Wewa,0.123859,direct,1,Marikkaragama Wewa  Pahala Amanakkattuwa Wewa
+22,Wagayakulama Wewa,Sembukulama Wewa,0.120644,direct,1,Wagayakulama Wewa  Sembukulama Wewa
+23,Ulankulama Wewa,Periyakulama Wewa,0.113092,direct,1,Ulankulama Wewa  Periyakulama Wewa
+24,Maha Ittikattiya Wewa,Periyakulama Wewa,0.10199,direct,1,Maha Ittikattiya Wewa  Periyakulama Wewa
+25,Settikulama  Wewa,Ulankulama Wewa,0.097234,indirect,2,Settikulama  Wewa  Pansala Wewa  Ulankulama Wewa
+26,Wannanmaduwa Wewa,Todamaduwa Wewa,0.096255,direct,1,Wannanmaduwa Wewa  Todamaduwa Wewa
+27,Tawalanhalmillewa Wewa,Ulankulama Wewa,0.09426,indirect,2,Tawalanhalmillewa Wewa  Pansala Wewa  Ulankulama Wewa
+28,Periyakulama Wewa,Wannanmaduwa Wewa,0.090713,indirect,2,Periyakulama Wewa  Manakkulama Wewa  Wannanmaduwa Wewa
+29,Amane Wewa,Pahala Amanakkattuwa Wewa,0.08929,indirect,2,Amane Wewa  Ihala Amanakkattuwa Wewa  Pahala Amanakkattuwa Wewa
+30,Pansala Wewa,Periyakulama Wewa,0.08143,indirect,2,Pansala Wewa  Ulankulama Wewa  Periyakulama Wewa
+31,Manakkulama Wewa,Todamaduwa Wewa,0.069878,indirect,2,Manakkulama Wewa  Wannanmaduwa Wewa  Todamaduwa Wewa
+32,Wellamaduwa Wewa,Sembukulama Wewa,0.068901,direct,1,Wellamaduwa Wewa  Sembukulama Wewa
+33,Pahala Amanakkattuwa Wewa,Sembukulama Wewa,0.064964,indirect,2,Pahala Amanakkattuwa Wewa  Mahakanumulla Wewa  Sembukulama Wewa
+34,Maha Ittikattiya Wewa,Manakkulama Wewa,0.064664,indirect,2,Maha Ittikattiya Wewa  Periyakulama Wewa  Manakkulama Wewa
+35,Kudaittikattiya Wewa,Periyakulama Wewa,0.062036,indirect,2,Kudaittikattiya Wewa  Maha Ittikattiya Wewa  Periyakulama Wewa
+36,Ethiniwetuna Wewa,Manakkulama Wewa,0.059932,indirect,2,Ethiniwetuna Wewa  Periyakulama Wewa  Manakkulama Wewa
+37,Ulankulama Wewa,Manakkulama Wewa,0.059472,indirect,2,Ulankulama Wewa  Periyakulama Wewa  Manakkulama Wewa
+38,Todamaduwa Wewa,Nachchaduwa Wewa,0.057428,direct,1,Todamaduwa Wewa  Nachchaduwa Wewa
+39,Meegassegama Wewa,Tirappane Wewa,0.048834,indirect,2,Meegassegama Wewa  Alittana Wewa  Tirappane Wewa
+40,Hammillakulama Wewa,Nachchaduwa Wewa,0.042862,direct,1,Hammillakulama Wewa  Nachchaduwa Wewa
+41,Galkulama Wewa,Nachchaduwa Wewa,0.038267,direct,1,Galkulama Wewa  Nachchaduwa Wewa
+42,Galwaduwawa Wewa,Nachchaduwa Wewa,0.037687,direct,1,Galwaduwawa Wewa  Nachchaduwa Wewa
+43,Ihala Amanakkattuwa Wewa,Mahakanumulla Wewa,0.037598,indirect,2,Ihala Amanakkattuwa Wewa  Pahala Amanakkattuwa Wewa  Mahakanumulla Wewa
+44,Wellamaduwa Wewa,Nachchaduwa Wewa,0.035076,direct,1,Wellamaduwa Wewa  Nachchaduwa Wewa
+45,Sembukulama Wewa,Nachchaduwa Wewa,0.031514,direct,1,Sembukulama Wewa  Nachchaduwa Wewa
+46,Mahakanumulla Wewa,Sembukulama Wewa,0.028618,direct,1,Mahakanumulla Wewa  Sembukulama Wewa
+47,Marikkaragama Wewa,Mahakanumulla Wewa,0.027378,indirect,2,Marikkaragama Wewa  Pahala Amanakkattuwa Wewa  Mahakanumulla Wewa
+48,Walagambahuwa Wewa,Mahakanumulla Wewa,0.023964,indirect,2,Walagambahuwa Wewa  Pahala Amanakkattuwa Wewa  Mahakanumulla Wewa
+49,Tirappane Wewa,Nachchaduwa Wewa,0.023879,direct,1,Tirappane Wewa  Nachchaduwa Wewa
+50,Mawatha Wewa,Sembukulama Wewa,0.020801,indirect,2,Mawatha Wewa  Mahakanumulla Wewa  Sembukulama Wewa
+51,Alittana Wewa,Nachchaduwa Wewa,0.017666,indirect,2,Alittana Wewa  Tirappane Wewa  Nachchaduwa Wewa
+52,Wannanmaduwa Wewa,Nachchaduwa Wewa,0.015404,indirect,2,Wannanmaduwa Wewa  Todamaduwa Wewa  Nachchaduwa Wewa
+53,Irahandaketu Wewa,Nachchaduwa Wewa,0.009575,indirect,2,Irahandaketu Wewa  Galkulama Wewa  Nachchaduwa Wewa
+54,Mahakanumulla Wewa,Nachchaduwa Wewa,0.006907,indirect,2,Mahakanumulla Wewa  Sembukulama Wewa  Nachchaduwa Wewa
+55,Wagayakulama Wewa,Nachchaduwa Wewa,0.003028,indirect,2,Wagayakulama Wewa  Sembukulama Wewa  Nachchaduwa Wewa
