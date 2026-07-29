@@ -1,0 +1,33 @@
+tank_id,tank_name,catchment_area_km2,runoff_coeff,max_surface_area_km2
+1,Tawalanhalmillewa Wewa,6.073888,0.34,0.91
+2,Settikulama  Wewa,7.065182,0.36,1.02
+3,Pansala Wewa,0.001881,0.18,0.01
+4,Kudaittikattiya Wewa,2.568486,0.27,0.39
+5,Maha Ittikattiya Wewa,9.356773,0.41,1.44
+6,Ulankulama Wewa,9.416906,0.4,1.48
+7,Amane Wewa,10.392892,0.43,1.63
+8,Ihala Amanakkattuwa Wewa,1.148281,0.24,0.18
+9,Ethiniwetuna Wewa,3.650796,0.31,0.56
+10,Pahala Amanakkattuwa Wewa,0.602814,0.22,0.1
+11,Walagambahuwa Wewa,6.065738,0.35,0.89
+12,Wendarakulama Wewa,2.830675,0.29,0.43
+13,Marikkaragama Wewa,7.598563,0.38,1.14
+14,Periyakulama Wewa,12.269561,0.46,1.95
+15,Mawatha Wewa,4.021118,0.32,0.63
+16,Meegassegama Wewa,8.873589,0.39,1.33
+17,Mahakanumulla Wewa,8.59797,0.38,1.29
+18,Manakkulama Wewa,8.493463,0.37,1.27
+19,Kuda Kanumulla Wewa,4.553241,0.33,0.69
+20,Wagayakulama Wewa,6.047452,0.35,0.92
+21,Wagayakulama,3.966382,0.31,0.61
+22,Alittana Wewa,2.506971,0.28,0.38
+23,Wannanmaduwa Wewa,11.123101,0.44,1.74
+24,Wellamaduwa Wewa,6.088571,0.34,0.93
+25,Sembukulama Wewa,6.151585,0.35,0.95
+26,Hammillakulama Wewa,8.014945,0.38,1.21
+27,Tirappane Wewa,12.503279,0.47,2.01
+28,Todamaduwa Wewa,5.773251,0.34,0.86
+29,Galwaduwawa Wewa,1.947081,0.25,0.3
+30,Galkulama Wewa,1.30209,0.23,0.2
+31,Nachchaduwa Wewa,90.696711,0.55,15.4
+32,Irahandaketu Wewa,2.262899,0.27,0.35

@@ -1,0 +1,33 @@
+tank_id,tank_name,downstream_demand,total_outflow_alpha
+1,Tawalanhalmillewa Wewa,1,0.9508321670007832
+2,Settikulama  Wewa,1,0.974540276413644
+3,Pansala Wewa,1,0.9223133514405808
+4,Kudaittikattiya Wewa,1,0.9607328546214212
+5,Maha Ittikattiya Wewa,1,0.8410595976712567
+6,Ulankulama Wewa,1,0.8504620006397419
+7,Amane Wewa,1,0.9493026747217036
+8,Ihala Amanakkattuwa Wewa,1,0.9453223363086924
+9,Ethiniwetuna Wewa,1,0.9136828029617184
+10,Pahala Amanakkattuwa Wewa,1,0.8631395917550576
+11,Walagambahuwa Wewa,1,0.8992097885565128
+12,Wendarakulama Wewa,1,0.9244390698740678
+13,Marikkaragama Wewa,1,0.8257038664724052
+14,Periyakulama Wewa,1,0.7016999540220481
+15,Mawatha Wewa,1,0.9323728374631404
+16,Meegassegama Wewa,1,0.9117708016798172
+17,Mahakanumulla Wewa,1,0.6970340171511278
+18,Manakkulama Wewa,1,0.8414220528281785
+19,Kuda Kanumulla Wewa,0,0.0
+20,Wagayakulama Wewa,2,0.9799999999999998
+21,Wagayakulama,1,0.8981684150782433
+22,Alittana Wewa,1,0.871391196693128
+23,Wannanmaduwa Wewa,1,0.7950028656381255
+24,Wellamaduwa Wewa,2,0.98
+25,Sembukulama Wewa,1,0.2154912044036585
+26,Hammillakulama Wewa,1,0.297672368382542
+27,Tirappane Wewa,1,0.6404916073873802
+28,Todamaduwa Wewa,1,0.5094972433222621
+29,Galwaduwawa Wewa,1,0.8003266738152182
+30,Galkulama Wewa,1,0.6431954159077833
+31,Nachchaduwa Wewa,0,0.0
+32,Irahandaketu Wewa,1,0.9365936516781468
