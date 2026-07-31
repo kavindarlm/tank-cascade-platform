@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tank storage forecast — Module 3</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .forecast-shell {
+    /* max-width: 1400px; */
+    /* margin: 0 auto; */
+    padding: 42px 24px 60px;
+  }
+
+  .forecast-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin: 0 0 16px;
+    gap: 12px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .brand-text h1 {
+    font-size: 22px;
+    margin: 0 0 4px;
+  }
+
+  .brand-text p {
+    color: #5b6272;
+    margin: 0;
+    font-size: 14px;
+  }
+
+  .status-pill {
+    font-size: 13px;
+    color: #5b6272;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: #fff;
+    border: 1px solid #e2e5eb;
+    border-radius: 999px;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #2f855a;
+  }
+
+  .card {
+    background: #fff;
+    border: 1px solid #e2e5eb;
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 18px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+  }
+
+  .request-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+  }
+
+  .field { flex: 1; }
+
+  .field label {
+    display: block;
+    font-size: 12px;
+    color: #5b6272;
+    margin-bottom: 4px;
+  }
+
+  .field input[type="date"] {
+    width: 100%;
+    padding: 7px 8px;
+    border: 1px solid #cdd2dc;
+    border-radius: 6px;
+    font-size: 13px;
+    min-width: 140px;
+  }
+
+  button.primary {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    border: none;
+    background: #2b6cb0;
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  button.primary:hover { background: #245a92; }
+  button.primary:disabled { background: #8a8f9c; cursor: not-allowed; }
+
+  .request-hint {
+    font-size: 13px;
+    color: #5b6272;
+    margin: 12px 0 0;
+  }
+
+  .loading-row {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 12px;
+    color: #5b6272;
+  }
+
+  .loading-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13px;
+  }
+
+  .loading-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: #1f2430;
+  }
+
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #e2e5eb;
+    border-top-color: #2b6cb0;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  .progress-track {
+    width: 100%;
+    height: 8px;
+    background: #edf2f7;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #2b6cb0 0%, #4f8bc9 100%);
+    transition: width 220ms ease;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .results-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 0 12px;
+  }
+
+  .results-head p {
+    font-size: 13px;
+    color: #5b6272;
+    margin: 0;
+  }
+
+  .results-head strong { color: #1f2430; font-weight: 600; }
+
+  button.ghost {
+    padding: 7px 12px;
+    background: #eceef2;
+    color: #1f2430;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .stat {
+    background: #fff;
+    border: 1px solid #e2e5eb;
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+
+  .stat.stat-drought { background: #faece7; border-color: transparent; }
+  .stat.stat-overflow { background: #faeeda; border-color: transparent; }
+
+  .stat p.label {
+    font-size: 12px;
+    color: #5b6272;
+    margin: 0 0 4px;
+  }
+
+  .stat.stat-drought p.label { color: #993c1d; }
+  .stat.stat-overflow p.label { color: #854f0b; }
+
+  .stat p.value {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .stat.stat-drought p.value { color: #993c1d; }
+  .stat.stat-overflow p.value { color: #854f0b; }
+
+  .tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  .tabs button {
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid #cdd2dc;
+    background: #fff;
+    color: #5b6272;
+    cursor: pointer;
+  }
+
+  .tabs button.active {
+    background: #14213d;
+    color: #fff;
+    border-color: #14213d;
+  }
+
+  .tank-list {
+    border: 1px solid #e2e5eb;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .tank-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-bottom: 1px solid #eef0f3;
+  }
+
+  .tank-row:last-child { border-bottom: none; }
+
+  .tank-row.collapsed-note {
+    justify-content: center;
+    color: #8a8f9c;
+    font-size: 12px;
+    padding: 10px;
+  }
+
+  .tank-info { flex: 1; min-width: 0; }
+
+  .tank-info p.name {
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .tank-info p.meta {
+    font-size: 12px;
+    color: #5b6272;
+    margin: 2px 0 0;
+  }
+
+  .risk-badge {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .risk-badge.drought { background: #faece7; color: #993c1d; }
+  .risk-badge.overflow { background: #faeeda; color: #854f0b; }
+  .risk-badge.normal { background: #e1f5ee; color: #0f6e56; }
+
+  .conf {
+    font-size: 12px;
+    color: #5b6272;
+    min-width: 40px;
+    text-align: right;
+  }
+
+  .empty-state {
+    padding: 16px;
+    text-align: center;
+    color: #8a8f9c;
+    font-size: 13px;
+  }
+
+  footer.note {
+    margin-top: 18px;
+    font-size: 12px;
+    color: #5b6272;
+    text-align: center;
+  }
+
+  @media (max-width: 560px) {
+    .forecast-header { flex-direction: column; }
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .request-row { flex-direction: column; align-items: stretch; }
+    button.primary { width: 100%; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-brand">Tank Cascade Platform</div>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="storage.html">Satellite water storage</a></li>
+    <li><a href="connectivity.html">Tank connectivity</a></li>
+    <li><a href="forecasting.html" class="active">Forecasting</a></li>
+  </ul>
+</nav>
+
+<main class="container forecast-shell">
+  <header class="forecast-header">
+    <div class="brand">
+      <div class="brand-text">
+        <h1>Tank storage forecast</h1>
+        <p>Select a forecast date and generate the daily storage outlook for the cascade network.</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="card" id="request-card">
+    <div class="request-row">
+      <div class="field">
+        <label for="forecast-date">Forecast date</label>
+        <input type="date" id="forecast-date" value="2026-07-29">
+      </div>
+      <button class="primary" id="generate-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15">
+          <path d="M5 12h14M13 5l7 7-7 7"/>
+        </svg>
+        Generate forecast
+      </button>
+    </div>
+    <p class="request-hint">Runs the Module 3 forecast pipeline for the selected date and displays the live risk output.</p>
+
+    <div class="loading-row" id="loading-row">
+      <div class="loading-meta">
+        <span class="loading-status">
+          <span class="spinner"></span>
+          <span id="loading-text">Preparing forecast request…</span>
+        </span>
+        <span id="loading-percentage">0%</span>
+      </div>
+      <div class="progress-track" aria-hidden="true">
+        <div class="progress-fill" id="loading-bar-fill"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="results" style="display:none;">
+    <div class="results-head">
+      <p>Results for <strong id="result-date">—</strong></p>
+      <button class="ghost" id="download-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+          <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/>
+        </svg>
+        Download CSV
+      </button>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat">
+        <p class="label">Tanks tracked</p>
+        <p class="value" id="total-count">0</p>
+      </div>
+      <div class="stat stat-drought">
+        <p class="label">Drought risk</p>
+        <p class="value" id="drought-count">0</p>
+      </div>
+      <div class="stat stat-overflow">
+        <p class="label">Overflow risk</p>
+        <p class="value" id="overflow-count">0</p>
+      </div>
+      <div class="stat">
+        <p class="label">Avg confidence</p>
+        <p class="value" id="avg-confidence">0.00</p>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="active" data-filter="all">All tanks</button>
+      <button data-filter="drought">Drought</button>
+      <button data-filter="overflow">Overflow</button>
+      <button data-filter="normal">Normal</button>
+    </div>
+
+    <div class="tank-list" id="tank-list"></div>
+  </div>
+
+  <footer class="note">Forecast generated from the last 14 days of satellite storage observations and live weather data.</footer>
+</main>
+
+<script>
+  const apiBase = 'http://127.0.0.1:8000/api/forecast';
+  let allRows = [];
+  let progressTimer = null;
+  let progressValue = 0;
+
+  function getRisk(rawValue) {
+    const value = String(rawValue || '').toLowerCase();
+    if (value.includes('drought')) return 'drought';
+    if (value.includes('overflow')) return 'overflow';
+    return 'normal';
+  }
+
+  function safeNumber(value) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  function formatPercent(value) {
+    return `${Number(value || 0).toFixed(1)}%`;
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  }
+
+  function setLoadingProgress(percent, text) {
+    const loadingRow = document.getElementById('loading-row');
+    const loadingText = document.getElementById('loading-text');
+    const loadingPercentage = document.getElementById('loading-percentage');
+    const loadingBarFill = document.getElementById('loading-bar-fill');
+
+    loadingRow.style.display = 'flex';
+    loadingText.textContent = text;
+    loadingPercentage.textContent = `${Math.round(percent)}%`;
+    loadingBarFill.style.width = `${Math.max(4, percent)}%`;
+  }
+
+  function startLoading() {
+    clearInterval(progressTimer);
+    progressValue = 8;
+    setLoadingProgress(progressValue, 'Preparing forecast request…');
+
+    progressTimer = window.setInterval(() => {
+      progressValue = Math.min(progressValue + Math.random() * 8 + 4, 92);
+      const text = progressValue < 35
+        ? 'Preparing forecast request…'
+        : progressValue < 70
+          ? 'Running forecast pipeline…'
+          : 'Finishing results…';
+      setLoadingProgress(progressValue, text);
+    }, 500);
+  }
+
+  function stopLoading(text) {
+    clearInterval(progressTimer);
+    setLoadingProgress(100, text);
+  }
+
+  function renderSummary(date, source) {
+    document.getElementById('result-date').textContent = date || '—';
+    document.getElementById('total-count').textContent = allRows.length;
+    const droughtRows = allRows.filter((row) => row.risk === 'drought');
+    const overflowRows = allRows.filter((row) => row.risk === 'overflow');
+    document.getElementById('drought-count').textContent = droughtRows.length;
+    document.getElementById('overflow-count').textContent = overflowRows.length;
+    const avgConfidence = allRows.length ? (allRows.reduce((sum, row) => sum + row.confidence, 0) / allRows.length).toFixed(2) : '0.00';
+    document.getElementById('avg-confidence').textContent = avgConfidence;
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('loading-row').style.display = 'none';
+    document.getElementById('generate-btn').disabled = false;
+    document.querySelectorAll('.tabs button').forEach((button) => button.classList.remove('active'));
+    document.querySelector('.tabs button[data-filter="all"]').classList.add('active');
+    renderTanks('all');
+    document.querySelector('#results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    document.getElementById('loading-text').textContent = `${source === 'generated' ? 'Generated' : 'Loaded'} forecast data`;
+  }
+
+  function renderTanks(filter) {
+    const list = document.getElementById('tank-list');
+    list.innerHTML = '';
+
+    const filteredRows = filter === 'all'
+      ? allRows.filter((row) => row.risk !== 'normal')
+      : allRows.filter((row) => row.risk === filter);
+
+    if (!filteredRows.length) {
+      list.innerHTML = '<div class="empty-state">No tanks match this filter.</div>';
+      return;
+    }
+
+    filteredRows.forEach((row) => {
+      const el = document.createElement('div');
+      el.className = 'tank-row';
+      el.innerHTML = `
+        <div class="tank-info">
+          <p class="name">${escapeHtml(row.tank_name)}</p>
+          <p class="meta">${formatPercent(row.storage_pct)} storage · ${escapeHtml(row.note)}</p>
+        </div>
+        <span class="conf">${row.confidence.toFixed(2)}</span>
+        <span class="risk-badge ${row.risk}">${row.risk.charAt(0).toUpperCase() + row.risk.slice(1)}</span>
+      `;
+      list.appendChild(el);
+    });
+
+    if (filter === 'all') {
+      const normalCount = allRows.filter((row) => row.risk === 'normal').length;
+      if (normalCount) {
+        const note = document.createElement('div');
+        note.className = 'tank-row collapsed-note';
+        note.textContent = `${normalCount} more tanks are currently in the normal range`;
+        list.appendChild(note);
+      }
+    }
+  }
+
+  async function loadForecast(date, { force = false } = {}) {
+    const button = document.getElementById('generate-btn');
+    const loadingRow = document.getElementById('loading-row');
+    const loadingText = document.getElementById('loading-text');
+    const results = document.getElementById('results');
+
+    button.disabled = true;
+    results.style.display = 'none';
+    startLoading();
+
+    try {
+      const url = new URL(apiBase);
+      url.searchParams.set('date', date);
+      if (force) url.searchParams.set('force', '1');
+
+      const response = await fetch(url.toString(), { cache: 'no-store' });
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => ({}));
+        throw new Error(errorPayload.error || 'Forecast request failed');
+      }
+
+      const payload = await response.json();
+      allRows = (payload.rows || []).map((row) => ({
+        tank_id: row.tank_id,
+        tank_name: row.tank_name || `Tank ${row.tank_id}`,
+        storage_pct: safeNumber(row.storage_pct_value ?? row.storage_pct),
+        risk: getRisk(row.primary_risk || row.classifier_risk),
+        confidence: safeNumber(row.confidence_value ?? row.confidence),
+        note: row.primary_risk === 'drought' ? 'below the drought threshold' : row.primary_risk === 'overflow' ? 'approaching overflow' : 'stable outlook',
+      }));
+
+      stopLoading(payload.source === 'generated' ? 'Generated forecast data' : 'Loaded forecast data');
+      renderSummary(date, payload.source || 'cached');
+    } catch (error) {
+      stopLoading('Request failed');
+      loadingRow.style.display = 'none';
+      button.disabled = false;
+      results.style.display = 'block';
+      document.getElementById('tank-list').innerHTML = `<div class="empty-state">${escapeHtml(error.message || 'Unable to load forecast data.')}</div>`;
+      document.getElementById('result-date').textContent = date || '—';
+      document.getElementById('drought-count').textContent = '0';
+      document.getElementById('overflow-count').textContent = '0';
+      document.getElementById('avg-confidence').textContent = '0.00';
+      document.getElementById('total-count').textContent = '0';
+    }
+  }
+
+  document.querySelectorAll('.tabs button').forEach((button) => {
+    button.addEventListener('click', () => {
+      document.querySelectorAll('.tabs button').forEach((tab) => tab.classList.remove('active'));
+      button.classList.add('active');
+      renderTanks(button.dataset.filter);
+    });
+  });
+
+  document.getElementById('generate-btn').addEventListener('click', () => {
+    const date = document.getElementById('forecast-date').value;
+    if (!date) {
+      document.getElementById('tank-list').innerHTML = '<div class="empty-state">Please select a forecast date first.</div>';
+      document.getElementById('results').style.display = 'block';
+      document.getElementById('result-date').textContent = '—';
+      document.getElementById('drought-count').textContent = '0';
+      document.getElementById('overflow-count').textContent = '0';
+      document.getElementById('avg-confidence').textContent = '0.00';
+      document.getElementById('total-count').textContent = '0';
+      return;
+    }
+    loadForecast(date, { force: true });
+  });
+
+  document.getElementById('download-btn').addEventListener('click', async () => {
+    const date = document.getElementById('forecast-date').value;
+    const url = `${apiBase}?date=${encodeURIComponent(date)}&download=1`;
+    const response = await fetch(url, { cache: 'no-store' });
+    if (!response.ok) {
+      alert('Unable to download the forecast CSV.');
+      return;
+    }
+    const blob = await response.blob();
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `forecast_${date}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  });
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('forecast-date').value = today;
+  });
+</script>
+
+</body>
+</html>

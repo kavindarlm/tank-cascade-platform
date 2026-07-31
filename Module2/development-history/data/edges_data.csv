@@ -1,0 +1,33 @@
+source_tank,target_tank,source_elev_m,target_elev_m,elev_diff_m,stream_path_length_m,slope_m/m
+Tawalanhalmillewa Wewa,Pansala Wewa,146,140,6,1477.2,0.004062
+Settikulama  Wewa,Pansala Wewa,145,140,5,889.1,0.005624
+Pansala Wewa,Ulankulama Wewa,140,133,7,2130.8,0.003285
+Kudaittikattiya Wewa,Maha Ittikattiya Wewa,143,137,6,1267.2,0.004735
+Maha Ittikattiya Wewa,Periyakulama Wewa,137,128,9,3848.4,0.002339
+Ulankulama Wewa,Periyakulama Wewa,133,128,5,3026.5,0.001652
+Ethiniwetuna Wewa,Periyakulama Wewa,137,128,9,2493.4,0.00361
+Wendarakulama Wewa,Meegassegama Wewa,135,125,10,2354.1,0.004248
+Periyakulama Wewa,Manakkulama Wewa,128,121,7,5704.5,0.001227
+Meegassegama Wewa,Alittana Wewa,125,119,6,2211.7,0.002713
+Manakkulama Wewa,Wannanmaduwa Wewa,121,117,4,2931.5,0.001364
+Wagayakulama,Wannanmaduwa Wewa,122,117,5,2301.5,0.002173
+Alittana Wewa,Tirappane Wewa,119,111,8,3176.3,0.002519
+Wannanmaduwa Wewa,Todamaduwa Wewa,117,110,7,4269.6,0.001639
+Tirappane Wewa,Nachchaduwa Wewa,111,104,7,6646.1,0.001053
+Todamaduwa Wewa,Nachchaduwa Wewa,110,104,6,8323.9,0.000721
+Galwaduwawa Wewa,Nachchaduwa Wewa,113,104,9,4552.8,0.001977
+Galkulama Wewa,Nachchaduwa Wewa,109,104,5,5904.3,0.000847
+Irahandaketu Wewa,Galkulama Wewa,123,109,14,2332.8,0.006001
+Amane Wewa,Ihala Amanakkattuwa Wewa,137,127,10,1788.4,0.005591
+Ihala Amanakkattuwa Wewa,Pahala Amanakkattuwa Wewa,127,124,3,1260.8,0.002379
+Pahala Amanakkattuwa Wewa,Mahakanumulla Wewa,124,119,5,2839.3,0.001761
+Walagambahuwa Wewa,Pahala Amanakkattuwa Wewa,128,124,4,2121,0.001886
+Marikkaragama Wewa,Pahala Amanakkattuwa Wewa,127,124,3,2854.3,0.001051
+Mawatha Wewa,Mahakanumulla Wewa,126,119,7,1935.7,0.003616
+Mahakanumulla Wewa,Sembukulama Wewa,119,112,7,5776.3,0.001212
+Wagayakulama Wewa,Kuda Kanumulla Wewa,122,119,3,3503.2,0.000856
+Wellamaduwa Wewa,Sembukulama Wewa,118,112,6,3385.9,0.001772
+Hammillakulama Wewa,Nachchaduwa Wewa,110,104,6,12305.9,0.000488
+Sembukulama Wewa,Nachchaduwa Wewa,112,104,8,15856,0.000505
+Wellamaduwa Wewa,Nachchaduwa Wewa,118,104,14,16944,0.000826
+Wagayakulama Wewa,Sembukulama Wewa,122,112,10,3000.15,0.003334

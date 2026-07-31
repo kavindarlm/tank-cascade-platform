@@ -1,0 +1,5 @@
+metric,value,interpretation
+Link Prediction AUC,0.6735,"Model correctly predicts cascade connections (1.0=perfect, 0.5=random)"
+Spearman Correlation (GNN vs Classical),0.4488,Agreement between GNN and classical importance rankings
+Rank Stability (Avg Std Dev across 10 runs),4.9573,Lower = more stable rankings (< 2.0 = good)
+Silhouette Score (upstream vs downstream),0.3182,How well embeddings separate upstream/downstream tanks (>0.3 = good)

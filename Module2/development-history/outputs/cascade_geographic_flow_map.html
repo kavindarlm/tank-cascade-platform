@@ -1,0 +1,2772 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_a9e69542b29ee44d037bf079dbc589e0 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+    <script src="https://cdn.jsdelivr.net/npm/leaflet.fullscreen@3.0.0/Control.FullScreen.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.fullscreen@3.0.0/Control.FullScreen.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-ant-path@1.1.2/dist/leaflet-ant-path.min.js"></script>
+</head>
+<body>
+    
+    
+<div style="position:fixed; top:10px; left:60px; z-index:1000;
+            background:white; padding:8px 16px; border-radius:6px;
+            border:1px solid #ccc; font-family:sans-serif;">
+  <h3 style="margin:0;">Cascade Tank Network - Geographic Flow Map</h3>
+</div>
+    
+<div style="position:fixed; bottom:20px; left:20px; z-index:1000;
+            background:white; padding:12px 16px; border-radius:6px;
+            border:1px solid #ccc; font-family:sans-serif; font-size:12px; line-height:1.6; max-width:300px;">
+  <b>Legend</b><br>
+  <b>Marker fill</b> - Final importance score: 
+  <span style="color:#E24B4A;">High</span> |
+  <span style="color:#EF9F27;">Medium</span> |
+  <span style="color:#1D9E75;">Low</span><br>
+  <b>Marker ring</b> - Thick dark = unstable rank (top 25% seed variance), thin grey = stable<br>
+  <b>Line colour</b> - GNN influence, dark purple (low) to yellow (high)<br>
+  <b>Line width</b> - alpha (physical water-transfer fraction)<br>
+  <b>Animated dashes</b> - Direction of water flow, direct channels only<br>
+  <b>Static dashed line</b> - Indirect/derived path (not a physical channel)<br>
+  <b>Base layer toggle</b> - Switch to Satellite to confirm tanks not traced in OSM<br>
+  <b>Overlay toggle</b> - NSDI official Pond layer for coordinate verification
+</div>
+    
+            <div class="folium-map" id="map_a9e69542b29ee44d037bf079dbc589e0" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_a9e69542b29ee44d037bf079dbc589e0 = L.map(
+                "map_a9e69542b29ee44d037bf079dbc589e0",
+                {
+                    center: [8.1793651501875, 80.52066168125],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 12,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_80dd9fcc289a0e29929a76ca71c5ab77 = L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 20,
+  "maxNativeZoom": 20,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors \u0026copy; \u003ca href=\"https://carto.com/attributions\"\u003eCARTO\u003c/a\u003e",
+  "subdomains": "abcd",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_80dd9fcc289a0e29929a76ca71c5ab77.addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+            L.control.fullscreen(
+                {
+  "position": "topright",
+  "title": "Full Screen",
+  "titleCancel": "Exit Full Screen",
+  "forceSeparateButton": false,
+}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+            var tile_layer_5cd2c9098bfa938bbc710a9511697a1d = L.tileLayer(
+                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {"attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors", "detect_retina": false, "max_native_zoom": 19, "max_zoom": 19, "min_zoom": 0, "no_wrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
+            );
+            var mini_map_95b28109836382b55c5dea7ec5d42504 = new L.Control.MiniMap(
+                tile_layer_5cd2c9098bfa938bbc710a9511697a1d,
+                {
+  "position": "bottomright",
+  "width": 150,
+  "height": 150,
+  "collapsedWidth": 25,
+  "collapsedHeight": 25,
+  "zoomLevelOffset": -5,
+  "centerFixed": false,
+  "zoomAnimation": false,
+  "toggleDisplay": true,
+  "autoToggleDisplay": false,
+  "minimized": false,
+}
+            );
+            map_a9e69542b29ee44d037bf079dbc589e0.addControl(mini_map_95b28109836382b55c5dea7ec5d42504);
+        
+    
+            var tile_layer_a7c2fa2a4d4882fab1bd3ac4264e9ee4 = L.tileLayer(
+                "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                {
+  "minZoom": 0,
+  "maxZoom": 18,
+  "maxNativeZoom": 18,
+  "noWrap": false,
+  "attribution": "Tiles \u0026copy; Esri \u2014 Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_a7c2fa2a4d4882fab1bd3ac4264e9ee4.addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+            ant_path_aab2cc3482d0e7d19c3a58f11a07b302 = L.polyline.antPath(
+              [[8.113120999, 80.56486553], [8.124015358, 80.5600438]],
+              {
+  "stroke": true,
+  "color": "#bc3587",
+  "weight": 9.508321670007831,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#bc3587",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_d04eb6195207456c92e725c9637fc553 = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_a249b71784e332d0cec0c1029d30221d = $(`<div id="html_a249b71784e332d0cec0c1029d30221d" style="width: 100.0%; height: 100.0%;"><b>Tawalanhalmillewa Wewa &rarr; Pansala Wewa</b><br>GNN influence: 0.2314<br>alpha (water transfer): 0.951<br>Type: direct</div>`)[0];
+                popup_d04eb6195207456c92e725c9637fc553.setContent(html_a249b71784e332d0cec0c1029d30221d);
+            
+        
+
+        ant_path_aab2cc3482d0e7d19c3a58f11a07b302.bindPopup(popup_d04eb6195207456c92e725c9637fc553)
+        ;
+
+        
+    
+    
+            ant_path_2fe5e48c1b4ca76a6cfd084c36809f70 = L.polyline.antPath(
+              [[8.116941449, 80.55884747], [8.124015358, 80.5600438]],
+              {
+  "stroke": true,
+  "color": "#bf3984",
+  "weight": 9.74540276413644,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#bf3984",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_5b7120ffd13ef532ed2d28b6bfe8124a = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_19251af712e78bf42dd98482c8a9c0c6 = $(`<div id="html_19251af712e78bf42dd98482c8a9c0c6" style="width: 100.0%; height: 100.0%;"><b>Settikulama  Wewa &rarr; Pansala Wewa</b><br>GNN influence: 0.2376<br>alpha (water transfer): 0.975<br>Type: direct</div>`)[0];
+                popup_5b7120ffd13ef532ed2d28b6bfe8124a.setContent(html_19251af712e78bf42dd98482c8a9c0c6);
+            
+        
+
+        ant_path_2fe5e48c1b4ca76a6cfd084c36809f70.bindPopup(popup_5b7120ffd13ef532ed2d28b6bfe8124a)
+        ;
+
+        
+    
+    
+            ant_path_18324e2f8751f6836fea904d299dff4a = L.polyline.antPath(
+              [[8.124015358, 80.5600438], [8.13919, 80.55386]],
+              {
+  "stroke": true,
+  "color": "#c8437b",
+  "weight": 9.22313351440581,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#c8437b",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_12afd36c691cacea7ab5fdc5618af2a8 = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_61cffe3cd9de1fc58fc81a885a56683d = $(`<div id="html_61cffe3cd9de1fc58fc81a885a56683d" style="width: 100.0%; height: 100.0%;"><b>Pansala Wewa &rarr; Ulankulama Wewa</b><br>GNN influence: 0.2543<br>alpha (water transfer): 0.922<br>Type: direct</div>`)[0];
+                popup_12afd36c691cacea7ab5fdc5618af2a8.setContent(html_61cffe3cd9de1fc58fc81a885a56683d);
+            
+        
+
+        ant_path_18324e2f8751f6836fea904d299dff4a.bindPopup(popup_12afd36c691cacea7ab5fdc5618af2a8)
+        ;
+
+        
+    
+    
+            ant_path_f5c85247b29bc2a4b6f1f297dc9d33e9 = L.polyline.antPath(
+              [[8.124561, 80.542977], [8.136556, 80.541031]],
+              {
+  "stroke": true,
+  "color": "#feb72d",
+  "weight": 9.607328546214212,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#feb72d",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_d4e8299a368999b79416613588fe00f8 = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_bb9a2e75e6ea87dfe6806c8eacae335d = $(`<div id="html_bb9a2e75e6ea87dfe6806c8eacae335d" style="width: 100.0%; height: 100.0%;"><b>Kudaittikattiya Wewa &rarr; Maha Ittikattiya Wewa</b><br>GNN influence: 0.4229<br>alpha (water transfer): 0.961<br>Type: direct</div>`)[0];
+                popup_d4e8299a368999b79416613588fe00f8.setContent(html_bb9a2e75e6ea87dfe6806c8eacae335d);
+            
+        
+
+        ant_path_f5c85247b29bc2a4b6f1f297dc9d33e9.bindPopup(popup_d4e8299a368999b79416613588fe00f8)
+        ;
+
+        
+    
+    
+            ant_path_fe5533a74895eb3976f3beb4702ca192 = L.polyline.antPath(
+              [[8.136556, 80.541031], [8.158391, 80.551955]],
+              {
+  "stroke": true,
+  "color": "#5c01a6",
+  "weight": 8.410595976712568,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#5c01a6",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_cfd453da97df9436e2326e61e268b943 = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_fcc8fa023ab9243561c2b3a7d2968da3 = $(`<div id="html_fcc8fa023ab9243561c2b3a7d2968da3" style="width: 100.0%; height: 100.0%;"><b>Maha Ittikattiya Wewa &rarr; Periyakulama Wewa</b><br>GNN influence: 0.1020<br>alpha (water transfer): 0.841<br>Type: direct</div>`)[0];
+                popup_cfd453da97df9436e2326e61e268b943.setContent(html_fcc8fa023ab9243561c2b3a7d2968da3);
+            
+        
+
+        ant_path_fe5533a74895eb3976f3beb4702ca192.bindPopup(popup_cfd453da97df9436e2326e61e268b943)
+        ;
+
+        
+    
+    
+            ant_path_8b75b7cd8d441c9016f7ee2f4c10e04f = L.polyline.antPath(
+              [[8.13919, 80.55386], [8.158391, 80.551955]],
+              {
+  "stroke": true,
+  "color": "#6600a7",
+  "weight": 8.504620006397419,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#6600a7",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_f439c0d4ef2819c420189bd567c5ab32 = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_0d9352af2c5d1faf577977f620d8a6d4 = $(`<div id="html_0d9352af2c5d1faf577977f620d8a6d4" style="width: 100.0%; height: 100.0%;"><b>Ulankulama Wewa &rarr; Periyakulama Wewa</b><br>GNN influence: 0.1131<br>alpha (water transfer): 0.850<br>Type: direct</div>`)[0];
+                popup_f439c0d4ef2819c420189bd567c5ab32.setContent(html_0d9352af2c5d1faf577977f620d8a6d4);
+            
+        
+
+        ant_path_8b75b7cd8d441c9016f7ee2f4c10e04f.bindPopup(popup_f439c0d4ef2819c420189bd567c5ab32)
+        ;
+
+        
+    
+    
+            ant_path_c05a63c62d3d1a08a161b495d87dc30a = L.polyline.antPath(
+              [[8.144003, 80.507638], [8.146975, 80.491948]],
+              {
+  "stroke": true,
+  "color": "#f3854b",
+  "weight": 9.493026747217037,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#f3854b",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_21328953f05b63259d4eed77e07c4f67 = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_4f9ca71b12cdbde9bbf384ad49a244c5 = $(`<div id="html_4f9ca71b12cdbde9bbf384ad49a244c5" style="width: 100.0%; height: 100.0%;"><b>Amane Wewa &rarr; Ihala Amanakkattuwa Wewa</b><br>GNN influence: 0.3585<br>alpha (water transfer): 0.949<br>Type: direct</div>`)[0];
+                popup_21328953f05b63259d4eed77e07c4f67.setContent(html_4f9ca71b12cdbde9bbf384ad49a244c5);
+            
+        
+
+        ant_path_c05a63c62d3d1a08a161b495d87dc30a.bindPopup(popup_21328953f05b63259d4eed77e07c4f67)
+        ;
+
+        
+    
+    
+            ant_path_446cad4ddd281daf0ee55bca758eeaf4 = L.polyline.antPath(
+              [[8.146975, 80.491948], [8.154533, 80.49463]],
+              {
+  "stroke": true,
+  "color": "#9613a1",
+  "weight": 9.453223363086924,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#9613a1",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_82f8a72477d332d21dac4e1003f5ea55 = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_6fded216e28c3b22677bb2b63d36cf03 = $(`<div id="html_6fded216e28c3b22677bb2b63d36cf03" style="width: 100.0%; height: 100.0%;"><b>Ihala Amanakkattuwa Wewa &rarr; Pahala Amanakkattuwa Wewa</b><br>GNN influence: 0.1743<br>alpha (water transfer): 0.945<br>Type: direct</div>`)[0];
+                popup_82f8a72477d332d21dac4e1003f5ea55.setContent(html_6fded216e28c3b22677bb2b63d36cf03);
+            
+        
+
+        ant_path_446cad4ddd281daf0ee55bca758eeaf4.bindPopup(popup_82f8a72477d332d21dac4e1003f5ea55)
+        ;
+
+        
+    
+    
+            ant_path_b470d7429294ebfebdf041e9daa2ec9c = L.polyline.antPath(
+              [[8.146812, 80.565155], [8.158391, 80.551955]],
+              {
+  "stroke": true,
+  "color": "#a72197",
+  "weight": 9.136828029617185,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#a72197",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_225dce84b878af3edc4042d36d33eebc = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_20f551ea4f04f2cdd805cf3f6c1bebc8 = $(`<div id="html_20f551ea4f04f2cdd805cf3f6c1bebc8" style="width: 100.0%; height: 100.0%;"><b>Ethiniwetuna Wewa &rarr; Periyakulama Wewa</b><br>GNN influence: 0.1987<br>alpha (water transfer): 0.914<br>Type: direct</div>`)[0];
+                popup_225dce84b878af3edc4042d36d33eebc.setContent(html_20f551ea4f04f2cdd805cf3f6c1bebc8);
+            
+        
+
+        ant_path_b470d7429294ebfebdf041e9daa2ec9c.bindPopup(popup_225dce84b878af3edc4042d36d33eebc)
+        ;
+
+        
+    
+    
+            ant_path_5680686a9b321b8a476a8b21493eb506 = L.polyline.antPath(
+              [[8.154533, 80.49463], [8.17284, 80.495096]],
+              {
+  "stroke": true,
+  "color": "#9410a2",
+  "weight": 8.631395917550575,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#9410a2",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_363d7c92141f15481a91074c73ea1118 = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_ae698bfeee5ec240a51b08652e62c8a9 = $(`<div id="html_ae698bfeee5ec240a51b08652e62c8a9" style="width: 100.0%; height: 100.0%;"><b>Pahala Amanakkattuwa Wewa &rarr; Mahakanumulla Wewa</b><br>GNN influence: 0.1713<br>alpha (water transfer): 0.863<br>Type: direct</div>`)[0];
+                popup_363d7c92141f15481a91074c73ea1118.setContent(html_ae698bfeee5ec240a51b08652e62c8a9);
+            
+        
+
+        ant_path_5680686a9b321b8a476a8b21493eb506.bindPopup(popup_363d7c92141f15481a91074c73ea1118)
+        ;
+
+        
+    
+    
+            ant_path_6e31e64dbfc13f7047191c6852bc97e0 = L.polyline.antPath(
+              [[8.154419, 80.509012], [8.154533, 80.49463]],
+              {
+  "stroke": true,
+  "color": "#7a02a8",
+  "weight": 8.992097885565128,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#7a02a8",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_f88256c4193744215417f79424cb59f8 = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_c5e2f73c39428ca7a9837744ac63b595 = $(`<div id="html_c5e2f73c39428ca7a9837744ac63b595" style="width: 100.0%; height: 100.0%;"><b>Walagambahuwa Wewa &rarr; Pahala Amanakkattuwa Wewa</b><br>GNN influence: 0.1368<br>alpha (water transfer): 0.899<br>Type: direct</div>`)[0];
+                popup_f88256c4193744215417f79424cb59f8.setContent(html_c5e2f73c39428ca7a9837744ac63b595);
+            
+        
+
+        ant_path_6e31e64dbfc13f7047191c6852bc97e0.bindPopup(popup_f88256c4193744215417f79424cb59f8)
+        ;
+
+        
+    
+    
+            ant_path_f1b086ac5684b26ce0f5cd165ea0e4a0 = L.polyline.antPath(
+              [[8.154861, 80.525338], [8.17014, 80.523025]],
+              {
+  "stroke": true,
+  "color": "#f0f921",
+  "weight": 9.244390698740677,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#f0f921",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_7c8f772dd7b10442b1595ded35f94b33 = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_a75f507b2990589da10e60e62887d6bc = $(`<div id="html_a75f507b2990589da10e60e62887d6bc" style="width: 100.0%; height: 100.0%;"><b>Wendarakulama Wewa &rarr; Meegassegama Wewa</b><br>GNN influence: 0.4972<br>alpha (water transfer): 0.924<br>Type: direct</div>`)[0];
+                popup_7c8f772dd7b10442b1595ded35f94b33.setContent(html_a75f507b2990589da10e60e62887d6bc);
+            
+        
+
+        ant_path_f1b086ac5684b26ce0f5cd165ea0e4a0.bindPopup(popup_7c8f772dd7b10442b1595ded35f94b33)
+        ;
+
+        
+    
+    
+            ant_path_db52e5e9182997a802b4910033830818 = L.polyline.antPath(
+              [[8.15792, 80.48678], [8.154533, 80.49463]],
+              {
+  "stroke": true,
+  "color": "#6f00a8",
+  "weight": 8.257038664724053,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#6f00a8",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_a63600a16e2b31771233aea4ea0b431a = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_7269fb7aa9b1f728bc9f64c7a6254ace = $(`<div id="html_7269fb7aa9b1f728bc9f64c7a6254ace" style="width: 100.0%; height: 100.0%;"><b>Marikkaragama Wewa &rarr; Pahala Amanakkattuwa Wewa</b><br>GNN influence: 0.1239<br>alpha (water transfer): 0.826<br>Type: direct</div>`)[0];
+                popup_a63600a16e2b31771233aea4ea0b431a.setContent(html_7269fb7aa9b1f728bc9f64c7a6254ace);
+            
+        
+
+        ant_path_db52e5e9182997a802b4910033830818.bindPopup(popup_a63600a16e2b31771233aea4ea0b431a)
+        ;
+
+        
+    
+    
+            ant_path_9e1ff6844196d7a89a379e4625b9c507 = L.polyline.antPath(
+              [[8.158391, 80.551955], [8.17147, 80.55004]],
+              {
+  "stroke": true,
+  "color": "#b83289",
+  "weight": 7.016999540220481,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#b83289",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_43f7af3f3244a5cb6c1e80cc6b5bf681 = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_685c8ffbaf84109abd18b12d82348fe9 = $(`<div id="html_685c8ffbaf84109abd18b12d82348fe9" style="width: 100.0%; height: 100.0%;"><b>Periyakulama Wewa &rarr; Manakkulama Wewa</b><br>GNN influence: 0.2261<br>alpha (water transfer): 0.702<br>Type: direct</div>`)[0];
+                popup_43f7af3f3244a5cb6c1e80cc6b5bf681.setContent(html_685c8ffbaf84109abd18b12d82348fe9);
+            
+        
+
+        ant_path_9e1ff6844196d7a89a379e4625b9c507.bindPopup(popup_43f7af3f3244a5cb6c1e80cc6b5bf681)
+        ;
+
+        
+    
+    
+            ant_path_cec3d45bc7dd1a6186360cb8caca3890 = L.polyline.antPath(
+              [[8.1721, 80.50953], [8.17284, 80.495096]],
+              {
+  "stroke": true,
+  "color": "#8f0da4",
+  "weight": 9.323728374631402,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#8f0da4",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_8dd8b54aad7b7c41caf83fc254597c0b = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_02f7f6138988d5623640575ee3e5a499 = $(`<div id="html_02f7f6138988d5623640575ee3e5a499" style="width: 100.0%; height: 100.0%;"><b>Mawatha Wewa &rarr; Mahakanumulla Wewa</b><br>GNN influence: 0.1656<br>alpha (water transfer): 0.932<br>Type: direct</div>`)[0];
+                popup_8dd8b54aad7b7c41caf83fc254597c0b.setContent(html_02f7f6138988d5623640575ee3e5a499);
+            
+        
+
+        ant_path_cec3d45bc7dd1a6186360cb8caca3890.bindPopup(popup_8dd8b54aad7b7c41caf83fc254597c0b)
+        ;
+
+        
+    
+    
+            ant_path_df797f72839ed981148cad304c581ecd = L.polyline.antPath(
+              [[8.17014, 80.523025], [8.187336, 80.52104]],
+              {
+  "stroke": true,
+  "color": "#a11b9b",
+  "weight": 9.11770801679817,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#a11b9b",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_b9b29a8b017d2b89fabdff158f132bc2 = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_18ac8beb6627fa24b960c099dd5a9ebd = $(`<div id="html_18ac8beb6627fa24b960c099dd5a9ebd" style="width: 100.0%; height: 100.0%;"><b>Meegassegama Wewa &rarr; Alittana Wewa</b><br>GNN influence: 0.1892<br>alpha (water transfer): 0.912<br>Type: direct</div>`)[0];
+                popup_b9b29a8b017d2b89fabdff158f132bc2.setContent(html_18ac8beb6627fa24b960c099dd5a9ebd);
+            
+        
+
+        ant_path_df797f72839ed981148cad304c581ecd.bindPopup(popup_b9b29a8b017d2b89fabdff158f132bc2)
+        ;
+
+        
+    
+    
+            ant_path_b5a9c03e5c4e2f18a50a5250ac4940bd = L.polyline.antPath(
+              [[8.17284, 80.495096], [8.20368, 80.50558]],
+              {
+  "stroke": true,
+  "color": "#130789",
+  "weight": 6.970340171511278,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#130789",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_ca1c7edf2a59d991d84878b992d8671a = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_0c40bad8cf8af05227d81414eb5b41aa = $(`<div id="html_0c40bad8cf8af05227d81414eb5b41aa" style="width: 100.0%; height: 100.0%;"><b>Mahakanumulla Wewa &rarr; Sembukulama Wewa</b><br>GNN influence: 0.0286<br>alpha (water transfer): 0.697<br>Type: direct</div>`)[0];
+                popup_ca1c7edf2a59d991d84878b992d8671a.setContent(html_0c40bad8cf8af05227d81414eb5b41aa);
+            
+        
+
+        ant_path_b5a9c03e5c4e2f18a50a5250ac4940bd.bindPopup(popup_ca1c7edf2a59d991d84878b992d8671a)
+        ;
+
+        
+    
+    
+            ant_path_2f00582f9beee5adfcc3909196231ac1 = L.polyline.antPath(
+              [[8.17147, 80.55004], [8.195081, 80.541005]],
+              {
+  "stroke": true,
+  "color": "#e66c5c",
+  "weight": 8.414220528281785,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#e66c5c",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_4f050e72c44ba2d4f7787deea0d138a6 = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_7f5e7a151bb9a877cd1600d3b466d442 = $(`<div id="html_7f5e7a151bb9a877cd1600d3b466d442" style="width: 100.0%; height: 100.0%;"><b>Manakkulama Wewa &rarr; Wannanmaduwa Wewa</b><br>GNN influence: 0.3204<br>alpha (water transfer): 0.841<br>Type: direct</div>`)[0];
+                popup_4f050e72c44ba2d4f7787deea0d138a6.setContent(html_7f5e7a151bb9a877cd1600d3b466d442);
+            
+        
+
+        ant_path_2f00582f9beee5adfcc3909196231ac1.bindPopup(popup_4f050e72c44ba2d4f7787deea0d138a6)
+        ;
+
+        
+    
+    
+            ant_path_72f26354d9ae65b0621768b48464a42d = L.polyline.antPath(
+              [[8.185262, 80.482609], [8.18602, 80.50575]],
+              {
+  "stroke": true,
+  "color": "#c7427c",
+  "weight": 4.539435612355442,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#c7427c",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_e0e8b24718fed0dbced507926bb64034 = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_ecf781c66e395089b0f4edfb35fd4fca = $(`<div id="html_ecf781c66e395089b0f4edfb35fd4fca" style="width: 100.0%; height: 100.0%;"><b>Wagayakulama Wewa &rarr; Kuda Kanumulla Wewa</b><br>GNN influence: 0.2524<br>alpha (water transfer): 0.454<br>Type: direct</div>`)[0];
+                popup_e0e8b24718fed0dbced507926bb64034.setContent(html_ecf781c66e395089b0f4edfb35fd4fca);
+            
+        
+
+        ant_path_72f26354d9ae65b0621768b48464a42d.bindPopup(popup_e0e8b24718fed0dbced507926bb64034)
+        ;
+
+        
+    
+    
+            ant_path_d38255027f9c9ccdaeb59fe81a46a29b = L.polyline.antPath(
+              [[8.185262, 80.482609], [8.20368, 80.50558]],
+              {
+  "stroke": true,
+  "color": "#6c00a8",
+  "weight": 5.260564387644556,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#6c00a8",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_af4a05b150091378d229ca5a7c976b20 = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_34cbee2cd18c20e2d59f0f33fe4c55d5 = $(`<div id="html_34cbee2cd18c20e2d59f0f33fe4c55d5" style="width: 100.0%; height: 100.0%;"><b>Wagayakulama Wewa &rarr; Sembukulama Wewa</b><br>GNN influence: 0.1206<br>alpha (water transfer): 0.526<br>Type: direct</div>`)[0];
+                popup_af4a05b150091378d229ca5a7c976b20.setContent(html_34cbee2cd18c20e2d59f0f33fe4c55d5);
+            
+        
+
+        ant_path_d38255027f9c9ccdaeb59fe81a46a29b.bindPopup(popup_af4a05b150091378d229ca5a7c976b20)
+        ;
+
+        
+    
+    
+            ant_path_d0abc9d5ff146f652e102b92be01b09c = L.polyline.antPath(
+              [[8.188411, 80.553109], [8.195081, 80.541005]],
+              {
+  "stroke": true,
+  "color": "#a62098",
+  "weight": 8.981684150782433,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#a62098",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_bc638a54125d23259aa49111ca80bb98 = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_98e609870b0b1f73a85fa0e3ccfa8e9e = $(`<div id="html_98e609870b0b1f73a85fa0e3ccfa8e9e" style="width: 100.0%; height: 100.0%;"><b>Wagayakulama &rarr; Wannanmaduwa Wewa</b><br>GNN influence: 0.1965<br>alpha (water transfer): 0.898<br>Type: direct</div>`)[0];
+                popup_bc638a54125d23259aa49111ca80bb98.setContent(html_98e609870b0b1f73a85fa0e3ccfa8e9e);
+            
+        
+
+        ant_path_d0abc9d5ff146f652e102b92be01b09c.bindPopup(popup_bc638a54125d23259aa49111ca80bb98)
+        ;
+
+        
+    
+    
+            ant_path_eea4ba5f339e9b43d98684fcdc105a85 = L.polyline.antPath(
+              [[8.187336, 80.52104], [8.21633, 80.51957]],
+              {
+  "stroke": true,
+  "color": "#9a169f",
+  "weight": 8.713911966931281,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#9a169f",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_85ca7461c0d004289b8bf5f1600e08d0 = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_20996185ec39387a0f418bcc220d6c3c = $(`<div id="html_20996185ec39387a0f418bcc220d6c3c" style="width: 100.0%; height: 100.0%;"><b>Alittana Wewa &rarr; Tirappane Wewa</b><br>GNN influence: 0.1795<br>alpha (water transfer): 0.871<br>Type: direct</div>`)[0];
+                popup_85ca7461c0d004289b8bf5f1600e08d0.setContent(html_20996185ec39387a0f418bcc220d6c3c);
+            
+        
+
+        ant_path_eea4ba5f339e9b43d98684fcdc105a85.bindPopup(popup_85ca7461c0d004289b8bf5f1600e08d0)
+        ;
+
+        
+    
+    
+            ant_path_7e578c15ccbcc770281a45db0c02a138 = L.polyline.antPath(
+              [[8.195081, 80.541005], [8.225497, 80.537873]],
+              {
+  "stroke": true,
+  "color": "#5801a4",
+  "weight": 7.950028656381255,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#5801a4",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_cbce0b480ff90fce1eb9ce5751ea29ce = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_874c98c6b6952a9cd9e9dbebef94b951 = $(`<div id="html_874c98c6b6952a9cd9e9dbebef94b951" style="width: 100.0%; height: 100.0%;"><b>Wannanmaduwa Wewa &rarr; Todamaduwa Wewa</b><br>GNN influence: 0.0963<br>alpha (water transfer): 0.795<br>Type: direct</div>`)[0];
+                popup_cbce0b480ff90fce1eb9ce5751ea29ce.setContent(html_874c98c6b6952a9cd9e9dbebef94b951);
+            
+        
+
+        ant_path_7e578c15ccbcc770281a45db0c02a138.bindPopup(popup_cbce0b480ff90fce1eb9ce5751ea29ce)
+        ;
+
+        
+    
+    
+            ant_path_efb3fe3b292563d93ecbec02c230782b = L.polyline.antPath(
+              [[8.20173, 80.48116], [8.20368, 80.50558]],
+              {
+  "stroke": true,
+  "color": "#3f049c",
+  "weight": 7.366259902670191,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#3f049c",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_de1992603ee64b827552f13a75b131cb = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_22714b85c95ae9ab7bacde4f8824f15b = $(`<div id="html_22714b85c95ae9ab7bacde4f8824f15b" style="width: 100.0%; height: 100.0%;"><b>Wellamaduwa Wewa &rarr; Sembukulama Wewa</b><br>GNN influence: 0.0689<br>alpha (water transfer): 0.737<br>Type: direct</div>`)[0];
+                popup_de1992603ee64b827552f13a75b131cb.setContent(html_22714b85c95ae9ab7bacde4f8824f15b);
+            
+        
+
+        ant_path_efb3fe3b292563d93ecbec02c230782b.bindPopup(popup_de1992603ee64b827552f13a75b131cb)
+        ;
+
+        
+    
+    
+            ant_path_81ea30b1a9c6510d7aa6965151d887d2 = L.polyline.antPath(
+              [[8.20173, 80.48116], [8.248901, 80.488894]],
+              {
+  "stroke": true,
+  "color": "#1d068e",
+  "weight": 2.433740097329809,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#1d068e",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_d3ceaf2a5885dcf307349abc1914a244 = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_443a14dda2558809f71b854cfd72c140 = $(`<div id="html_443a14dda2558809f71b854cfd72c140" style="width: 100.0%; height: 100.0%;"><b>Wellamaduwa Wewa &rarr; Nachchaduwa Wewa</b><br>GNN influence: 0.0351<br>alpha (water transfer): 0.243<br>Type: direct</div>`)[0];
+                popup_d3ceaf2a5885dcf307349abc1914a244.setContent(html_443a14dda2558809f71b854cfd72c140);
+            
+        
+
+        ant_path_81ea30b1a9c6510d7aa6965151d887d2.bindPopup(popup_d3ceaf2a5885dcf307349abc1914a244)
+        ;
+
+        
+    
+    
+            ant_path_e2421deb6640f63ffcb8c86ed3155dfe = L.polyline.antPath(
+              [[8.20368, 80.50558], [8.248901, 80.488894]],
+              {
+  "stroke": true,
+  "color": "#19068c",
+  "weight": 2.154912044036585,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#19068c",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_a601aaf9870ba4ba018075f9d7411fa3 = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_8d4c7759f37e184a43efc6955238d26e = $(`<div id="html_8d4c7759f37e184a43efc6955238d26e" style="width: 100.0%; height: 100.0%;"><b>Sembukulama Wewa &rarr; Nachchaduwa Wewa</b><br>GNN influence: 0.0315<br>alpha (water transfer): 0.215<br>Type: direct</div>`)[0];
+                popup_a601aaf9870ba4ba018075f9d7411fa3.setContent(html_8d4c7759f37e184a43efc6955238d26e);
+            
+        
+
+        ant_path_e2421deb6640f63ffcb8c86ed3155dfe.bindPopup(popup_a601aaf9870ba4ba018075f9d7411fa3)
+        ;
+
+        
+    
+    
+            ant_path_f51da2bf78f7c574c5ecd1087d03057d = L.polyline.antPath(
+              [[8.216571, 80.472496], [8.248901, 80.488894]],
+              {
+  "stroke": true,
+  "color": "#260591",
+  "weight": 2.97672368382542,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#260591",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_15899bb1fb56e0098254b07997050949 = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_6a39aa991fc40751b7afe66b04b261f2 = $(`<div id="html_6a39aa991fc40751b7afe66b04b261f2" style="width: 100.0%; height: 100.0%;"><b>Hammillakulama Wewa &rarr; Nachchaduwa Wewa</b><br>GNN influence: 0.0429<br>alpha (water transfer): 0.298<br>Type: direct</div>`)[0];
+                popup_15899bb1fb56e0098254b07997050949.setContent(html_6a39aa991fc40751b7afe66b04b261f2);
+            
+        
+
+        ant_path_f51da2bf78f7c574c5ecd1087d03057d.bindPopup(popup_15899bb1fb56e0098254b07997050949)
+        ;
+
+        
+    
+    
+            ant_path_36cdd675ed646915d498888d872fbe6f = L.polyline.antPath(
+              [[8.21633, 80.51957], [8.248901, 80.488894]],
+              {
+  "stroke": true,
+  "color": "#0d0887",
+  "weight": 6.404916073873802,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#0d0887",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_7a7b5394aa064044326816e6f7b56c19 = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_4c031144fdd54b30b6dafba9fc8196d2 = $(`<div id="html_4c031144fdd54b30b6dafba9fc8196d2" style="width: 100.0%; height: 100.0%;"><b>Tirappane Wewa &rarr; Nachchaduwa Wewa</b><br>GNN influence: 0.0239<br>alpha (water transfer): 0.640<br>Type: direct</div>`)[0];
+                popup_7a7b5394aa064044326816e6f7b56c19.setContent(html_4c031144fdd54b30b6dafba9fc8196d2);
+            
+        
+
+        ant_path_36cdd675ed646915d498888d872fbe6f.bindPopup(popup_7a7b5394aa064044326816e6f7b56c19)
+        ;
+
+        
+    
+    
+            ant_path_c8cd41a0e253594cef800cff6da364e0 = L.polyline.antPath(
+              [[8.225497, 80.537873], [8.248901, 80.488894]],
+              {
+  "stroke": true,
+  "color": "#350498",
+  "weight": 5.094972433222621,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#350498",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_15a2e5e1873c2b3c0007ad7e6237e109 = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_ffb2136175064d723ca60bda7b82578b = $(`<div id="html_ffb2136175064d723ca60bda7b82578b" style="width: 100.0%; height: 100.0%;"><b>Todamaduwa Wewa &rarr; Nachchaduwa Wewa</b><br>GNN influence: 0.0574<br>alpha (water transfer): 0.509<br>Type: direct</div>`)[0];
+                popup_15a2e5e1873c2b3c0007ad7e6237e109.setContent(html_ffb2136175064d723ca60bda7b82578b);
+            
+        
+
+        ant_path_c8cd41a0e253594cef800cff6da364e0.bindPopup(popup_15a2e5e1873c2b3c0007ad7e6237e109)
+        ;
+
+        
+    
+    
+            ant_path_132b7d99ff2ec8c837276917740c5bec = L.polyline.antPath(
+              [[8.267227, 80.512098], [8.248901, 80.488894]],
+              {
+  "stroke": true,
+  "color": "#20068f",
+  "weight": 8.003266738152181,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#20068f",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_42366771a261b82654eb79276f277d28 = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_ec509bfe045df9636207b48fc1a658a8 = $(`<div id="html_ec509bfe045df9636207b48fc1a658a8" style="width: 100.0%; height: 100.0%;"><b>Galwaduwawa Wewa &rarr; Nachchaduwa Wewa</b><br>GNN influence: 0.0377<br>alpha (water transfer): 0.800<br>Type: direct</div>`)[0];
+                popup_42366771a261b82654eb79276f277d28.setContent(html_ec509bfe045df9636207b48fc1a658a8);
+            
+        
+
+        ant_path_132b7d99ff2ec8c837276917740c5bec.bindPopup(popup_42366771a261b82654eb79276f277d28)
+        ;
+
+        
+    
+    
+            ant_path_08565d5c5d3d49338c7a858705638de8 = L.polyline.antPath(
+              [[8.27357, 80.498948], [8.248901, 80.488894]],
+              {
+  "stroke": true,
+  "color": "#20068f",
+  "weight": 6.431954159077833,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#20068f",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_1dfd7c7aee89e0d97477750e8a949b51 = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_c63f221d5695fd9d1e1165bf01e94d93 = $(`<div id="html_c63f221d5695fd9d1e1165bf01e94d93" style="width: 100.0%; height: 100.0%;"><b>Galkulama Wewa &rarr; Nachchaduwa Wewa</b><br>GNN influence: 0.0383<br>alpha (water transfer): 0.643<br>Type: direct</div>`)[0];
+                popup_1dfd7c7aee89e0d97477750e8a949b51.setContent(html_c63f221d5695fd9d1e1165bf01e94d93);
+            
+        
+
+        ant_path_08565d5c5d3d49338c7a858705638de8.bindPopup(popup_1dfd7c7aee89e0d97477750e8a949b51)
+        ;
+
+        
+    
+    
+            ant_path_8a86602927a9bcf7fd363386ce650818 = L.polyline.antPath(
+              [[8.28522, 80.50927], [8.27357, 80.498948]],
+              {
+  "stroke": true,
+  "color": "#9e199d",
+  "weight": 9.365936516781467,
+  "opacity": 0.85,
+  "lineCap": "round",
+  "lineJoin": "round",
+  "dashArray": [
+10,
+20,
+],
+  "dashOffset": null,
+  "fill": false,
+  "fillColor": "#9e199d",
+  "fillOpacity": 0.2,
+  "fillRule": "evenodd",
+  "bubblingMouseEvents": true,
+  "smoothFactor": 1.0,
+  "noClip": false,
+  "paused": false,
+  "reverse": false,
+  "hardwareAcceleration": false,
+  "delay": 1000,
+  "pulseColor": "#FFFFFF",
+}
+        ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_a4b40e4c81bcf91e582bbd98e2ec45a1 = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_fdc8b8caf054ac831f4deb5298d9e261 = $(`<div id="html_fdc8b8caf054ac831f4deb5298d9e261" style="width: 100.0%; height: 100.0%;"><b>Irahandaketu Wewa &rarr; Galkulama Wewa</b><br>GNN influence: 0.1865<br>alpha (water transfer): 0.937<br>Type: direct</div>`)[0];
+                popup_a4b40e4c81bcf91e582bbd98e2ec45a1.setContent(html_fdc8b8caf054ac831f4deb5298d9e261);
+            
+        
+
+        ant_path_8a86602927a9bcf7fd363386ce650818.bindPopup(popup_a4b40e4c81bcf91e582bbd98e2ec45a1)
+        ;
+
+        
+    
+    
+            var circle_marker_39c5c9f934de42cd42e9eeee58eda2de = L.circleMarker(
+                [8.113120999, 80.56486553],
+                {"bubblingMouseEvents": true, "color": "#666666", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10.539143373568852, "stroke": true, "weight": 1}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_45bbd9b1d2e95d33e457b7e7e9ccf442 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_066021a86766633739e81dd2d6798d72 = $(`<div id="html_066021a86766633739e81dd2d6798d72" style="width: 100.0%; height: 100.0%;"><b>Tawalanhalmillewa Wewa</b><br>Rank #6<br>Final score: 0.324<br>Rank stability: stable</div>`)[0];
+                popup_45bbd9b1d2e95d33e457b7e7e9ccf442.setContent(html_066021a86766633739e81dd2d6798d72);
+            
+        
+
+        circle_marker_39c5c9f934de42cd42e9eeee58eda2de.bindPopup(popup_45bbd9b1d2e95d33e457b7e7e9ccf442)
+        ;
+
+        
+    
+    
+            circle_marker_39c5c9f934de42cd42e9eeee58eda2de.bindTooltip(
+                `<div>
+                     Tawalanhalmillewa Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_8ff6fbc8e11c002e9ac2a4ae19fa7b9d = L.circleMarker(
+                [8.116941449, 80.55884747],
+                {"bubblingMouseEvents": true, "color": "#666666", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10.05304465194543, "stroke": true, "weight": 1}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_ba89c50fb7bb720748c839df9a69ddca = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_b95c88c52a5566ece0b3e30d0f0eddd1 = $(`<div id="html_b95c88c52a5566ece0b3e30d0f0eddd1" style="width: 100.0%; height: 100.0%;"><b>Settikulama  Wewa</b><br>Rank #10<br>Final score: 0.290<br>Rank stability: stable</div>`)[0];
+                popup_ba89c50fb7bb720748c839df9a69ddca.setContent(html_b95c88c52a5566ece0b3e30d0f0eddd1);
+            
+        
+
+        circle_marker_8ff6fbc8e11c002e9ac2a4ae19fa7b9d.bindPopup(popup_ba89c50fb7bb720748c839df9a69ddca)
+        ;
+
+        
+    
+    
+            circle_marker_8ff6fbc8e11c002e9ac2a4ae19fa7b9d.bindTooltip(
+                `<div>
+                     Settikulama  Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_2a6a2fae66282fc56d136b1273841d3c = L.circleMarker(
+                [8.124015358, 80.5600438],
+                {"bubblingMouseEvents": true, "color": "#666666", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#EF9F27", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 11.212864570334892, "stroke": true, "weight": 1}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_ab7ab23b49298c4c46c8459722bbe75c = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_ff9cd1c63f266b792d9c975ec5675aa5 = $(`<div id="html_ff9cd1c63f266b792d9c975ec5675aa5" style="width: 100.0%; height: 100.0%;"><b>Pansala Wewa</b><br>Rank #4<br>Final score: 0.372<br>Rank stability: stable</div>`)[0];
+                popup_ab7ab23b49298c4c46c8459722bbe75c.setContent(html_ff9cd1c63f266b792d9c975ec5675aa5);
+            
+        
+
+        circle_marker_2a6a2fae66282fc56d136b1273841d3c.bindPopup(popup_ab7ab23b49298c4c46c8459722bbe75c)
+        ;
+
+        
+    
+    
+            circle_marker_2a6a2fae66282fc56d136b1273841d3c.bindTooltip(
+                `<div>
+                     Pansala Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_36f4d2663aa2f12007e32622564e02e7 = L.circleMarker(
+                [8.124561, 80.542977],
+                {"bubblingMouseEvents": true, "color": "#666666", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10.035755455493927, "stroke": true, "weight": 1}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_083d6b83f35ae33a4ea13b21e68bd1f2 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_bd8d5f74ed15ed3e1a70726ed46c751b = $(`<div id="html_bd8d5f74ed15ed3e1a70726ed46c751b" style="width: 100.0%; height: 100.0%;"><b>Kudaittikattiya Wewa</b><br>Rank #11<br>Final score: 0.288<br>Rank stability: stable</div>`)[0];
+                popup_083d6b83f35ae33a4ea13b21e68bd1f2.setContent(html_bd8d5f74ed15ed3e1a70726ed46c751b);
+            
+        
+
+        circle_marker_36f4d2663aa2f12007e32622564e02e7.bindPopup(popup_083d6b83f35ae33a4ea13b21e68bd1f2)
+        ;
+
+        
+    
+    
+            circle_marker_36f4d2663aa2f12007e32622564e02e7.bindTooltip(
+                `<div>
+                     Kudaittikattiya Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_1775e36816ad5ba2e69e2f9f1d30e993 = L.circleMarker(
+                [8.136556, 80.541031],
+                {"bubblingMouseEvents": true, "color": "#666666", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10.205565424022744, "stroke": true, "weight": 1}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_4dce5be7dcfd499b0838aa23443903d6 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_333f7d74adc03c07f30ef25c4448879a = $(`<div id="html_333f7d74adc03c07f30ef25c4448879a" style="width: 100.0%; height: 100.0%;"><b>Maha Ittikattiya Wewa</b><br>Rank #8<br>Final score: 0.300<br>Rank stability: stable</div>`)[0];
+                popup_4dce5be7dcfd499b0838aa23443903d6.setContent(html_333f7d74adc03c07f30ef25c4448879a);
+            
+        
+
+        circle_marker_1775e36816ad5ba2e69e2f9f1d30e993.bindPopup(popup_4dce5be7dcfd499b0838aa23443903d6)
+        ;
+
+        
+    
+    
+            circle_marker_1775e36816ad5ba2e69e2f9f1d30e993.bindTooltip(
+                `<div>
+                     Maha Ittikattiya Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_79ffca94b5b95420b5cbe27016483d9a = L.circleMarker(
+                [8.13919, 80.55386],
+                {"bubblingMouseEvents": true, "color": "#666666", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10.837112395251182, "stroke": true, "weight": 1}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_fc7a859e406c86345106c524bae22919 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_67d228fd8698dcd10adce4cd6820477f = $(`<div id="html_67d228fd8698dcd10adce4cd6820477f" style="width: 100.0%; height: 100.0%;"><b>Ulankulama Wewa</b><br>Rank #5<br>Final score: 0.346<br>Rank stability: stable</div>`)[0];
+                popup_fc7a859e406c86345106c524bae22919.setContent(html_67d228fd8698dcd10adce4cd6820477f);
+            
+        
+
+        circle_marker_79ffca94b5b95420b5cbe27016483d9a.bindPopup(popup_fc7a859e406c86345106c524bae22919)
+        ;
+
+        
+    
+    
+            circle_marker_79ffca94b5b95420b5cbe27016483d9a.bindTooltip(
+                `<div>
+                     Ulankulama Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_b86e22dd8950e97391d0649d7fe5abf5 = L.circleMarker(
+                [8.144003, 80.507638],
+                {"bubblingMouseEvents": true, "color": "#666666", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 9.069658870498339, "stroke": true, "weight": 1}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_bc0b6c71c876496478ae47b71a33776e = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_8cfda189cc5c31d47eb20af3c655ff38 = $(`<div id="html_8cfda189cc5c31d47eb20af3c655ff38" style="width: 100.0%; height: 100.0%;"><b>Amane Wewa</b><br>Rank #14<br>Final score: 0.219<br>Rank stability: stable</div>`)[0];
+                popup_bc0b6c71c876496478ae47b71a33776e.setContent(html_8cfda189cc5c31d47eb20af3c655ff38);
+            
+        
+
+        circle_marker_b86e22dd8950e97391d0649d7fe5abf5.bindPopup(popup_bc0b6c71c876496478ae47b71a33776e)
+        ;
+
+        
+    
+    
+            circle_marker_b86e22dd8950e97391d0649d7fe5abf5.bindTooltip(
+                `<div>
+                     Amane Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_4f1d98769214b857a77a42d1943da073 = L.circleMarker(
+                [8.146975, 80.491948],
+                {"bubblingMouseEvents": true, "color": "#666666", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 9.032036683219344, "stroke": true, "weight": 1}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_ef75af9728c527c81e248c01cfc29d92 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_a4730c9cc1ab742645c1922f6afb6f97 = $(`<div id="html_a4730c9cc1ab742645c1922f6afb6f97" style="width: 100.0%; height: 100.0%;"><b>Ihala Amanakkattuwa Wewa</b><br>Rank #15<br>Final score: 0.217<br>Rank stability: stable</div>`)[0];
+                popup_ef75af9728c527c81e248c01cfc29d92.setContent(html_a4730c9cc1ab742645c1922f6afb6f97);
+            
+        
+
+        circle_marker_4f1d98769214b857a77a42d1943da073.bindPopup(popup_ef75af9728c527c81e248c01cfc29d92)
+        ;
+
+        
+    
+    
+            circle_marker_4f1d98769214b857a77a42d1943da073.bindTooltip(
+                `<div>
+                     Ihala Amanakkattuwa Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_47c8ccbc36de4c2735928183a36f2b76 = L.circleMarker(
+                [8.146812, 80.565155],
+                {"bubblingMouseEvents": true, "color": "#111111", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 8.288247513274351, "stroke": true, "weight": 3}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_4b7b539290e83db60422a0dfa11802b5 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_716596d93c32483b7e845d74e6764c82 = $(`<div id="html_716596d93c32483b7e845d74e6764c82" style="width: 100.0%; height: 100.0%;"><b>Ethiniwetuna Wewa</b><br>Rank #20<br>Final score: 0.163<br>Rank stability: UNSTABLE (std=10.71)</div>`)[0];
+                popup_4b7b539290e83db60422a0dfa11802b5.setContent(html_716596d93c32483b7e845d74e6764c82);
+            
+        
+
+        circle_marker_47c8ccbc36de4c2735928183a36f2b76.bindPopup(popup_4b7b539290e83db60422a0dfa11802b5)
+        ;
+
+        
+    
+    
+            circle_marker_47c8ccbc36de4c2735928183a36f2b76.bindTooltip(
+                `<div>
+                     Ethiniwetuna Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_3dda9db50cb54b65f639de50af2344a3 = L.circleMarker(
+                [8.154533, 80.49463],
+                {"bubblingMouseEvents": true, "color": "#666666", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 9.682529538657635, "stroke": true, "weight": 1}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_f6141d8fe638e427546149fd3fa67b2c = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_2b83e9834c2f6b8643058d8e24ba1df0 = $(`<div id="html_2b83e9834c2f6b8643058d8e24ba1df0" style="width: 100.0%; height: 100.0%;"><b>Pahala Amanakkattuwa Wewa</b><br>Rank #13<br>Final score: 0.263<br>Rank stability: stable</div>`)[0];
+                popup_f6141d8fe638e427546149fd3fa67b2c.setContent(html_2b83e9834c2f6b8643058d8e24ba1df0);
+            
+        
+
+        circle_marker_3dda9db50cb54b65f639de50af2344a3.bindPopup(popup_f6141d8fe638e427546149fd3fa67b2c)
+        ;
+
+        
+    
+    
+            circle_marker_3dda9db50cb54b65f639de50af2344a3.bindTooltip(
+                `<div>
+                     Pahala Amanakkattuwa Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_ccaebb9d8f488b22addb75d3cf81aced = L.circleMarker(
+                [8.154419, 80.509012],
+                {"bubblingMouseEvents": true, "color": "#666666", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 8.708439802130062, "stroke": true, "weight": 1}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_275db1d433e08244e718c66ab6edda85 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_002fdcc372c62dc2b0f1a4ea6bb968e6 = $(`<div id="html_002fdcc372c62dc2b0f1a4ea6bb968e6" style="width: 100.0%; height: 100.0%;"><b>Walagambahuwa Wewa</b><br>Rank #17<br>Final score: 0.193<br>Rank stability: stable</div>`)[0];
+                popup_275db1d433e08244e718c66ab6edda85.setContent(html_002fdcc372c62dc2b0f1a4ea6bb968e6);
+            
+        
+
+        circle_marker_ccaebb9d8f488b22addb75d3cf81aced.bindPopup(popup_275db1d433e08244e718c66ab6edda85)
+        ;
+
+        
+    
+    
+            circle_marker_ccaebb9d8f488b22addb75d3cf81aced.bindTooltip(
+                `<div>
+                     Walagambahuwa Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_0f46d29940a7dd34a7da0409509f825f = L.circleMarker(
+                [8.154861, 80.525338],
+                {"bubblingMouseEvents": true, "color": "#111111", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 7.7801472668846445, "stroke": true, "weight": 3}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_69424fcb31c5af73d45724ddc5312b16 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_5f4f88c1f114d1942466fb3d248cc218 = $(`<div id="html_5f4f88c1f114d1942466fb3d248cc218" style="width: 100.0%; height: 100.0%;"><b>Wendarakulama Wewa</b><br>Rank #23<br>Final score: 0.127<br>Rank stability: UNSTABLE (std=9.27)</div>`)[0];
+                popup_69424fcb31c5af73d45724ddc5312b16.setContent(html_5f4f88c1f114d1942466fb3d248cc218);
+            
+        
+
+        circle_marker_0f46d29940a7dd34a7da0409509f825f.bindPopup(popup_69424fcb31c5af73d45724ddc5312b16)
+        ;
+
+        
+    
+    
+            circle_marker_0f46d29940a7dd34a7da0409509f825f.bindTooltip(
+                `<div>
+                     Wendarakulama Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_759ed23309be38ac2707b2b591ec91b4 = L.circleMarker(
+                [8.15792, 80.48678],
+                {"bubblingMouseEvents": true, "color": "#666666", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 8.43048044045766, "stroke": true, "weight": 1}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_a6b60711a7c7a6bedc67bcac32485eb3 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_ab2474e24d7314472f9e97839afd968a = $(`<div id="html_ab2474e24d7314472f9e97839afd968a" style="width: 100.0%; height: 100.0%;"><b>Marikkaragama Wewa</b><br>Rank #19<br>Final score: 0.174<br>Rank stability: stable</div>`)[0];
+                popup_a6b60711a7c7a6bedc67bcac32485eb3.setContent(html_ab2474e24d7314472f9e97839afd968a);
+            
+        
+
+        circle_marker_759ed23309be38ac2707b2b591ec91b4.bindPopup(popup_a6b60711a7c7a6bedc67bcac32485eb3)
+        ;
+
+        
+    
+    
+            circle_marker_759ed23309be38ac2707b2b591ec91b4.bindTooltip(
+                `<div>
+                     Marikkaragama Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_07b340dbd1cc58fcc8b9e79ffd3c90cd = L.circleMarker(
+                [8.158391, 80.551955],
+                {"bubblingMouseEvents": true, "color": "#111111", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#EF9F27", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 12.138093364578001, "stroke": true, "weight": 3}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_e5b92ba7f9eef08dffe2442daccc77a8 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_116be623cd8e54888f343d714c119089 = $(`<div id="html_116be623cd8e54888f343d714c119089" style="width: 100.0%; height: 100.0%;"><b>Periyakulama Wewa</b><br>Rank #3<br>Final score: 0.438<br>Rank stability: UNSTABLE (std=9.86)</div>`)[0];
+                popup_e5b92ba7f9eef08dffe2442daccc77a8.setContent(html_116be623cd8e54888f343d714c119089);
+            
+        
+
+        circle_marker_07b340dbd1cc58fcc8b9e79ffd3c90cd.bindPopup(popup_e5b92ba7f9eef08dffe2442daccc77a8)
+        ;
+
+        
+    
+    
+            circle_marker_07b340dbd1cc58fcc8b9e79ffd3c90cd.bindTooltip(
+                `<div>
+                     Periyakulama Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_72f6590e577a91056a31d04c65862d34 = L.circleMarker(
+                [8.1721, 80.50953],
+                {"bubblingMouseEvents": true, "color": "#666666", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 8.211795508861542, "stroke": true, "weight": 1}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_e0d2ec0d1835ac7cb2ff86c2320ab995 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_96aaaa8ec417a09ce8cca678589677ec = $(`<div id="html_96aaaa8ec417a09ce8cca678589677ec" style="width: 100.0%; height: 100.0%;"><b>Mawatha Wewa</b><br>Rank #21<br>Final score: 0.158<br>Rank stability: stable</div>`)[0];
+                popup_e0d2ec0d1835ac7cb2ff86c2320ab995.setContent(html_96aaaa8ec417a09ce8cca678589677ec);
+            
+        
+
+        circle_marker_72f6590e577a91056a31d04c65862d34.bindPopup(popup_e0d2ec0d1835ac7cb2ff86c2320ab995)
+        ;
+
+        
+    
+    
+            circle_marker_72f6590e577a91056a31d04c65862d34.bindTooltip(
+                `<div>
+                     Mawatha Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_dfc64028d5ef7dfbdf6619a79ead8b52 = L.circleMarker(
+                [8.17014, 80.523025],
+                {"bubblingMouseEvents": true, "color": "#666666", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 7.688668232418766, "stroke": true, "weight": 1}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_e8c1358e5c6222a1882d1cc79672842d = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_e8fe875cae095cec7eec011d2b21f9de = $(`<div id="html_e8fe875cae095cec7eec011d2b21f9de" style="width: 100.0%; height: 100.0%;"><b>Meegassegama Wewa</b><br>Rank #25<br>Final score: 0.121<br>Rank stability: stable</div>`)[0];
+                popup_e8c1358e5c6222a1882d1cc79672842d.setContent(html_e8fe875cae095cec7eec011d2b21f9de);
+            
+        
+
+        circle_marker_dfc64028d5ef7dfbdf6619a79ead8b52.bindPopup(popup_e8c1358e5c6222a1882d1cc79672842d)
+        ;
+
+        
+    
+    
+            circle_marker_dfc64028d5ef7dfbdf6619a79ead8b52.bindTooltip(
+                `<div>
+                     Meegassegama Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_a5e89ac3108e0d6b3f1a704a2009db26 = L.circleMarker(
+                [8.17284, 80.495096],
+                {"bubblingMouseEvents": true, "color": "#111111", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 9.001266152984211, "stroke": true, "weight": 3}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_2062a24114100b2cf4758889d9162210 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_c2573ede5504413a64ca62ae4e01d69c = $(`<div id="html_c2573ede5504413a64ca62ae4e01d69c" style="width: 100.0%; height: 100.0%;"><b>Mahakanumulla Wewa</b><br>Rank #16<br>Final score: 0.214<br>Rank stability: UNSTABLE (std=9.35)</div>`)[0];
+                popup_2062a24114100b2cf4758889d9162210.setContent(html_c2573ede5504413a64ca62ae4e01d69c);
+            
+        
+
+        circle_marker_a5e89ac3108e0d6b3f1a704a2009db26.bindPopup(popup_2062a24114100b2cf4758889d9162210)
+        ;
+
+        
+    
+    
+            circle_marker_a5e89ac3108e0d6b3f1a704a2009db26.bindTooltip(
+                `<div>
+                     Mahakanumulla Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_b00bd70465c1468e2ca6e1c20bfae147 = L.circleMarker(
+                [8.17147, 80.55004],
+                {"bubblingMouseEvents": true, "color": "#666666", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#EF9F27", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 13.349580509066445, "stroke": true, "weight": 1}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_437dbb4a47f6d8de60de699a130be9ef = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_50e26298cd0a6fcd9bb2418ac61492aa = $(`<div id="html_50e26298cd0a6fcd9bb2418ac61492aa" style="width: 100.0%; height: 100.0%;"><b>Manakkulama Wewa</b><br>Rank #2<br>Final score: 0.525<br>Rank stability: stable</div>`)[0];
+                popup_437dbb4a47f6d8de60de699a130be9ef.setContent(html_50e26298cd0a6fcd9bb2418ac61492aa);
+            
+        
+
+        circle_marker_b00bd70465c1468e2ca6e1c20bfae147.bindPopup(popup_437dbb4a47f6d8de60de699a130be9ef)
+        ;
+
+        
+    
+    
+            circle_marker_b00bd70465c1468e2ca6e1c20bfae147.bindTooltip(
+                `<div>
+                     Manakkulama Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_449f20e3edad124aa1cba9ee5f148dd5 = L.circleMarker(
+                [8.18602, 80.50575],
+                {"bubblingMouseEvents": true, "color": "#111111", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6.38283815049016, "stroke": true, "weight": 3}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_9958b41123ab91179f0abfea82196af9 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_b5bb0cd02e8461fd2c92757e3e0f3a87 = $(`<div id="html_b5bb0cd02e8461fd2c92757e3e0f3a87" style="width: 100.0%; height: 100.0%;"><b>Kuda Kanumulla Wewa</b><br>Rank #32<br>Final score: 0.027<br>Rank stability: UNSTABLE (std=9.67)</div>`)[0];
+                popup_9958b41123ab91179f0abfea82196af9.setContent(html_b5bb0cd02e8461fd2c92757e3e0f3a87);
+            
+        
+
+        circle_marker_449f20e3edad124aa1cba9ee5f148dd5.bindPopup(popup_9958b41123ab91179f0abfea82196af9)
+        ;
+
+        
+    
+    
+            circle_marker_449f20e3edad124aa1cba9ee5f148dd5.bindTooltip(
+                `<div>
+                     Kuda Kanumulla Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_4af2f77d51b7917ba7aa9c92ec1900ec = L.circleMarker(
+                [8.185262, 80.482609],
+                {"bubblingMouseEvents": true, "color": "#111111", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 7.248191699385643, "stroke": true, "weight": 3}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_56e214ab7946830954f6fa75a1f6d03f = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_dfad11d61e2aa2663f5e45d151c61229 = $(`<div id="html_dfad11d61e2aa2663f5e45d151c61229" style="width: 100.0%; height: 100.0%;"><b>Wagayakulama Wewa</b><br>Rank #30<br>Final score: 0.089<br>Rank stability: UNSTABLE (std=10.12)</div>`)[0];
+                popup_56e214ab7946830954f6fa75a1f6d03f.setContent(html_dfad11d61e2aa2663f5e45d151c61229);
+            
+        
+
+        circle_marker_4af2f77d51b7917ba7aa9c92ec1900ec.bindPopup(popup_56e214ab7946830954f6fa75a1f6d03f)
+        ;
+
+        
+    
+    
+            circle_marker_4af2f77d51b7917ba7aa9c92ec1900ec.bindTooltip(
+                `<div>
+                     Wagayakulama Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_e23f9d168554b943059a277fa4d24dfc = L.circleMarker(
+                [8.188411, 80.553109],
+                {"bubblingMouseEvents": true, "color": "#666666", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 7.572600774466991, "stroke": true, "weight": 1}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_3d1bda46d28f28d2427d6a2a6c382e57 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_e9f0b5e794c5009a9f714ab615874f07 = $(`<div id="html_e9f0b5e794c5009a9f714ab615874f07" style="width: 100.0%; height: 100.0%;"><b>Wagayakulama</b><br>Rank #26<br>Final score: 0.112<br>Rank stability: stable</div>`)[0];
+                popup_3d1bda46d28f28d2427d6a2a6c382e57.setContent(html_e9f0b5e794c5009a9f714ab615874f07);
+            
+        
+
+        circle_marker_e23f9d168554b943059a277fa4d24dfc.bindPopup(popup_3d1bda46d28f28d2427d6a2a6c382e57)
+        ;
+
+        
+    
+    
+            circle_marker_e23f9d168554b943059a277fa4d24dfc.bindTooltip(
+                `<div>
+                     Wagayakulama
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_c978b499dccf012e3f9a669deb219cdf = L.circleMarker(
+                [8.187336, 80.52104],
+                {"bubblingMouseEvents": true, "color": "#111111", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 7.20397677249812, "stroke": true, "weight": 3}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_bb78099872f46aa7f4749d77add33198 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_c0ac6e4024e9be5415a25fadc3c1d9aa = $(`<div id="html_c0ac6e4024e9be5415a25fadc3c1d9aa" style="width: 100.0%; height: 100.0%;"><b>Alittana Wewa</b><br>Rank #31<br>Final score: 0.086<br>Rank stability: UNSTABLE (std=10.99)</div>`)[0];
+                popup_bb78099872f46aa7f4749d77add33198.setContent(html_c0ac6e4024e9be5415a25fadc3c1d9aa);
+            
+        
+
+        circle_marker_c978b499dccf012e3f9a669deb219cdf.bindPopup(popup_bb78099872f46aa7f4749d77add33198)
+        ;
+
+        
+    
+    
+            circle_marker_c978b499dccf012e3f9a669deb219cdf.bindTooltip(
+                `<div>
+                     Alittana Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_e8da15703b0991b4f9469f4ffc6acb97 = L.circleMarker(
+                [8.195081, 80.541005],
+                {"bubblingMouseEvents": true, "color": "#666666", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10.132026741222708, "stroke": true, "weight": 1}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_842c9de724d5ae3c7d197426b2183d11 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_f250d8aef9a0fdce716aeb694e393128 = $(`<div id="html_f250d8aef9a0fdce716aeb694e393128" style="width: 100.0%; height: 100.0%;"><b>Wannanmaduwa Wewa</b><br>Rank #9<br>Final score: 0.295<br>Rank stability: stable</div>`)[0];
+                popup_842c9de724d5ae3c7d197426b2183d11.setContent(html_f250d8aef9a0fdce716aeb694e393128);
+            
+        
+
+        circle_marker_e8da15703b0991b4f9469f4ffc6acb97.bindPopup(popup_842c9de724d5ae3c7d197426b2183d11)
+        ;
+
+        
+    
+    
+            circle_marker_e8da15703b0991b4f9469f4ffc6acb97.bindTooltip(
+                `<div>
+                     Wannanmaduwa Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_7ab7c84c020d175da9c4d30f665911d1 = L.circleMarker(
+                [8.20173, 80.48116],
+                {"bubblingMouseEvents": true, "color": "#666666", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 7.500447432200113, "stroke": true, "weight": 1}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_8eecfe2d20fb621335531ceb36d66234 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_22e7ae2769c1213db0ee8792616cf653 = $(`<div id="html_22e7ae2769c1213db0ee8792616cf653" style="width: 100.0%; height: 100.0%;"><b>Wellamaduwa Wewa</b><br>Rank #27<br>Final score: 0.107<br>Rank stability: stable</div>`)[0];
+                popup_8eecfe2d20fb621335531ceb36d66234.setContent(html_22e7ae2769c1213db0ee8792616cf653);
+            
+        
+
+        circle_marker_7ab7c84c020d175da9c4d30f665911d1.bindPopup(popup_8eecfe2d20fb621335531ceb36d66234)
+        ;
+
+        
+    
+    
+            circle_marker_7ab7c84c020d175da9c4d30f665911d1.bindTooltip(
+                `<div>
+                     Wellamaduwa Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_03fb61ecdfccaafc7d6a6ef61be508f1 = L.circleMarker(
+                [8.20368, 80.50558],
+                {"bubblingMouseEvents": true, "color": "#111111", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 8.044574441000721, "stroke": true, "weight": 3}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_76bd1e32211688529882679e0570bfa1 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_c65a22a49eea59d65f1c4eba23290caf = $(`<div id="html_c65a22a49eea59d65f1c4eba23290caf" style="width: 100.0%; height: 100.0%;"><b>Sembukulama Wewa</b><br>Rank #22<br>Final score: 0.146<br>Rank stability: UNSTABLE (std=9.37)</div>`)[0];
+                popup_76bd1e32211688529882679e0570bfa1.setContent(html_c65a22a49eea59d65f1c4eba23290caf);
+            
+        
+
+        circle_marker_03fb61ecdfccaafc7d6a6ef61be508f1.bindPopup(popup_76bd1e32211688529882679e0570bfa1)
+        ;
+
+        
+    
+    
+            circle_marker_03fb61ecdfccaafc7d6a6ef61be508f1.bindTooltip(
+                `<div>
+                     Sembukulama Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_d13608928b2edf04ad0e1a6b3c5fa4c5 = L.circleMarker(
+                [8.216571, 80.472496],
+                {"bubblingMouseEvents": true, "color": "#666666", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 9.871096213658651, "stroke": true, "weight": 1}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_df0035a11f385e780d773e59824081cd = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_12c843d5c5f062ce34d586c0b080138a = $(`<div id="html_12c843d5c5f062ce34d586c0b080138a" style="width: 100.0%; height: 100.0%;"><b>Hammillakulama Wewa</b><br>Rank #12<br>Final score: 0.277<br>Rank stability: stable</div>`)[0];
+                popup_df0035a11f385e780d773e59824081cd.setContent(html_12c843d5c5f062ce34d586c0b080138a);
+            
+        
+
+        circle_marker_d13608928b2edf04ad0e1a6b3c5fa4c5.bindPopup(popup_df0035a11f385e780d773e59824081cd)
+        ;
+
+        
+    
+    
+            circle_marker_d13608928b2edf04ad0e1a6b3c5fa4c5.bindTooltip(
+                `<div>
+                     Hammillakulama Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_bf9c5eee129dada2f2c019e1f5365052 = L.circleMarker(
+                [8.21633, 80.51957],
+                {"bubblingMouseEvents": true, "color": "#666666", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 7.710382499339105, "stroke": true, "weight": 1}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_3d99b3761dc878f24f971e8607246730 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_5c83fa0a04ffabafa8a8c97e61107599 = $(`<div id="html_5c83fa0a04ffabafa8a8c97e61107599" style="width: 100.0%; height: 100.0%;"><b>Tirappane Wewa</b><br>Rank #24<br>Final score: 0.122<br>Rank stability: stable</div>`)[0];
+                popup_3d99b3761dc878f24f971e8607246730.setContent(html_5c83fa0a04ffabafa8a8c97e61107599);
+            
+        
+
+        circle_marker_bf9c5eee129dada2f2c019e1f5365052.bindPopup(popup_3d99b3761dc878f24f971e8607246730)
+        ;
+
+        
+    
+    
+            circle_marker_bf9c5eee129dada2f2c019e1f5365052.bindTooltip(
+                `<div>
+                     Tirappane Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_141a836513b56e611a52dede321d3bf7 = L.circleMarker(
+                [8.225497, 80.537873],
+                {"bubblingMouseEvents": true, "color": "#666666", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10.252076300845406, "stroke": true, "weight": 1}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_ad79bef5045e256fe3867fe4d7f389cd = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_d1483ca7e69cdc8b6cca3eedcc60e15f = $(`<div id="html_d1483ca7e69cdc8b6cca3eedcc60e15f" style="width: 100.0%; height: 100.0%;"><b>Todamaduwa Wewa</b><br>Rank #7<br>Final score: 0.304<br>Rank stability: stable</div>`)[0];
+                popup_ad79bef5045e256fe3867fe4d7f389cd.setContent(html_d1483ca7e69cdc8b6cca3eedcc60e15f);
+            
+        
+
+        circle_marker_141a836513b56e611a52dede321d3bf7.bindPopup(popup_ad79bef5045e256fe3867fe4d7f389cd)
+        ;
+
+        
+    
+    
+            circle_marker_141a836513b56e611a52dede321d3bf7.bindTooltip(
+                `<div>
+                     Todamaduwa Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_bedd9bebb817cccf4840f64acf3c611f = L.circleMarker(
+                [8.267227, 80.512098],
+                {"bubblingMouseEvents": true, "color": "#666666", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 8.537808646758398, "stroke": true, "weight": 1}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_237a561e3bdc929c9dd6ed4e3f6fda03 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_eb4c513954e172a804f611c002226a31 = $(`<div id="html_eb4c513954e172a804f611c002226a31" style="width: 100.0%; height: 100.0%;"><b>Galwaduwawa Wewa</b><br>Rank #18<br>Final score: 0.181<br>Rank stability: stable</div>`)[0];
+                popup_237a561e3bdc929c9dd6ed4e3f6fda03.setContent(html_eb4c513954e172a804f611c002226a31);
+            
+        
+
+        circle_marker_bedd9bebb817cccf4840f64acf3c611f.bindPopup(popup_237a561e3bdc929c9dd6ed4e3f6fda03)
+        ;
+
+        
+    
+    
+            circle_marker_bedd9bebb817cccf4840f64acf3c611f.bindTooltip(
+                `<div>
+                     Galwaduwawa Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_9d7f31c9eff2412b71e6d14d09371902 = L.circleMarker(
+                [8.27357, 80.498948],
+                {"bubblingMouseEvents": true, "color": "#666666", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 7.3754400002535885, "stroke": true, "weight": 1}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_bc618332ba5e2213b59f642352c58c7f = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_4bd98ed62020761036353e5e1e8bee4a = $(`<div id="html_4bd98ed62020761036353e5e1e8bee4a" style="width: 100.0%; height: 100.0%;"><b>Galkulama Wewa</b><br>Rank #29<br>Final score: 0.098<br>Rank stability: stable</div>`)[0];
+                popup_bc618332ba5e2213b59f642352c58c7f.setContent(html_4bd98ed62020761036353e5e1e8bee4a);
+            
+        
+
+        circle_marker_9d7f31c9eff2412b71e6d14d09371902.bindPopup(popup_bc618332ba5e2213b59f642352c58c7f)
+        ;
+
+        
+    
+    
+            circle_marker_9d7f31c9eff2412b71e6d14d09371902.bindTooltip(
+                `<div>
+                     Galkulama Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_0344e9634628e7ee73f5542208bf2dcd = L.circleMarker(
+                [8.248901, 80.488894],
+                {"bubblingMouseEvents": true, "color": "#666666", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#E24B4A", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 15.333333333333334, "stroke": true, "weight": 1}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_eb1207eb4504b024b080ad5b97e304cf = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_ea3c579cf7185f7598b01aab3c56d076 = $(`<div id="html_ea3c579cf7185f7598b01aab3c56d076" style="width: 100.0%; height: 100.0%;"><b>Nachchaduwa Wewa</b><br>Rank #1<br>Final score: 0.667<br>Rank stability: stable</div>`)[0];
+                popup_eb1207eb4504b024b080ad5b97e304cf.setContent(html_ea3c579cf7185f7598b01aab3c56d076);
+            
+        
+
+        circle_marker_0344e9634628e7ee73f5542208bf2dcd.bindPopup(popup_eb1207eb4504b024b080ad5b97e304cf)
+        ;
+
+        
+    
+    
+            circle_marker_0344e9634628e7ee73f5542208bf2dcd.bindTooltip(
+                `<div>
+                     Nachchaduwa Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_be719e21151372ccd997fbc6ecfcc047 = L.circleMarker(
+                [8.28522, 80.50927],
+                {"bubblingMouseEvents": true, "color": "#666666", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#1D9E75", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 7.490530701975027, "stroke": true, "weight": 1}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+        var popup_76b9b1de1ac461b2504db8bfec9000bc = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_e526671905c6fc12811ee972a72e6d4d = $(`<div id="html_e526671905c6fc12811ee972a72e6d4d" style="width: 100.0%; height: 100.0%;"><b>Irahandaketu Wewa</b><br>Rank #28<br>Final score: 0.106<br>Rank stability: stable</div>`)[0];
+                popup_76b9b1de1ac461b2504db8bfec9000bc.setContent(html_e526671905c6fc12811ee972a72e6d4d);
+            
+        
+
+        circle_marker_be719e21151372ccd997fbc6ecfcc047.bindPopup(popup_76b9b1de1ac461b2504db8bfec9000bc)
+        ;
+
+        
+    
+    
+            circle_marker_be719e21151372ccd997fbc6ecfcc047.bindTooltip(
+                `<div>
+                     Irahandaketu Wewa
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var macro_element_499375f7f74e6c39e25df29b019cf110 = L.tileLayer.wms(
+                "https://gisapps.nsdi.gov.lk/server/services/SLNSDI/Inland_Waters/MapServer/WmsServer",
+                {"attribution": "Sri Lanka NSDI - Survey Department", "format": "image/png", "layers": "11", "styles": "", "transparent": true, "version": "1.3.0"}
+            );
+        
+    
+            macro_element_499375f7f74e6c39e25df29b019cf110.addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+        
+    
+            var layer_control_ee4705b2a451865df6e268c36036dfba_layers = {
+                base_layers : {
+                    "cartodbpositron" : tile_layer_80dd9fcc289a0e29929a76ca71c5ab77,
+                    "Satellite imagery (Esri)" : tile_layer_a7c2fa2a4d4882fab1bd3ac4264e9ee4,
+                },
+                overlays :  {
+                    "NSDI - Pond (official)" : macro_element_499375f7f74e6c39e25df29b019cf110,
+                },
+            };
+            let layer_control_ee4705b2a451865df6e268c36036dfba = L.control.layers(
+                layer_control_ee4705b2a451865df6e268c36036dfba_layers.base_layers,
+                layer_control_ee4705b2a451865df6e268c36036dfba_layers.overlays,
+                {
+  "position": "topright",
+  "collapsed": false,
+  "autoZIndex": true,
+}
+            ).addTo(map_a9e69542b29ee44d037bf079dbc589e0);
+
+        
+</script>
+</html>
