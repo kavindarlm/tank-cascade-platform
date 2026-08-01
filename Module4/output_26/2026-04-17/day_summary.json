@@ -1,0 +1,89 @@
+{
+  "date": "2026-04-17",
+  "day_offset": 47,
+  "status": "complete",
+  "runtime_seconds": 317.18,
+  "feasible": true,
+  "p_drought": 0.5533,
+  "p_overflow": 0.1207,
+  "weights": {
+    "shortage": 0.391,
+    "overflow": 0.2327,
+    "equity": 0.2167,
+    "loss": 0.1595
+  },
+  "storage": {
+    "total_today_m3": 49081388.52,
+    "per_tank_m3": {
+      "Tawalanhalmillewa_Wewa": 12774.39,
+      "Settikulama_Wewa": 864.9,
+      "Pansala_Wewa": 151789.68,
+      "Kudaittikattiya_Wewa": 7.66,
+      "Maha_Ittikattiya_Wewa": 225385.01,
+      "Ulankulama_Wewa": 112061.94,
+      "Amane_Wewa": 107085.79,
+      "Ihala_Amanakkattuwa_Wewa": 19475.69,
+      "Ethiniwetuna_Wewa": 35174.32,
+      "Pahala_Amanakkattuwa_Wewa": 24048.34,
+      "Walagambahuwa_Wewa": 96057.92,
+      "Wendarakulama_Wewa": 47119.13,
+      "Marikkaragama_Wewa": 27475.41,
+      "Periyakulama_Wewa": 674989.52,
+      "Mawatha_Wewa": 68833.94,
+      "Meegassegama_Wewa": 97882.79,
+      "Mahakanumulla_Wewa": 105545.3,
+      "Manakkulama_Wewa": 1122.38,
+      "Kuda_Kanumulla_Wewa": 104758.68,
+      "Wagayakulama_Wewa": 31690.88,
+      "Wagayakulama": 33648.0,
+      "Alittana_Wewa": 242684.96,
+      "Wannanmaduwa_Wewa": 649538.77,
+      "Wellamaduwa_Wewa": 127255.77,
+      "Sembukulama_Wewa": 134904.16,
+      "Hammillakulama_Wewa": 159011.18,
+      "Tirappane_Wewa": 235741.72,
+      "Todamaduwa_Wewa": 151775.97,
+      "Galwaduwawa_Wewa": 113.6,
+      "Galkulama_Wewa": 56531.09,
+      "Nachchaduwa_Wewa": 45294635.17,
+      "Irahandaketu_Wewa": 51404.47
+    }
+  },
+  "selected": {
+    "rank": 1,
+    "closeness": 0.8928,
+    "f1_shortage": 13826.53,
+    "f2_overflow": 14353.45,
+    "f3_equity": 20.5389,
+    "f4_water_loss": 2856.64,
+    "total_release": 1409120.4993501254,
+    "total_consumed": 1406100.9946831595,
+    "total_return_flow": 3019.5046669658836,
+    "total_channel_loss": 990.0777733309089,
+    "satisfaction_pct_mean": 86.15491605956831,
+    "satisfaction_pct_min": 0.0,
+    "satisfaction_pct_max": 100.0
+  },
+  "crosscheck": {
+    "mean_abs_ratio_diff": 0.2477,
+    "max_abs_ratio_diff": 4.4141,
+    "direction_agreement_rate": 0.562,
+    "n_tanks_compared": 32,
+    "n_comparisons": 224,
+    "flagged_tanks": [
+      "Galkulama_Wewa",
+      "Galwaduwawa_Wewa",
+      "Kudaittikattiya_Wewa",
+      "Manakkulama_Wewa",
+      "Pahala_Amanakkattuwa_Wewa",
+      "Settikulama_Wewa",
+      "Tawalanhalmillewa_Wewa"
+    ],
+    "divergence_threshold": 0.15
+  },
+  "output_files": {
+    "decisions": "output\\2026-04-17\\mpc_decisions.csv",
+    "weights": "output\\2026-04-17\\topsis_weights_log.csv",
+    "crosscheck": "output\\2026-04-17\\module3_crosscheck.csv"
+  }
+}

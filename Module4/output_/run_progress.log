@@ -1,0 +1,10 @@
+
+=== run_simulation starting  2025-03-01 .. 2025-03-07  (completed days are skipped) ===
+tanks: 32   yala demand: season_days=130  duration_class=105
+[2025-03-01] day 1/184  feasible=True    343.3s  total_storage=52,818,236 m3
+[2025-03-02] day 2/184  feasible=True    352.0s  total_storage=52,925,264 m3
+[2025-03-03] day 3/184  feasible=True    355.9s  total_storage=52,972,025 m3
+[2025-03-04] day 4/184  feasible=True    351.6s  total_storage=53,028,117 m3
+[2025-03-05] day 5/184  feasible=True    353.0s  total_storage=53,035,468 m3
+[2025-03-06] day 6/184  feasible=True    353.3s  total_storage=52,893,584 m3
+=== run_simulation stopped/finished at 2025-03-07 ===

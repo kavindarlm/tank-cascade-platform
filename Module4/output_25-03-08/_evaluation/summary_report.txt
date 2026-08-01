@@ -1,0 +1,78 @@
+==============================================================================
+SEASON EVALUATION REPORT  -  output_25-03-08
+  2025-03-01 .. 2025-08-31   (184 days)
+==============================================================================
+
+A. FEASIBILITY
+  total_days                      : 184
+  days_complete                   : 184
+  days_error                      : 0
+  days_feasible                   : 184
+  feasibility_rate_pct            : 100.0
+  c3_tier_hard                    : 183
+  c3_tier_relaxed                 : 1
+  c3_tier_none_infeasible         : 0
+  c3_tier_unknown                 : 0
+
+B. WATER DELIVERY
+  total_release_m3                : 219818042.8
+  total_consumed_m3               : 218280938.4
+  total_return_flow_m3            : 1537104.4
+  total_channel_loss_m3_asreported: 325217.7
+  total_f1_shortage_m3            : 15687740.8
+  total_f2_overflow_m3            : 1583664.6
+  mean_f3_equity                  : 62.9396
+  total_f4_water_loss_m3          : 1325902.8
+  mean_daily_release_m3           : 1194663.3
+  season_mean_satisfaction_pct    : 71.9
+  season_min_satisfaction_pct     : 5.88
+  season_min_satisfaction_date    : 2025-04-04
+  season_max_satisfaction_pct     : 91.37
+
+C. WATER BALANCE
+  mass_balance_max_abs_error_m3   : 0.0
+  mass_balance_mean_abs_error_m3  : 0.0
+  mass_balance_closes_exactly     : True
+  conveyance_efficiency_pct       : 99.3
+  return_flow_share_of_release_pct: 0.7
+
+   CHANNEL LOSS (corrected for structural network termini)
+  n_tanks                         : 32
+  n_structural_termini            : 2
+  structural_termini              : ['Nachchaduwa_Wewa', 'Kuda_Kanumulla_Wewa']
+  raw_mean_channel_loss_pct_INCLUDING_termini: 23.52
+  corrected_mean_channel_loss_pct_EXCLUDING_termini: 22.11
+  lowest_capture_non_terminus_tanks: [{'tank_id': 'Sembukulama_Wewa', 'network_capture_fraction': 0.2154912044036585}, {'tank_id': 'Hammillakulama_Wewa', 'network_capture_fraction': 0.297672368382542}, {'tank_id': 'Todamaduwa_Wewa', 'network_capture_fraction': 0.5094972433222621}]
+
+D. C3 RESERVE DECOMPOSITION
+  n_tanks_held_season_majority    : 4
+  n_tanks_free_season_majority    : 28
+  n_tanks_held_day1_only          : 3
+  held_tanks_net_change_m3        : -4336.2
+  free_tanks_net_change_m3        : -15521940.3
+  total_net_change_m3             : -15526276.5
+  held_tank_names_season          : ['Galkulama_Wewa', 'Kudaittikattiya_Wewa', 'Maha_Ittikattiya_Wewa', 'Manakkulama_Wewa']
+  note                            : held/free now classified by MAJORITY of season days below floor, not day 1 alone - see docstring.
+
+E. MODULE 3 CROSS-CHECK
+  mean_direction_agreement_pct_RAW: 41.04
+  last_direction_agreement_pct    : 34.4
+  mean_abs_ratio_diff_RAW         : 0.3203
+  tanks_flagged_every_day         : ['Settikulama_Wewa']
+  tanks_flagged_ge_75pct_days     : ['Ethiniwetuna_Wewa', 'Galwaduwawa_Wewa', 'Kudaittikattiya_Wewa', 'Manakkulama_Wewa', 'Marikkaragama_Wewa', 'Settikulama_Wewa', 'Tawalanhalmillewa_Wewa']
+  anchor_correction               : {'threshold': 'anchor_storage >= 2.0 * S_min', 'n_tank_days_total': 5867, 'n_tank_days_excluded_small_anchor': 1387, 'pct_excluded': 23.6, 'direction_agreement_pct_CORRECTED': 34.15, 'interpretation': 'The RAW figure includes tank-days where the ratio denominator (anchor storage) was small enough to make the ratio numerically unstable, which is a property of the comparison METHOD, not a module-vs-module disagreement. CORRECTED excludes those tank-days.'}
+  mean_abs_ratio_diff_CURRENT_CSV : 0.2769
+  _note_on_magnitude_vs_direction : mean_abs_ratio_diff_RAW above is cached from day_summary.json at original simulation time and will NOT reflect a later magnitude-only fix (e.g. recompute_crosscheck.py). mean_abs_ratio_diff_CURRENT_CSV is recomputed fresh from module3_crosscheck.csv every run and always reflects the current files on disk. Direction-agreement figures are unaffected either way, by mathematical necessity - see the docstring.
+
+G. PER-TANK ANOMALIES
+  none - every high-zero-release tank is explained by C3 status or low demand.
+
+F. BASELINE COMPARISON
+  proposed : {'n_days': 184, 'total_release_m3': 219818042.7628682, 'total_f1_shortage_m3': 15687740.76, 'total_f2_overflow_m3': 1583664.61, 'mean_f3_equity': 62.939577173913044, 'total_f4_water_loss_m3': 1325902.78, 'mean_satisfaction_pct': 71.90416339326813}
+  baseline : {'n_days': 184, 'total_release_m3': 229401161.5532938, 'total_f1_shortage_m3': 4964277.092066913, 'total_f2_overflow_m3': 2056690.8287443577, 'mean_f3_equity': 29.882480447057304, 'total_f4_water_loss_m3': 0.0, 'mean_satisfaction_pct': 88.23159443816475}
+
+EXTERNAL VALIDATION: not requested (--real-release-csv not supplied)
+
+==============================================================================
+Full artefacts written to: output_25-03-08\_evaluation/
+==============================================================================

@@ -1,0 +1,2 @@
+date,day_offset,status,feasible,p_drought,p_overflow,total_storage_m3,f1_shortage,f2_overflow,f3_equity,f4_water_loss,total_release,total_consumed,total_return_flow,closeness,satisfaction_pct_mean,direction_agreement_rate,mean_abs_ratio_diff,n_flagged_tanks
+2025-03-01,0,complete,True,0.3273,0.2485,52818236.0,153826.56,20072.51,59.8562,29083.93,3560307.5171575756,3531222.0550760967,29085.462081478192,0.6579,85.59668709978277,0.562,0.2827,7

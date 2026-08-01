@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "E:\Reaserch Module 4-\Module4-integrated\module4\module4\simulation_runner.py", line 539, in run_simulation
+    run_one_day(ctx, sim_date, tee, season_start)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Reaserch Module 4-\Module4-integrated\module4\module4\simulation_runner.py", line 228, in run_one_day
+    results = run_mpc(day_cfg, season_length=1, verbose=True)
+  File "E:\Reaserch Module 4-\Module4-integrated\module4\module4\mpc_loop.py", line 126, in run_mpc
+    S_current = load_current_storage(cfg)
+  File "E:\Reaserch Module 4-\Module4-integrated\module4\module4\data_loader.py", line 189, in load_current_storage
+    raise ValueError("Negative storage detected in tank_storage.csv "
+                     "(check Module 1 output).")
+ValueError: Negative storage detected in tank_storage.csv (check Module 1 output).

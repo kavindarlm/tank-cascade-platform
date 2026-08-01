@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "E:\Reaserch Module 4-\Module4-integrated\module4\module4\simulation_runner.py", line 539, in run_simulation
+    run_one_day(ctx, sim_date, tee, season_start)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Reaserch Module 4-\Module4-integrated\module4\module4\simulation_runner.py", line 198, in run_one_day
+    day_rows = sd.day_slice(ctx.forecast_df, sim_date)
+  File "E:\Reaserch Module 4-\Module4-integrated\module4\module4\simulation_data.py", line 106, in day_slice
+    raise ValueError(
+        f"expected {n_tanks} tank rows for {sim_date}, got {len(rows)}"
+    )
+ValueError: expected 32 tank rows for 2026-05-28, got 0

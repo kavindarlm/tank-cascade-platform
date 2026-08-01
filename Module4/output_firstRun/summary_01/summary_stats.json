@@ -1,0 +1,97 @@
+{
+  "period": {
+    "start": "2025-03-01",
+    "end": "2025-03-01",
+    "n_days": 1,
+    "n_feasible": 1,
+    "feasibility_rate": 1.0
+  },
+  "storage": {
+    "start_m3": 52818236.0,
+    "end_m3": 52818236.0,
+    "mean_m3": 52818236.0,
+    "min_m3": 52818236.0,
+    "max_m3": 52818236.0
+  },
+  "release": {
+    "mean": 3560307.5171575756,
+    "sum": 3560307.5171575756,
+    "min": 3560307.5171575756,
+    "max": 3560307.5171575756
+  },
+  "consumed": {
+    "mean": 3531222.0550760967,
+    "sum": 3531222.0550760967,
+    "min": 3531222.0550760967,
+    "max": 3531222.0550760967
+  },
+  "return_flow": {
+    "mean": 29085.462081478192,
+    "sum": 29085.462081478192,
+    "min": 29085.462081478192,
+    "max": 29085.462081478192
+  },
+  "shortage_f1": {
+    "mean": 153826.56,
+    "sum": 153826.56,
+    "min": 153826.56,
+    "max": 153826.56
+  },
+  "overflow_f2": {
+    "mean": 20072.51,
+    "sum": 20072.51,
+    "min": 20072.51,
+    "max": 20072.51
+  },
+  "equity_f3": {
+    "mean": 59.8562,
+    "sum": 59.8562,
+    "min": 59.8562,
+    "max": 59.8562
+  },
+  "water_loss_f4": {
+    "mean": 29083.93,
+    "sum": 29083.93,
+    "min": 29083.93,
+    "max": 29083.93
+  },
+  "closeness": {
+    "mean": 0.6579,
+    "sum": 0.6579,
+    "min": 0.6579,
+    "max": 0.6579
+  },
+  "satisfaction_pct_mean": {
+    "mean": 85.59668709978277,
+    "sum": 85.59668709978277,
+    "min": 85.59668709978277,
+    "max": 85.59668709978277
+  },
+  "risk": {
+    "p_drought_mean": 0.3273,
+    "p_overflow_mean": 0.2485
+  },
+  "crosscheck": {
+    "direction_agreement_rate": {
+      "mean": 0.562,
+      "sum": 0.562,
+      "min": 0.562,
+      "max": 0.562
+    },
+    "mean_abs_ratio_diff": {
+      "mean": 0.2827,
+      "sum": 0.2827,
+      "min": 0.2827,
+      "max": 0.2827
+    },
+    "tanks_ever_flagged": [
+      "Amane_Wewa",
+      "Kudaittikattiya_Wewa",
+      "Maha_Ittikattiya_Wewa",
+      "Meegassegama_Wewa",
+      "Pansala_Wewa",
+      "Settikulama_Wewa",
+      "Todamaduwa_Wewa"
+    ]
+  }
+}

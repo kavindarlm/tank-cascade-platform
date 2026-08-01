@@ -1,0 +1,99 @@
+{
+  "period": {
+    "start": "2025-03-01",
+    "end": "2025-03-01",
+    "n_days": 1,
+    "n_feasible": 1,
+    "feasibility_rate": 1.0
+  },
+  "storage": {
+    "start_m3": 52818236.0,
+    "end_m3": 52818236.0,
+    "mean_m3": 52818236.0,
+    "min_m3": 52818236.0,
+    "max_m3": 52818236.0
+  },
+  "release": {
+    "mean": 3532061.555833895,
+    "sum": 3532061.555833895,
+    "min": 3532061.555833895,
+    "max": 3532061.555833895
+  },
+  "consumed": {
+    "mean": 3523552.5320127616,
+    "sum": 3523552.5320127616,
+    "min": 3523552.5320127616,
+    "max": 3523552.5320127616
+  },
+  "return_flow": {
+    "mean": 8509.023821133609,
+    "sum": 8509.023821133609,
+    "min": 8509.023821133609,
+    "max": 8509.023821133609
+  },
+  "shortage_f1": {
+    "mean": 161211.13,
+    "sum": 161211.13,
+    "min": 161211.13,
+    "max": 161211.13
+  },
+  "overflow_f2": {
+    "mean": 31444.44,
+    "sum": 31444.44,
+    "min": 31444.44,
+    "max": 31444.44
+  },
+  "equity_f3": {
+    "mean": 60.2711,
+    "sum": 60.2711,
+    "min": 60.2711,
+    "max": 60.2711
+  },
+  "water_loss_f4": {
+    "mean": 8499.61,
+    "sum": 8499.61,
+    "min": 8499.61,
+    "max": 8499.61
+  },
+  "closeness": {
+    "mean": 0.7614,
+    "sum": 0.7614,
+    "min": 0.7614,
+    "max": 0.7614
+  },
+  "satisfaction_pct_mean": {
+    "mean": 84.56766218933694,
+    "sum": 84.56766218933694,
+    "min": 84.56766218933694,
+    "max": 84.56766218933694
+  },
+  "risk": {
+    "p_drought_mean": 0.3273,
+    "p_overflow_mean": 0.2485
+  },
+  "crosscheck": {
+    "direction_agreement_rate": {
+      "mean": 0.562,
+      "sum": 0.562,
+      "min": 0.562,
+      "max": 0.562
+    },
+    "mean_abs_ratio_diff": {
+      "mean": 0.2951,
+      "sum": 0.2951,
+      "min": 0.2951,
+      "max": 0.2951
+    },
+    "tanks_ever_flagged": [
+      "Ethiniwetuna_Wewa",
+      "Kudaittikattiya_Wewa",
+      "Maha_Ittikattiya_Wewa",
+      "Manakkulama_Wewa",
+      "Meegassegama_Wewa",
+      "Pansala_Wewa",
+      "Settikulama_Wewa",
+      "Todamaduwa_Wewa",
+      "Ulankulama_Wewa"
+    ]
+  }
+}
