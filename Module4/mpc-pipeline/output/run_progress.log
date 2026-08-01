@@ -7,3 +7,12 @@ tanks: 32   yala demand: season_days=160  duration_class=135
 [2026-03-04] ERROR: ValueError('Negative storage detected in tank_storage.csv (check Module 1 output).')  (see error.txt; day left incomplete so a re-run will retry it)
 [2026-03-05] day 5/138  feasible=True    399.4s  total_storage=51,764,934 m3
 === run_simulation stopped/finished at 2026-03-06 ===
+
+=== run_simulation starting  2026-03-01 .. 2026-07-26  (completed days are skipped) ===
+tanks: 32   yala demand: season_days=160  duration_class=135
+[2026-03-01] already complete - skipping
+[2026-03-02] already complete - skipping
+[2026-03-03] already complete - skipping
+[2026-03-04] ERROR: ValueError('Negative storage detected in tank_storage.csv (check Module 1 output).')  (see error.txt; day left incomplete so a re-run will retry it)
+[2026-03-05] already complete - skipping
+=== run_simulation stopped/finished at 2026-03-06 ===
