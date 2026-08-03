@@ -14,7 +14,18 @@ CHANGELOG (Module 3 update response):
 """
 
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import List
+
+# Module 2's live GNN output - the cascade transfer/alpha matrix. Module 4 no
+# longer keeps its own copy under data/; it reads Module 2's output directly,
+# so a re-trained/updated alpha matrix is picked up automatically. Resolved
+# from this file's own location (not cwd), so it works no matter where a
+# Module 4 script is invoked from. NOT alpha_matrix_v2.csv.
+_MODULE2_ALPHA_MATRIX_PATH = str(
+    Path(__file__).resolve().parents[3]
+    / "Module2" / "development-history" / "outputs" / "alpha_matrix.csv"
+)
 
 
 @dataclass
@@ -366,7 +377,7 @@ class Config:
     FILE_TANK_PARAMS: str = "tank_params.csv"
     FILE_TANK_STORAGE: str = "tank_storage.csv"
     FILE_DEMAND: str = "demand.csv"
-    FILE_NETWORK_ALPHA: str = "network_alpha.csv"
+    FILE_NETWORK_ALPHA: str = _MODULE2_ALPHA_MATRIX_PATH
     FILE_RAINFALL_HISTORY: str = "rainfall_history.csv"
     FILE_MODULE3_RISK: str = "module3_risk.csv"
     FILE_MAHAWELI: str = "mahaweli_schedule.csv"

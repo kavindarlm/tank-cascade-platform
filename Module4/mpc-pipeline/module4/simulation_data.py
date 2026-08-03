@@ -263,15 +263,20 @@ def load_static_reference(cfg: Config = None):
 
 def stage_static_files(static_dir, source_data_dir="data"):
     """
-    Copy the three PER-RUN-CONSTANT input files (tank_params, network_alpha,
-    rainfall_history) byte-for-byte into the scratch data directory used to
-    feed the existing loaders, so the real data/ directory is never written
-    to. tank_storage.csv / demand.csv / module3_risk.csv are written fresh
-    each simulated day by simulation_runner.
+    Copy the PER-RUN-CONSTANT input files (tank_params, rainfall_history)
+    byte-for-byte into the scratch data directory used to feed the existing
+    loaders, so the real data/ directory is never written to. tank_storage.csv
+    / demand.csv / module3_risk.csv are written fresh each simulated day by
+    simulation_runner.
+
+    network_alpha.csv is NOT staged here: cfg.FILE_NETWORK_ALPHA is now an
+    absolute path straight to Module 2's live output (see config.py), so
+    every loader reads it from there directly regardless of DATA_DIR/
+    static_dir - there is nothing to copy.
     """
     os.makedirs(static_dir, exist_ok=True)
     cfg = Config()
-    for fname in (cfg.FILE_TANK_PARAMS, cfg.FILE_NETWORK_ALPHA, cfg.FILE_RAINFALL_HISTORY):
+    for fname in (cfg.FILE_TANK_PARAMS, cfg.FILE_RAINFALL_HISTORY):
         shutil.copyfile(os.path.join(source_data_dir, fname),
                         os.path.join(static_dir, fname))
 

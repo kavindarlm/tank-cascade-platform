@@ -10,7 +10,9 @@ USAGE
 -----
     python evaluate_season.py output_25-03-08
     python evaluate_season.py output_2026 --season yala --duration 135 ^
-        --demand-csv data/demand_2026.csv --alpha-csv data/network_alpha.csv
+        --demand-csv data/demand_2026.csv
+        (--alpha-csv defaults to Module 2's live alpha_matrix.csv output;
+        pass it explicitly to pin an older/different alpha matrix)
 
 WHY EACH METRIC EXISTS
 -----------------------
@@ -60,11 +62,19 @@ import argparse
 import glob
 import json
 import os
+import re
 import sys
 import warnings
 
 import numpy as np
 import pandas as pd
+
+# Module 2's live GNN output, resolved from this file's own location (not
+# cwd) so the default works regardless of where this script is invoked from.
+# NOT alpha_matrix_v2.csv. Mirrors module4/config.py's FILE_NETWORK_ALPHA.
+_MODULE2_ALPHA_MATRIX_PATH = os.path.normpath(os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", "..",
+    "Module2", "development-history", "outputs", "alpha_matrix.csv"))
 
 
 # ======================================================================
@@ -90,9 +100,10 @@ def parse_args():
                          "If omitted, per-tank demand metrics are skipped "
                          "rather than risking a mismatch with whatever is "
                          "currently in data/.")
-    ap.add_argument("--alpha-csv", default="data/network_alpha.csv",
-                    help="path to network_alpha.csv for the channel-loss "
-                         "diagnostic (default: data/network_alpha.csv)")
+    ap.add_argument("--alpha-csv", default=_MODULE2_ALPHA_MATRIX_PATH,
+                    help="path to the alpha matrix for the channel-loss "
+                         "diagnostic (default: Module 2's live "
+                         "alpha_matrix.csv output)")
     ap.add_argument("--tank-params-csv", default="data/tank_params.csv",
                     help="path to tank_params.csv, for S_min/S_max/C3 floor "
                          "(default: data/tank_params.csv)")
@@ -435,6 +446,13 @@ def compute_channel_loss(alpha_csv_path, decisions_df, tank_names):
         return pd.DataFrame(), {}
 
     alpha = pd.read_csv(alpha_csv_path, index_col=0)
+    # Module 2's raw output uses space-separated tank names (and inconsistent
+    # spacing, e.g. "Settikulama  Wewa"); Module 4 uses underscores
+    # everywhere else (tank_ids, mpc_decisions.csv, etc.). Normalize so the
+    # label-based lookups below actually match instead of silently treating
+    # every tank as "missing".
+    rename = {c: re.sub(r"\s+", "_", c.strip()) for c in alpha.columns}
+    alpha = alpha.rename(columns=rename, index=rename)
     missing = set(tank_names) - set(alpha.columns)
     if missing:
         warn(f"{len(missing)} tank(s) in the run are not columns of "

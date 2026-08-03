@@ -46,8 +46,7 @@ Re-run evaluate_season.py and generate_plots.py as normal - both read the
 now-corrected CSVs and need no changes themselves:
 
     python evaluate_season.py <folder> --season yala --duration 135 \\
-        --demand-csv data/demand.csv --alpha-csv data/network_alpha.csv \\
-        --tank-params-csv data/tank_params.csv
+        --demand-csv data/demand.csv --tank-params-csv data/tank_params.csv
     python generate_plots.py <folder>/_evaluation
 
 evaluate_season.py's own "anchor_correction" figure is a SEPARATE, further

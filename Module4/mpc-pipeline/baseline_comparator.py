@@ -84,14 +84,13 @@ USAGE
 Resumable exactly like run_simulation.py: days already marked complete are
 skipped, so an interrupted run can simply be re-invoked.
 
-THEN evaluate and compare exactly like any other run:
+THEN evaluate and compare exactly like any other run
+(--alpha-csv defaults to Module 2's live alpha_matrix.csv output):
     python evaluate_season.py output_baseline_2025 --season yala --duration 135 \\
-        --demand-csv data/demand.csv --alpha-csv data/network_alpha.csv \\
-        --tank-params-csv data/tank_params.csv
+        --demand-csv data/demand.csv --tank-params-csv data/tank_params.csv
 
     python evaluate_season.py output_25-03-08 --season yala --duration 135 \\
-        --demand-csv data/demand.csv --alpha-csv data/network_alpha.csv \\
-        --tank-params-csv data/tank_params.csv \\
+        --demand-csv data/demand.csv --tank-params-csv data/tank_params.csv \\
         --baseline-dir output_baseline_2025
 
     python generate_plots.py output_25-03-08/_evaluation \\

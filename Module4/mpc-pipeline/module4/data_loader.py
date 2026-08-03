@@ -8,7 +8,9 @@ Inputs (all in DATA_DIR, see config for file names):
   tank_params.csv       - S_min, S_max, R_max, E_day*, catchment_area_km2  (static)
   tank_storage.csv      - storage_m3 today (from Module 1)                  (dynamic)
   demand.csv            - D_i(t) full season (from FAO-56 generator)        (static)
-  network_alpha.csv     - alpha matrix (from Module 2 GNN)                  (static)
+  network_alpha.csv     - alpha matrix, read directly from Module 2's live
+                          output (Module2/development-history/outputs/
+                          alpha_matrix.csv) - see config.FILE_NETWORK_ALPHA  (static)
   rainfall_history.csv  - daily rainfall history per tank (Open-Meteo)      (dynamic)
   module3_risk.csv      - Module 3 forecast + risk probs (Option A weights) (dynamic)
   mahaweli_schedule.csv - R_sched (ONLY if C6 enabled)                      (optional)
