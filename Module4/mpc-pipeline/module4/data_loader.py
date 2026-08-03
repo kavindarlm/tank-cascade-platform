@@ -21,6 +21,8 @@ the next phase after the code is in place.
 """
 
 import os
+from datetime import date
+
 import numpy as np
 import pandas as pd
 
@@ -146,6 +148,120 @@ def load_module3_risk(cfg: Config = DEFAULT_CONFIG):
         return None
     df = pd.read_csv(path, index_col="tank_id")
     return df
+
+
+_MODULE3_LIVE_TANK_COORDINATES_PATH = os.path.join("data_", "tank_coordinates.csv")
+
+
+def _module3_live_tank_index_map(coords_path=_MODULE3_LIVE_TANK_COORDINATES_PATH):
+    """
+    Self-contained duplicate of simulation_data.load_tank_index_map(), kept
+    separate on purpose: simulation_data.py already imports from this module,
+    so importing simulation_data back here would be circular. Returns the 32
+    tank NAMES in tank_coordinates.csv row order; position i (0-based) is
+    Module 3's raw integer tank_id i+1.
+    """
+    coords = pd.read_csv(_require(coords_path))
+    return list(coords["tank_id"])
+
+
+def load_module3_risk_live(cfg: Config = DEFAULT_CONFIG):
+    """
+    Read Module 3's LIVE daily forecast output directly - one
+    Module3/forecast-service/outputs/forecast_<date>.csv - and reshape it
+    into the same frame load_module3_risk() returns, so mpc_loop.py can
+    switch between the two with the MODULE3_LIVE_FORECAST config flag.
+
+    Self-contained by design: duplicates the small rename / tank-id-to-name
+    mapping simulation_data.py already does for the full-season bulk-CSV
+    path (load_forecast_dataset / build_module3_frame), rather than
+    importing or modifying that module.
+
+    A tank Module 3 rejected for the day (blank row: no date, no
+    probabilities, no t+1..t+7) is NOT dropped - it gets a neutral
+    1/3-1/3-1/3 fallback risk plus a loud warning, so the run still produces
+    a decision for all 32 tanks today instead of failing outright.
+    """
+    run_date = cfg.RUN_DATE or date.today().isoformat()
+    path = os.path.join(cfg.MODULE3_FORECAST_OUTPUTS_DIR, f"forecast_{run_date}.csv")
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Module 3 live forecast not found for {run_date}: {path}\n"
+            f"  -> Generate it first (from Module3/forecast-service/):\n"
+            f"       python batch_forecast.py --date {run_date}"
+        )
+
+    raw = pd.read_csv(path)
+
+    tank_names = _module3_live_tank_index_map()
+    index_to_name = {i + 1: name for i, name in enumerate(tank_names)}
+    bad = set(raw["tank_id"].unique()) - set(index_to_name)
+    if bad:
+        raise ValueError(
+            f"Module 3 live forecast {path} has tank_id value(s) outside "
+            f"1..{len(tank_names)}: {sorted(bad)}"
+        )
+    raw["tank_id"] = raw["tank_id"].map(index_to_name)
+    raw = raw.set_index("tank_id")
+
+    rejected = list(raw.index[raw["primary_risk"] == "rejected"])
+    if rejected:
+        print(f"  [!] Module 3 rejected {len(rejected)} tank(s) for {run_date}: "
+              f"{rejected} - using neutral (1/3, 1/3, 1/3) fallback risk for "
+              f"them today; their t+1..t+7 forecast is unavailable (NaN).")
+
+    df = pd.DataFrame(index=raw.index.copy())
+    df.index.name = "tank_id"
+    df["drought_probability"] = pd.to_numeric(
+        raw["prob_drought"], errors="coerce").fillna(1 / 3)
+    df["overflow_probability"] = pd.to_numeric(
+        raw["prob_overflow"], errors="coerce").fillna(1 / 3)
+    df["normal_probability"] = pd.to_numeric(
+        raw["prob_normal"], errors="coerce").fillna(1 / 3)
+    for d in range(1, 8):
+        df[f"t+{d}"] = pd.to_numeric(raw[f"t+{d}"], errors="coerce")
+    for c in ("primary_risk", "classifier_risk", "agreement",
+              "drought_duration_days", "overflow_duration_days",
+              "confidence", "days_gap"):
+        if c in raw.columns:
+            df[c] = raw[c]
+    return df
+
+
+def storage_from_module3_t1(module3_df, static, cfg: Config = DEFAULT_CONFIG):
+    """
+    Convert Module 3's live t+1 (% of capacity) into today's absolute storage
+    (m3) for every tank, using that tank's own S_max - the same convention
+    simulation_data.storage_pct_to_volume() already uses for the full-season
+    bulk-CSV path. Used only when MODULE3_LIVE_FORECAST=True (see
+    mpc_loop.run_mpc): today's storage comes from the SAME live Module 3 file
+    as the risk probabilities, not the static tank_storage.csv, which can
+    silently drift out of sync with tank_params.csv's S_max (that mismatch is
+    exactly what produced impossible >100%-of-capacity readings when this
+    file was read directly).
+
+    A tank Module 3 rejected today has no t+1 (NaN - see
+    load_module3_risk_live). For just that tank, this falls back to
+    tank_storage.csv's value, with a loud warning - there is no live
+    measurement to use otherwise, and stalling the whole day because one
+    tank is missing would defeat this mode's "must act today" purpose.
+    """
+    tank_ids = static["tank_ids"]
+    S_max = np.asarray(static["S_max"], dtype=float)
+    pct = module3_df["t+1"].reindex(tank_ids).astype(float)
+
+    S_current = (pct.to_numpy() / 100.0) * S_max
+
+    missing_mask = pct.isna().to_numpy()
+    if missing_mask.any():
+        missing_tanks = [tank_ids[i] for i in np.where(missing_mask)[0]]
+        print(f"  [!] Module 3 has no live t+1 storage for {len(missing_tanks)} "
+              f"tank(s) today: {missing_tanks} - falling back to "
+              f"{os.path.join(cfg.DATA_DIR, cfg.FILE_TANK_STORAGE)} for just "
+              f"those tanks.")
+        fallback = load_current_storage(cfg)   # ordered as tank_ids, same as S_current
+        S_current[missing_mask] = fallback[missing_mask]
+    return S_current
 
 
 def load_mahaweli(cfg: Config = DEFAULT_CONFIG):

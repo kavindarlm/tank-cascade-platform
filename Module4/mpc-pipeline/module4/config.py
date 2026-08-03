@@ -15,7 +15,7 @@ CHANGELOG (Module 3 update response):
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 # Module 2's live GNN output - the cascade transfer/alpha matrix. Module 4 no
 # longer keeps its own copy under data/; it reads Module 2's output directly,
@@ -25,6 +25,15 @@ from typing import List
 _MODULE2_ALPHA_MATRIX_PATH = str(
     Path(__file__).resolve().parents[3]
     / "Module2" / "development-history" / "outputs" / "alpha_matrix.csv"
+)
+
+# Module 3's live daily forecast output folder (one forecast_<date>.csv per
+# date, written by Module3/forecast-service/batch_forecast.py). Only used
+# when MODULE3_LIVE_FORECAST=True - see data_loader.load_module3_risk_live.
+# Resolved from this file's own location, same reasoning as the alpha path.
+_MODULE3_FORECAST_OUTPUTS_DIR = str(
+    Path(__file__).resolve().parents[3]
+    / "Module3" / "forecast-service" / "outputs"
 )
 
 
@@ -40,6 +49,29 @@ class Config:
     #                         so the controller is corrected against reality and
     #                         internal state propagation is skipped.
     RELOAD_STORAGE_EACH_DAY: bool = False
+
+    # MODULE 3 RISK/FORECAST SOURCE PER MPC DAY
+    #   False (default) - module3_risk.csv is read once from DATA_DIR, exactly
+    #                      as before this flag existed (bulk-CSV / full-season
+    #                      runs via run_simulation.py are NOT affected by this
+    #                      flag at all - they never read it).
+    #   True  (deployment) - main.py's single-day path reads Module 3's live
+    #                      daily output directly (Module3/forecast-service/
+    #                      outputs/forecast_<RUN_DATE>.csv) instead of the
+    #                      static module3_risk.csv - see
+    #                      data_loader.load_module3_risk_live. Requires
+    #                      SEASON_LENGTH == 1 (validated below): Module 3 only
+    #                      guarantees a file for the one date you generated,
+    #                      not a run of consecutive days.
+    MODULE3_LIVE_FORECAST: bool = True
+
+    # Which date's Module 3 forecast to read when MODULE3_LIVE_FORECAST=True.
+    # None -> real "today" (date.today()) at the point of use. Set explicitly
+    # to test/run against a specific already-generated forecast_<date>.csv
+    # without waiting for the system clock.
+    RUN_DATE: Optional[str] = "2026-07-29"
+
+    MODULE3_FORECAST_OUTPUTS_DIR: str = _MODULE3_FORECAST_OUTPUTS_DIR
 
     T: int = 7                    # planning horizon in days (receding-horizon window)
     SEASON_LENGTH: int = 1       # full irrigation season length for the MPC loop
@@ -426,6 +458,12 @@ class Config:
             f"PADDY_DURATION_DAYS must be 135, 105, or 90, got {self.PADDY_DURATION_DAYS}"
         assert 0.0 < self.CONVEYANCE_EFFICIENCY <= 1.0, \
             f"CONVEYANCE_EFFICIENCY must be in (0,1], got {self.CONVEYANCE_EFFICIENCY}"
+        if self.MODULE3_LIVE_FORECAST:
+            assert self.SEASON_LENGTH == 1, \
+                "MODULE3_LIVE_FORECAST=True requires SEASON_LENGTH == 1 " \
+                f"(got {self.SEASON_LENGTH}); Module 3 only guarantees a " \
+                "forecast file for the single date you generated, not a " \
+                "run of consecutive days."
         return self
 
     def kc_stages(self):

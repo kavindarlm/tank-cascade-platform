@@ -20,12 +20,14 @@ the controller robust to forecast error (Mayne et al. 2000).
 import time
 
 from dataclasses import replace as _dc_replace
+from datetime import date
 
 import numpy as np
 
 from .config import Config, DEFAULT_CONFIG
-from .data_loader import (load_static_inputs, load_module3_risk, build_state,
-                          load_current_storage)
+from .data_loader import (load_static_inputs, load_module3_risk,
+                          load_module3_risk_live, build_state,
+                          load_current_storage, storage_from_module3_t1)
 from .state_transition import simulate_cascade
 from .nsga2_optimizer import run_nsga2, sink_release_rule
 from .topsis import compute_risk_weights, topsis_rank
@@ -35,6 +37,7 @@ from .constraints import (log_feasibility_snapshot,
                           c3_absolute_reserve_deficit)
 from . import logging_utils as lg
 from . import output as out
+from . import consolidated_output as co
 
 
 def advance_one_day(state, R_today, cfg: Config = DEFAULT_CONFIG):
@@ -144,15 +147,20 @@ def run_mpc(cfg: Config = DEFAULT_CONFIG, season_length=None, verbose=True):
         # (build_state also runs stage 2 PREDICT and prints its own detail lines)
         log.stage("OBSERVE", "Module 1 storage + Module 3 risk")
 
-        # TODO(module3): module3_risk.csv is a STATIC placeholder - re-reading it
-        # returns the same probabilities every day, so Option A's weights never
-        # move over the season. In a real run Module 3 would rewrite this file
-        # each morning with a fresh 7-day forecast and updated drought/overflow
-        # probabilities; wire that in (or accept a per-day file) once Module 3
-        # publishes daily output.
-        module3_df = load_module3_risk(cfg)                # reloaded each step
+        # module3_risk.csv is a STATIC placeholder unless MODULE3_LIVE_FORECAST
+        # is set (config.py), in which case Module 3's live daily output is
+        # read fresh instead - see data_loader.load_module3_risk_live.
+        module3_df = (load_module3_risk_live(cfg) if cfg.MODULE3_LIVE_FORECAST
+                      else load_module3_risk(cfg))          # reloaded each step
 
-        if cfg.RELOAD_STORAGE_EACH_DAY:
+        if cfg.MODULE3_LIVE_FORECAST:
+            # Live mode: today's storage comes from Module 3's own t+1 (% of
+            # capacity), not the static tank_storage.csv - see
+            # data_loader.storage_from_module3_t1 for why. Takes priority
+            # over RELOAD_STORAGE_EACH_DAY (live mode is always exactly one
+            # day, enforced by Config.validate()).
+            S_current = storage_from_module3_t1(module3_df, static, cfg)
+        elif cfg.RELOAD_STORAGE_EACH_DAY:
             # Deployment: Module 1 has written a fresh measurement overnight.
             S_current = load_current_storage(cfg)
         # else: S_current is whatever yesterday's release left behind.
@@ -416,13 +424,34 @@ def log_season_summary(results, season_length, cfg: Config = DEFAULT_CONFIG, pat
 
 
 def save_all(results, cfg: Config = DEFAULT_CONFIG):
-    """Persist all MPC outputs to CSV and return the written paths."""
+    """
+    Persist all MPC outputs to CSV and return the written paths.
+
+    Always overwrites the flat cfg.OUTPUT_DIR/{mpc_decisions,
+    topsis_weights_log, module3_crosscheck}.csv - a "latest run" snapshot,
+    as before this function grew a second mode.
+
+    Additionally, when cfg.CONSOLIDATED_OUTPUT is True (the Config default),
+    ALSO appends this run as dated rows onto run-wide
+    cfg.OUTPUT_DIR/consolidated_*.csv files - reusing
+    consolidated_output.append_day() exactly as simulation_runner.py already
+    does for the full-season path, just keyed by cfg.RUN_DATE (or real
+    "today" if unset) instead of a simulated day offset. This is what makes
+    repeated main.py runs (e.g. one per day in live/MODULE3_LIVE_FORECAST
+    mode) build up a per-day history instead of each run overwriting the
+    last one with no trace.
+    """
     log = lg.Log(cfg)
     paths = {}
     with log.timed("writing CSV outputs"):
         paths["decisions"] = out.save_decisions(results["decisions"], cfg)
         paths["weights"] = out.save_weights_log(results["weights_log"], cfg)
         paths["crosscheck"] = out.save_crosscheck(results["crosschecks"], cfg)
+        if cfg.CONSOLIDATED_OUTPUT:
+            run_date = date.fromisoformat(cfg.RUN_DATE) if cfg.RUN_DATE else date.today()
+            consolidated_paths = co.append_day(cfg.OUTPUT_DIR, run_date, results, cfg)
+            for name, p in consolidated_paths.items():
+                paths[f"consolidated_{name}"] = p
     for name, p in paths.items():
         log.kv(name, p if p else "(nothing written)")
     return paths
