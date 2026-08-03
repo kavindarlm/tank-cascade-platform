@@ -5,12 +5,13 @@ import json
 import os
 import subprocess
 import sys
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from io import StringIO
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 BASE_DIR = Path(__file__).resolve().parent
+REPO_ROOT = BASE_DIR.parent.parent
 OUTPUT_DIR = BASE_DIR / "outputs"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -101,7 +102,10 @@ def _run_forecast(date_str, force=False):
     return output_path, "generated"
 
 
-class ForecastHandler(BaseHTTPRequestHandler):
+class ForecastHandler(SimpleHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, directory=str(REPO_ROOT), **kwargs)
+
     def _send(self, payload, status=200, content_type="application/json"):
         body = payload if isinstance(payload, bytes) else json.dumps(payload).encode("utf-8")
         self.send_response(status)
@@ -122,55 +126,60 @@ class ForecastHandler(BaseHTTPRequestHandler):
             self._send({"status": "ok"})
             return
 
-        if parsed.path != "/api/forecast":
-            self.send_error(404)
+        if parsed.path == "/api/forecast":
+            try:
+                csv_path, source = _run_forecast(date_value, force=force)
+                rows = _load_csv_rows(csv_path)
+
+                if download:
+                    fieldnames = [
+                        "tank_id",
+                        "date",
+                        "storage",
+                        "storage_pct",
+                        "storage_source",
+                        "t+1",
+                        "t+2",
+                        "t+3",
+                        "t+4",
+                        "t+5",
+                        "t+6",
+                        "t+7",
+                        "primary_risk",
+                        "classifier_risk",
+                        "agreement",
+                        "prob_drought",
+                        "prob_normal",
+                        "prob_overflow",
+                        "drought_duration_days",
+                        "overflow_duration_days",
+                        "confidence",
+                        "days_gap",
+                    ]
+                    stream = StringIO()
+                    writer = csv.DictWriter(stream, fieldnames=fieldnames)
+                    writer.writeheader()
+                    for row in rows:
+                        writer.writerow({k: row.get(k, "") for k in fieldnames})
+                    self._send(stream.getvalue().encode("utf-8"), content_type="text/csv")
+                    return
+
+                self._send({
+                    "date": date_value,
+                    "source": source,
+                    "count": len(rows),
+                    "rows": rows,
+                })
+            except Exception as exc:
+                self._send({"error": str(exc)}, status=500)
             return
 
-        try:
-            csv_path, source = _run_forecast(date_value, force=force)
-            rows = _load_csv_rows(csv_path)
+        if parsed.path == "/":
+            self.path = "/frontend/index.html"
+        elif parsed.path in {"/index.html", "/storage.html", "/connectivity.html", "/forecasting.html"}:
+            self.path = f"/frontend{parsed.path}"
 
-            if download:
-                fieldnames = [
-                    "tank_id",
-                    "date",
-                    "storage",
-                    "storage_pct",
-                    "storage_source",
-                    "t+1",
-                    "t+2",
-                    "t+3",
-                    "t+4",
-                    "t+5",
-                    "t+6",
-                    "t+7",
-                    "primary_risk",
-                    "classifier_risk",
-                    "agreement",
-                    "prob_drought",
-                    "prob_normal",
-                    "prob_overflow",
-                    "drought_duration_days",
-                    "overflow_duration_days",
-                    "confidence",
-                    "days_gap",
-                ]
-                stream = StringIO()
-                writer = csv.DictWriter(stream, fieldnames=fieldnames)
-                writer.writeheader()
-                for row in rows:
-                    writer.writerow({k: row.get(k, "") for k in fieldnames})
-                self._send(stream.getvalue().encode("utf-8"), content_type="text/csv")
-                return
-
-            self._send({
-                "date": date_value,
-                "source": source,
-                "count": len(rows),
-                "rows": rows,
-            })
-        except Exception as exc:
-            self._send({"error": str(exc)}, status=500)
+        return super().do_GET()
 
 
 def main():
