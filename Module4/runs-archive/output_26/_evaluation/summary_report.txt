@@ -1,5 +1,5 @@
 ==============================================================================
-SEASON EVALUATION REPORT  -  output
+SEASON EVALUATION REPORT  -  ..\runs-archive\output_26
   2026-03-01 .. 2026-07-26   (148 days)
 ==============================================================================
 
@@ -45,14 +45,17 @@ C. WATER BALANCE
   lowest_capture_non_terminus_tanks: [{'tank_id': 'Sembukulama_Wewa', 'network_capture_fraction': 0.2154912044036585}, {'tank_id': 'Hammillakulama_Wewa', 'network_capture_fraction': 0.297672368382542}, {'tank_id': 'Todamaduwa_Wewa', 'network_capture_fraction': 0.5094972433222621}]
 
 D. C3 RESERVE DECOMPOSITION
-  n_tanks_held_season_majority    : 5
-  n_tanks_free_season_majority    : 27
-  n_tanks_held_day1_only          : 4
-  held_tanks_net_change_m3        : -52899.8
-  free_tanks_net_change_m3        : -8465980.6
+  n_tanks_held_season_majority    : 2
+  n_tanks_free_season_majority    : 26
+  n_sink_tanks_excluded_from_c3   : 4
+  n_tanks_held_day1_only          : 2
+  held_tanks_net_change_m3        : -54270.3
+  free_tanks_net_change_m3        : -2233181.3
+  sink_tanks_net_change_m3        : -6231428.8
   total_net_change_m3             : -8518880.5
-  held_tank_names_season          : ['Galwaduwawa_Wewa', 'Kudaittikattiya_Wewa', 'Mahakanumulla_Wewa', 'Manakkulama_Wewa', 'Settikulama_Wewa']
-  note                            : held/free now classified by MAJORITY of season days below floor, not day 1 alone - see docstring.
+  held_tank_names_season          : ['Mahakanumulla_Wewa', 'Manakkulama_Wewa']
+  sink_tanks_below_floor_majority_of_season: ['Galwaduwawa_Wewa', 'Kudaittikattiya_Wewa', 'Settikulama_Wewa']
+  note                            : held/free now classified by MAJORITY of season days below floor, not day 1 alone, AND excludes sink tanks (C3 does not apply to TERMINAL_SINK_TANKS - see docstring). Sink tanks sitting below their floor are listed separately in sink_tanks_below_floor_majority_of_season; that reflects sink_release_rule()'s availability, not the C3 constraint.
 
 E. MODULE 3 CROSS-CHECK
   mean_direction_agreement_pct_RAW: 54.39
@@ -72,5 +75,5 @@ F. BASELINE COMPARISON: not requested (--baseline-dir not supplied)
 EXTERNAL VALIDATION: not requested (--real-release-csv not supplied)
 
 ==============================================================================
-Full artefacts written to: output\_evaluation/
+Full artefacts written to: ..\runs-archive\output_26\_evaluation/
 ==============================================================================

@@ -1,5 +1,5 @@
 {
-  "output_dir": "output",
+  "output_dir": "..\\runs-archive\\output_26",
   "date_range": [
     "2026-03-01",
     "2026-07-26"
@@ -62,20 +62,24 @@
     ]
   },
   "c3_decomposition": {
-    "n_tanks_held_season_majority": 5,
-    "n_tanks_free_season_majority": 27,
-    "n_tanks_held_day1_only": 4,
-    "held_tanks_net_change_m3": -52899.8,
-    "free_tanks_net_change_m3": -8465980.6,
+    "n_tanks_held_season_majority": 2,
+    "n_tanks_free_season_majority": 26,
+    "n_sink_tanks_excluded_from_c3": 4,
+    "n_tanks_held_day1_only": 2,
+    "held_tanks_net_change_m3": -54270.3,
+    "free_tanks_net_change_m3": -2233181.3,
+    "sink_tanks_net_change_m3": -6231428.8,
     "total_net_change_m3": -8518880.5,
     "held_tank_names_season": [
+      "Mahakanumulla_Wewa",
+      "Manakkulama_Wewa"
+    ],
+    "sink_tanks_below_floor_majority_of_season": [
       "Galwaduwawa_Wewa",
       "Kudaittikattiya_Wewa",
-      "Mahakanumulla_Wewa",
-      "Manakkulama_Wewa",
       "Settikulama_Wewa"
     ],
-    "note": "held/free now classified by MAJORITY of season days below floor, not day 1 alone - see docstring."
+    "note": "held/free now classified by MAJORITY of season days below floor, not day 1 alone, AND excludes sink tanks (C3 does not apply to TERMINAL_SINK_TANKS - see docstring). Sink tanks sitting below their floor are listed separately in sink_tanks_below_floor_majority_of_season; that reflects sink_release_rule()'s availability, not the C3 constraint."
   },
   "crosscheck": {
     "mean_direction_agreement_pct_RAW": 54.39,

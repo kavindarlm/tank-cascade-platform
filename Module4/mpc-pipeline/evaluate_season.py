@@ -107,6 +107,16 @@ def parse_args():
     ap.add_argument("--c3-buffer-fraction", type=float, default=0.05,
                     help="the C3 seasonal buffer fraction used by the run "
                          "(default 0.05, matching config.py's default)")
+    ap.add_argument("--sink-tanks",
+                    default="Nachchaduwa_Wewa,Kudaittikattiya_Wewa,"
+                            "Settikulama_Wewa,Galwaduwawa_Wewa",
+                    help="comma-separated tank_ids that are terminal-sink "
+                         "reservoirs for THIS run (default matches config.py's "
+                         "TERMINAL_SINK_TANKS). These tanks are excluded from "
+                         "C1-C5 and f1-f4 and are released by the fixed "
+                         "min(D, R_max, avail) rule, not by the optimiser - "
+                         "see sink_release_rule() in nsga2_optimizer.py. "
+                         "Pass '' for a run with no sink tanks configured.")
     return ap.parse_args()
 
 
@@ -472,7 +482,8 @@ def compute_channel_loss(alpha_csv_path, decisions_df, tank_names):
 # D. Storage / C3 decomposition
 # ======================================================================
 
-def compute_c3_decomposition(days, tank_params_csv, c3_buffer_fraction, tank_names):
+def compute_c3_decomposition(days, tank_params_csv, c3_buffer_fraction, tank_names,
+                             sink_tank_names=None):
     """
     Splits the season's storage change into tanks the seasonal reserve floor
     holds back versus tanks free to draw down. This is the single most
@@ -490,7 +501,19 @@ def compute_c3_decomposition(days, tank_params_csv, c3_buffer_fraction, tank_nam
     and every earlier version of this function missed it entirely. A tank is
     now classified 'held' if it spends more than half its days below floor,
     which is what the controller actually experienced across the season.
+
+    SINK TANKS (added): C3 is a decision-variable constraint inside NSGA-II
+    (constraints.py / nsga2_optimizer.py). Tanks in TERMINAL_SINK_TANKS are
+    never a decision variable - their release comes from sink_release_rule()
+    - so C3 literally cannot "hold" them, whatever their storage does. Before
+    this parameter existed, a sink tank sitting below its own S_min+buffer
+    floor was indistinguishable from a real C3-held tank in this function's
+    output, which mislabelled Settikulama_Wewa as C3-held in the 2026 run.
+    held_by_c3_season is now forced False for sink tanks; the raw
+    pct_days_below_floor is kept (it's still a true physical observation),
+    and is_sink_tank marks which rows to interpret that way.
     """
+    sink_tank_names = set(sink_tank_names or [])
     if not os.path.exists(tank_params_csv):
         warn(f"tank_params not found at {tank_params_csv} - skipping the "
              f"C3 held/free decomposition.")
@@ -532,6 +555,7 @@ def compute_c3_decomposition(days, tank_params_csv, c3_buffer_fraction, tank_nam
         s1 = last_storage[tid]
         n = max(n_obs.get(tid, 0), 1)
         pct_below_floor = below_floor_days.get(tid, 0) / n * 100
+        is_sink = tid in sink_tank_names
         rows.append({
             "tank_id": tid, "S_min": s_min, "S_max": s_max, "C3_floor": floor,
             "storage_day1": s0, "storage_last_day": s1,
@@ -540,30 +564,46 @@ def compute_c3_decomposition(days, tank_params_csv, c3_buffer_fraction, tank_nam
             "days_below_S_min": below_smin_days.get(tid, 0),
             "n_days_observed": n,
             "pct_days_below_floor": round(pct_below_floor, 1),
+            "is_sink_tank": is_sink,
             # Season-wide classification: "held" if below floor on the
-            # MAJORITY of days, not just day 1.
-            "held_by_c3_season": bool(pct_below_floor > 50.0),
+            # MAJORITY of days, not just day 1. Forced False for sink tanks -
+            # C3 is not evaluated on them at all inside the optimiser, so
+            # they cannot be "C3-held" regardless of where their storage
+            # sits; use is_sink_tank + pct_days_below_floor to describe them
+            # instead (their level is governed by sink_release_rule's
+            # min(D, R_max, avail), not by the reserve constraint).
+            "held_by_c3_season": bool(pct_below_floor > 50.0) and not is_sink,
             # Kept for backward compatibility with anything reading the old
             # column name; now clearly documented as day-1-only.
-            "held_by_c3_on_day1": bool(s0 < floor),
+            "held_by_c3_on_day1": bool(s0 < floor) and not is_sink,
         })
     df = pd.DataFrame(rows)
     if df.empty:
         return df, {}
 
     held = df[df["held_by_c3_season"]]
-    free = df[~df["held_by_c3_season"]]
+    free = df[~df["held_by_c3_season"] & ~df["is_sink_tank"]]
+    sinks = df[df["is_sink_tank"]]
     held_d1 = df[df["held_by_c3_on_day1"]]
     summary = {
         "n_tanks_held_season_majority": len(held),
         "n_tanks_free_season_majority": len(free),
+        "n_sink_tanks_excluded_from_c3": len(sinks),
         "n_tanks_held_day1_only": len(held_d1),
         "held_tanks_net_change_m3": round(float(held["change_m3"].sum()), 1),
         "free_tanks_net_change_m3": round(float(free["change_m3"].sum()), 1),
+        "sink_tanks_net_change_m3": round(float(sinks["change_m3"].sum()), 1)
+            if len(sinks) else 0.0,
         "total_net_change_m3": round(float(df["change_m3"].sum()), 1),
         "held_tank_names_season": list(held["tank_id"]),
+        "sink_tanks_below_floor_majority_of_season": list(
+            sinks[sinks["pct_days_below_floor"] > 50.0]["tank_id"]),
         "note": "held/free now classified by MAJORITY of season days below "
-               "floor, not day 1 alone - see docstring.",
+               "floor, not day 1 alone, AND excludes sink tanks (C3 does not "
+               "apply to TERMINAL_SINK_TANKS - see docstring). Sink tanks "
+               "sitting below their floor are listed separately in "
+               "sink_tanks_below_floor_majority_of_season; that reflects "
+               "sink_release_rule()'s availability, not the C3 constraint.",
     }
     return df, summary
 
@@ -738,14 +778,26 @@ def compute_crosscheck_summary(days, output_dir=None, tank_params_csv=None,
 # ======================================================================
 
 def compute_per_tank_summary(decisions_df, demand_m3, tank_names, days,
-                             c3_df, alpha_df):
+                             c3_df, alpha_df, sink_tank_names=None):
     """
     Per-tank release/demand/satisfaction/zero-day statistics, with AUTOMATIC
     anomaly flagging. This directly operationalises how the Galkulama problem
     was found in this project: a tank releasing zero on a large majority of
-    days, that is NOT explained by (a) being C3-held, or (b) having near-zero
-    demand, is flagged for manual investigation rather than silently passing.
+    days, that is NOT explained by (a) being C3-held, (b) having near-zero
+    demand, or (c) being a terminal-sink tank released by the fixed
+    min(D, R_max, avail) rule instead of the optimiser, is flagged for manual
+    investigation rather than silently passing.
+
+    (c) was added after Kudaittikattiya_Wewa and Galwaduwawa_Wewa's ~0%
+    2026 satisfaction showed up as neither C3-held nor low-demand - i.e. as
+    UNEXPLAINED - when in fact both are TERMINAL_SINK_TANKS: Kudaittikattiya's
+    R_max (86.4 m3/day) alone caps it near 7% of its ~1285 m3/day demand, and
+    Galwaduwawa's near-zero release means sink_release_rule()'s `avail`
+    (storage above S_min) was itself near zero for most of the season - a
+    real, separate thing to verify against that tank's actual S trajectory,
+    but not an optimiser bug, since the optimiser never touches either tank.
     """
+    sink_tank_names = set(sink_tank_names or [])
     if decisions_df.empty:
         return pd.DataFrame()
 
@@ -800,15 +852,30 @@ def compute_per_tank_summary(decisions_df, demand_m3, tank_names, days,
             alpha_df[["tank_id", "network_capture_fraction", "structural_terminus"]],
             on="tank_id", how="left")
 
+    rel["is_sink_tank"] = rel["tank_id"].isin(sink_tank_names)
+
     # --- anomaly flag -------------------------------------------------
     def flag(row):
         reasons = []
         if row["zero_day_pct"] > 50:
             explained = False
+            # (c) Terminal-sink tank: never a decision variable, released by
+            # sink_release_rule()'s min(D, R_max, avail) instead of the
+            # optimiser. Checked first since, when true, it fully accounts
+            # for the release pattern regardless of what C3/demand say.
+            if row.get("is_sink_tank"):
+                explained = True
+                reasons.append("expected: terminal-sink tank "
+                              "(rule-based release, not optimised - check "
+                              "R_max and storage-above-S_min for this tank "
+                              "rather than the optimiser)")
             # SEASON-WIDE floor check, not day-1-only - see
             # compute_c3_decomposition's docstring for why day-1-only missed
             # Galkulama_Wewa, which crossed below its floor after day 1 and
             # was held for most of the season despite starting above it.
+            # (held_by_c3_season is already forced False for sink tanks in
+            # compute_c3_decomposition, so this branch cannot double-count
+            # a sink tank as "C3-held".)
             if row.get("held_by_c3_season") is True:
                 explained = True
                 pct = row.get("pct_days_below_floor")
@@ -820,8 +887,8 @@ def compute_per_tank_summary(decisions_df, demand_m3, tank_names, days,
                 reasons.append("mostly explained: near-zero demand")
             if not explained:
                 reasons.append("UNEXPLAINED - high zero-release rate with "
-                              "neither season-wide C3 status nor low demand "
-                              "accounting for it")
+                              "neither sink status, season-wide C3 status, "
+                              "nor low demand accounting for it")
         return "; ".join(reasons) if reasons else ""
 
     rel["anomaly_flag"] = rel.apply(flag, axis=1)
@@ -929,20 +996,30 @@ def main():
         tank_names, season_days_needed, args)
 
     print("Computing metrics ...")
+    # OPERATIONAL sink list (config.py's TERMINAL_SINK_TANKS for this run) -
+    # these tanks are excluded from C1-C5/f1-f4 and released by
+    # sink_release_rule(), NOT by the optimiser. This is a DIFFERENT concept
+    # from alpha_df's "structural_terminus" (a topological property of
+    # network_alpha.csv - which tanks have zero downstream conveyance - used
+    # only by compute_channel_loss). The two sets overlap on Nachchaduwa_Wewa
+    # but are not the same; using the wrong one to build "village storage"
+    # silently mixes rule-based tanks into what's presented as the
+    # controller's own trajectory. See --sink-tanks help text.
+    sink_names = [t.strip() for t in args.sink_tanks.split(",") if t.strip()]
     feasibility = compute_feasibility_metrics(days, weights_df)
     delivery = compute_delivery_metrics(days)
     monthly = compute_monthly_breakdown(days, demand_m3, season_days_reconstructed)
     water_balance = compute_water_balance(days)
     alpha_df, channel_loss = compute_channel_loss(args.alpha_csv, decisions_df, tank_names)
     c3_df, c3_summary = compute_c3_decomposition(
-        days, args.tank_params_csv, args.c3_buffer_fraction, tank_names)
-    sink_names = list(alpha_df[alpha_df["structural_terminus"]]["tank_id"]) \
-        if not alpha_df.empty else []
+        days, args.tank_params_csv, args.c3_buffer_fraction, tank_names,
+        sink_tank_names=sink_names)
     storage_traj = compute_storage_trajectory(days, sink_tank_names=sink_names)
     crosscheck_summary, crosscheck_daily = compute_crosscheck_summary(
         days, output_dir=args.output_dir, tank_params_csv=args.tank_params_csv)
     per_tank = compute_per_tank_summary(decisions_df, demand_m3, tank_names,
-                                        days, c3_df, alpha_df)
+                                        days, c3_df, alpha_df,
+                                        sink_tank_names=sink_names)
     baseline_cmp = compute_baseline_comparison(days, args.baseline_dir)
     external_val = compute_external_validation(decisions_df, args.real_release_csv)
 
