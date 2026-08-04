@@ -20,17 +20,38 @@ output root, alongside (not instead of) the per-day folders:
 
 Every row is tagged with an explicit "date" column, since - unlike the
 per-day folders - the day is no longer implied by a directory name.
+
+Re-running the same date REPLACES that date's rows rather than duplicating
+them: before appending, any existing rows already tagged with the same date
+are dropped first. Without this, running the same day twice (e.g. re-running
+main.py's live-forecast day, or re-running an overlapping season range) would
+silently double-count that date in every downstream sum/average.
 """
 
 import os
 import pandas as pd
 
 
-def _append_csv(df: pd.DataFrame, path: str):
-    """Append df to path, writing the header only if the file is new."""
+def _append_csv(df: pd.DataFrame, path: str, date_str: str = None):
+    """
+    Append df to path, writing the header only if the file is new.
+
+    If date_str is given and the file already exists with a "date" column,
+    existing rows for that same date are dropped first, so the new rows
+    REPLACE that date's entry instead of piling up alongside it.
+    """
     if df is None or len(df) == 0:
         return
     file_exists = os.path.exists(path)
+    if file_exists and date_str is not None:
+        try:
+            existing = pd.read_csv(path, dtype={"date": str})
+        except pd.errors.EmptyDataError:
+            existing = None
+        if existing is not None and "date" in existing.columns:
+            existing = existing[existing["date"] != str(date_str)]
+            pd.concat([existing, df], ignore_index=True).to_csv(path, index=False)
+            return
     df.to_csv(path, mode="a", header=not file_exists, index=False)
 
 
@@ -58,7 +79,7 @@ def append_day(output_root: str, sim_date, results, cfg) -> dict:
             })
     if decision_rows:
         path = os.path.join(output_root, cfg.FILE_CONSOLIDATED_DECISIONS)
-        _append_csv(pd.DataFrame(decision_rows), path)
+        _append_csv(pd.DataFrame(decision_rows), path, date_str=date_str)
         paths["decisions"] = path
 
     if results["weights_log"]:
@@ -68,7 +89,7 @@ def append_day(output_root: str, sim_date, results, cfg) -> dict:
             row.update(wl)
             wl_rows.append(row)
         path = os.path.join(output_root, cfg.FILE_CONSOLIDATED_WEIGHTS_LOG)
-        _append_csv(pd.DataFrame(wl_rows), path)
+        _append_csv(pd.DataFrame(wl_rows), path, date_str=date_str)
         paths["weights"] = path
 
     frames = []
@@ -79,7 +100,7 @@ def append_day(output_root: str, sim_date, results, cfg) -> dict:
             frames.append(df)
     if frames:
         path = os.path.join(output_root, cfg.FILE_CONSOLIDATED_CROSSCHECK)
-        _append_csv(pd.concat(frames, ignore_index=True), path)
+        _append_csv(pd.concat(frames, ignore_index=True), path, date_str=date_str)
         paths["crosscheck"] = path
 
     return paths
@@ -98,5 +119,5 @@ def append_day_summary(output_root: str, summary: dict, cfg) -> str:
     os.makedirs(output_root, exist_ok=True)
     df = _flatten_day_rows([summary])
     path = os.path.join(output_root, cfg.FILE_CONSOLIDATED_SUMMARY)
-    _append_csv(df, path)
+    _append_csv(df, path, date_str=summary.get("date"))
     return path
