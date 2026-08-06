@@ -82,11 +82,13 @@ def save_decisions(all_decisions, cfg: Config = DEFAULT_CONFIG):
     os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
     rows = []
     for dec in all_decisions:
+        d_today = dec.get("D_today")
         for i, tid in enumerate(dec["tank_ids"]):
             rows.append({
                 "day": dec["day"] + 1,
                 "tank_id": tid,
                 "release_m3": round(float(dec["R_today"][i]), 2),
+                "demand_m3": round(float(d_today[i]), 2) if d_today is not None else None,
             })
     df = pd.DataFrame(rows)
     path = os.path.join(cfg.OUTPUT_DIR, cfg.FILE_DECISIONS)

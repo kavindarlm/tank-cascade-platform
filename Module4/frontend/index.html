@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Module 4 - MPC Decisions</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -123,6 +124,7 @@
       <button type="button" class="step-item active" data-target="decisions">Release decisions</button>
       <button type="button" class="step-item" data-target="weights">Feasibility &amp; TOPSIS weights</button>
       <button type="button" class="step-item" data-target="crosscheck">Module 3 cross-check</button>
+      <button type="button" class="step-item" data-target="map">Map view</button>
     </nav>
 
     <section id="panel-decisions" class="view-panel">
@@ -243,10 +245,36 @@
         </select>
       </div>
     </section>
+
+    <section id="panel-map" class="view-panel" hidden>
+      <div class="filters">
+        <div class="filter-group">
+          <label for="map-date">Release date shown</label>
+          <select id="map-date"><option value="">Load a run first</option></select>
+        </div>
+        <button class="btn-secondary" id="map-reload-btn" type="button">Reload map data</button>
+        <span class="hint" id="map-hint" style="margin:0;"></span>
+      </div>
+      <p class="hint" style="margin-top:0;">
+        Blue = each tank's storage capacity (symbolic size, larger tank &rarr; larger circle).
+        Green = the command area that tank's demand is calculated from (true ground area).
+        Thin lines with arrows = cascade connectivity and flow direction (Module 2 alpha matrix).
+        Tank names are labeled directly on the map. <strong>Hover</strong> any tank for a quick detail
+        card; <strong>click</strong> a tank to open the full breakdown in the panel on the right.
+      </p>
+      <div class="map-row" id="map-row">
+        <div id="map-container"></div>
+        <div id="tank-detail-panel">
+          <div class="detail-placeholder">Click a tank on the map to see its full demand/release breakdown here.</div>
+        </div>
+      </div>
+    </section>
   </section>
 </main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

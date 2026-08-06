@@ -71,11 +71,13 @@ def append_day(output_root: str, sim_date, results, cfg) -> dict:
 
     decision_rows = []
     for dec in results["decisions"]:
+        d_today = dec.get("D_today")
         for i, tid in enumerate(dec["tank_ids"]):
             decision_rows.append({
                 "date": date_str,
                 "tank_id": tid,
                 "release_m3": round(float(dec["R_today"][i]), 2),
+                "demand_m3": round(float(d_today[i]), 2) if d_today is not None else None,
             })
     if decision_rows:
         path = os.path.join(output_root, cfg.FILE_CONSOLIDATED_DECISIONS)

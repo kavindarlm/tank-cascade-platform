@@ -351,3 +351,217 @@ tbody tr:hover { background: #f7f9fc; }
   border-radius: 6px;
   margin-left: auto;
 }
+
+/* ---- Map tab ---- */
+.map-row {
+  display: flex;
+  gap: 14px;
+  align-items: stretch;
+}
+
+/* Full-width map by default. The panel takes no layout space at all until a
+   tank is clicked - .panel-open (added/removed by renderDetailPanel()) is
+   what switches to an even 1/2 + 1/2 split. */
+#map-container {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  height: 760px;
+  border: 1px solid #e2e5eb;
+  border-radius: 8px;
+  background: #eef0f3;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04);
+}
+
+#tank-detail-panel {
+  display: none;
+  min-width: 0;
+  height: 760px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #e2e5eb;
+  border-radius: 8px;
+  padding: 20px 22px;
+}
+
+.map-row.panel-open #map-container { flex: 1 1 0; }
+.map-row.panel-open #tank-detail-panel { display: block; flex: 1 1 0; }
+
+.detail-placeholder {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #8a8f9c;
+  font-size: 14px;
+  padding: 0 40px;
+}
+
+@media (max-width: 1000px) {
+  .map-row { flex-direction: column; }
+  #map-container, #tank-detail-panel { flex: none; width: 100%; height: 480px; }
+}
+
+.map-legend {
+  background: rgba(255, 255, 255, 0.92);
+  padding: 8px 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.15);
+  font-size: 12px;
+  color: #1f2430;
+  line-height: 1.7;
+}
+.map-legend .swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+/* Always-visible tank name, small and unobtrusive against the satellite
+   imagery - the map was otherwise unreadable (no way to tell tanks apart
+   without hovering each one). */
+.tank-name-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9), 0 0 3px rgba(0, 0, 0, 0.85);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Release-vs-demand PAIRED bar: two peer columns (demand, release) sharing a
+   baseline, each scaled to that tank's own max(demand, release). Reading two
+   bar heights side by side is more literal than one overlaid on the other.
+   Colors run through the dataviz palette validator (validate_palette.js):
+   slate (demand) is a deliberately muted reference, not a competing
+   categorical hue, so its low chroma is by design; gold/red pass CVD
+   separation comfortably in both light and dark modes. */
+.tank-pair {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  width: 26px;
+  height: 30px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+  padding-bottom: 1px;
+}
+.tank-pair.big {
+  width: 110px;
+  height: 70px;
+  gap: 14px;
+  border-bottom-color: #cbd5e1;
+}
+.pair-bar {
+  flex: 1;
+  min-height: 3px;
+  border-radius: 2px 2px 0 0;
+  outline: 1px solid rgba(255, 255, 255, 0.5);
+  outline-offset: -1px;
+}
+.pair-bar.demand { background: #64748b; }
+.pair-bar.release { background: #ca8a04; }
+.pair-bar.release.over { background: #dc2626; }
+.tank-pair-nodata {
+  align-self: center;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.65);
+  text-align: center;
+}
+.tank-pair.big .tank-pair-nodata { font-size: 12px; }
+
+.pair-legend {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: #1f2430;
+  margin-top: 8px;
+}
+.swatch-sq {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+.swatch-sq.demand { background: #64748b; }
+.swatch-sq.release { background: #ca8a04; }
+.swatch-sq.release.over { background: #dc2626; }
+
+.pair-caption {
+  font-size: 11px;
+  color: #fff;
+  margin-top: 4px;
+}
+
+.map-popup h4 { margin: 0 0 6px; font-size: 13px; }
+.map-popup table { font-size: 12px; border-collapse: collapse; }
+.map-popup td { padding: 2px 8px 2px 0; }
+.map-popup td.k { color: #5b6272; }
+.map-popup td.v { font-weight: 600; text-align: right; }
+.map-popup-label { font-size: 11px; color: #5b6272; margin: 10px 0 4px; }
+.map-popup .pair-caption { color: #1f2430; font-size: 12px; }
+.map-popup .tank-pair-nodata { color: #8a8f9c; }
+.map-popup .pair-bar { outline: none; }
+
+/* Side panel (#tank-detail-panel) reuses .map-popup's own styling for its
+   content (same function, popupHtml-style output) - these extend it with
+   the panel-only header/history pieces. */
+.map-popup.detail-body h4 { font-size: 17px; }
+.detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.detail-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  color: #8a8f9c;
+  cursor: pointer;
+  padding: 0 2px;
+}
+.detail-close:hover { color: #1f2430; }
+.detail-history {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-top: 6px;
+}
+.detail-history th {
+  text-align: right;
+  font-weight: 600;
+  color: #5b6272;
+  padding: 6px 8px;
+  border-bottom: 1px solid #e2e5eb;
+}
+.detail-history th:first-child { text-align: left; }
+.detail-history td {
+  padding: 6px 8px;
+  text-align: right;
+  border-bottom: 1px solid #eef0f3;
+}
+.detail-history td:first-child { text-align: left; color: #5b6272; }
+.detail-history tr.current-date { background: #eff6ff; }
+.detail-history .tier-good { color: #059669; font-weight: 600; }
+.detail-history .tier-warn { color: #ca8a04; font-weight: 600; }
+.detail-history .tier-bad { color: #dc2626; font-weight: 600; }
+
+/* Rich hover tooltip - the same detail card the click-popup shows, now also
+   on hover (primary interaction). Popup stays bound too as a touch-device
+   fallback, since hover doesn't exist there. */
+.leaflet-tooltip.tank-tooltip-rich {
+  background: #fff;
+  border: 1px solid #e2e5eb;
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.25);
+  opacity: 1;
+}
+.leaflet-tooltip.tank-tooltip-rich::before { border-top-color: #e2e5eb; }

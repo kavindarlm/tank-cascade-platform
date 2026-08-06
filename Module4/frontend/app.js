@@ -422,6 +422,7 @@ function loadAllTabs(folder) {
   decisionsView.load(baseUrl);
   weightsView.load(baseUrl);
   crosscheckView.load(baseUrl);
+  mapView.loadReleases(baseUrl);
 }
 
 function wireDataSource() {
@@ -439,8 +440,406 @@ function wireTabs() {
       document.querySelectorAll(".view-panel").forEach((panel) => {
         panel.hidden = panel.id !== `panel-${step.dataset.target}`;
       });
+      if (step.dataset.target === "map") mapView.onTabShown();
     });
   });
+}
+
+// ---------------------------------------------------------------------
+// Map tab - satellite view of tank capacity (blue), command area (green),
+// cascade connectivity (thin lines) and the release decision for a chosen
+// date. Geo/sizing data comes from mpc_api.py's /api/tanks/geo (reuses the
+// existing loaders server-side, no hydrology math duplicated here);
+// release-by-date comes from whatever consolidated_mpc_decisions.csv the
+// "Data source folder" box above already points at.
+// ---------------------------------------------------------------------
+
+const mapView = (() => {
+  const ACRE_TO_SQM = 4046.8564224;
+  const MIN_CAP_RADIUS_M = 25;
+  const MAX_CAP_RADIUS_M = 220;
+  // Fixed default zoom, not an auto-fit-everything zoom. fitBounds() was
+  // zooming out far enough to fit all 32 tanks at once, which shrank every
+  // circle/arc/number below legible size - reading the % required manually
+  // zooming in every time. This trades "see everything at once" for
+  // "readable by default"; pan/zoom out for the wider view when wanted.
+  const DEFAULT_ZOOM = 15;
+
+  let map = null;
+  let geo = null;                 // { tanks: [...], edges: [...] }
+  let maxSMax = 1;
+  let releasesByDate = {};        // { "2026-07-29": { tank_id: {release, demand} } }
+  let layers = { edges: [], arrows: [], commandCircles: [], capCircles: [], nameLabels: [] };
+  let tanksById = {};             // tank_id -> tank record from /api/tanks/geo
+  let selectedTankId = null;      // which tank the detail panel is currently showing
+  let initStarted = false;
+
+  function commandAreaRadiusM(acres) {
+    const areaM2 = Math.max(0, acres) * ACRE_TO_SQM;
+    return Math.sqrt(areaM2 / Math.PI);
+  }
+
+  function capacityRadiusM(sMax) {
+    const t = Math.sqrt(Math.max(0, sMax)) / Math.sqrt(maxSMax || 1);
+    return MIN_CAP_RADIUS_M + (MAX_CAP_RADIUS_M - MIN_CAP_RADIUS_M) * t;
+  }
+
+  function clearLayers() {
+    Object.values(layers).flat().forEach((l) => map.removeLayer(l));
+    layers = { edges: [], arrows: [], commandCircles: [], capCircles: [], nameLabels: [] };
+  }
+
+  function ensureMap() {
+    if (map) return;
+    map = L.map("map-container", { minZoom: 11 });
+    L.tileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      {
+        attribution: "Tiles &copy; Esri - Esri, Maxar, Earthstar Geographics",
+        maxZoom: 18,
+      }
+    ).addTo(map);
+
+    const legend = L.control({ position: "bottomright" });
+    legend.onAdd = () => {
+      const div = L.DomUtil.create("div", "map-legend");
+      div.innerHTML = `
+        <div><span class="swatch" style="background:#3b82f6"></span>Tank capacity (S_max)</div>
+        <div><span class="swatch" style="background:#22c55e"></span>Command area (demand basis)</div>
+        <div><span style="display:inline-block;width:14px;height:0;border-top:2px solid #fff;opacity:.6;margin-right:6px;vertical-align:middle;"></span>Cascade connectivity (arrow = flow direction)</div>
+        <div>Hover a tank for a quick card; click for the full breakdown, right &rarr;</div>
+      `;
+      return div;
+    };
+    legend.addTo(map);
+  }
+
+  async function fetchGeo() {
+    if (geo) return geo;
+    const res = await fetch(`${API_BASE}/api/tanks/geo`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    geo = await res.json();
+    maxSMax = Math.max(...geo.tanks.map((t) => t.s_max_m3), 1);
+    tanksById = {};
+    geo.tanks.forEach((t) => (tanksById[t.tank_id] = t));
+    return geo;
+  }
+
+  function drawStatic() {
+    clearLayers();
+
+    // Connectivity lines first, so circles sit visually on top of them.
+    // e.from/e.to are the true upstream->downstream direction (see
+    // mpc_api.py's _tanks_geo_payload - alpha's row=destination,
+    // column=source convention, matching state_transition.py's mass
+    // balance). A small low-opacity arrowhead at the midpoint shows which
+    // way water actually moves, without making the line itself any louder.
+    const canDecorate = typeof L.polylineDecorator === "function";
+    geo.edges.forEach((e) => {
+      const a = tanksById[e.from], b = tanksById[e.to];
+      if (!a || !b) return;
+      const path = [[a.lat, a.lon], [b.lat, b.lon]];
+      const line = L.polyline(path, {
+        color: "#ffffff",
+        weight: 1.5,
+        opacity: 0.25,
+        interactive: false,
+      }).addTo(map);
+      layers.edges.push(line);
+
+      if (canDecorate) {
+        const arrow = L.polylineDecorator(line, {
+          patterns: [{
+            offset: "50%",
+            repeat: 0,
+            symbol: L.Symbol.arrowHead({
+              pixelSize: 9,
+              polygon: false,
+              pathOptions: { color: "#ffffff", opacity: 0.4, weight: 1.5, interactive: false },
+            }),
+          }],
+        }).addTo(map);
+        layers.arrows.push(arrow);
+      }
+    });
+
+    geo.tanks.forEach((t) => {
+      const commandCircle = L.circle([t.lat, t.lon], {
+        radius: commandAreaRadiusM(t.command_area_acres),
+        color: "#22c55e",
+        weight: 1.5,
+        opacity: 0.6,
+        fillColor: "#22c55e",
+        fillOpacity: 0.12,
+      }).addTo(map);
+      commandCircle.bindTooltip(() => popupHtml(t), {
+        direction: "top", className: "tank-tooltip-rich", opacity: 1,
+      });
+      commandCircle.on("click", () => showTankDetail(t.tank_id));
+      layers.commandCircles.push(commandCircle);
+
+      const capCircle = L.circle([t.lat, t.lon], {
+        radius: capacityRadiusM(t.s_max_m3),
+        color: "#3b82f6",
+        weight: 1.5,
+        opacity: 0.85,
+        fillColor: "#3b82f6",
+        fillOpacity: 0.4,
+      }).addTo(map);
+      capCircle.bindTooltip(() => popupHtml(t), {
+        direction: "top", className: "tank-tooltip-rich", opacity: 1,
+      });
+      capCircle.on("click", () => showTankDetail(t.tank_id));
+      layers.capCircles.push(capCircle);
+
+      // Always-visible name - without this there was no way to tell tanks
+      // apart without hovering each one individually.
+      const nameLabel = L.marker([t.lat, t.lon], {
+        icon: L.divIcon({
+          className: "tank-name-label",
+          html: t.tank_id.replace(/_/g, " "),
+          iconSize: null,
+          iconAnchor: [-6, -4],   // small offset up-right, clear of the click target at center
+        }),
+        interactive: false,
+      }).addTo(map);
+      layers.nameLabels.push(nameLabel);
+    });
+
+    const bounds = L.latLngBounds(geo.tanks.map((t) => [t.lat, t.lon]));
+    map.setView(bounds.getCenter(), DEFAULT_ZOOM);
+  }
+
+  // Release-vs-demand PAIRED bar: two separate columns (demand, release) side
+  // by side, each scaled to that tank's own max(demand, release) so both are
+  // directly comparable regardless of tank size. Two peer bars read more
+  // literally than one overlaid on the other - the shorter bar next to the
+  // taller one still makes the shortfall obvious without implying one is
+  // "behind" the other.
+  function releaseDemandBarsHtml(entry, { big } = {}) {
+    const size = big ? "big" : "";
+    if (!entry || entry.release === undefined || entry.release === null) {
+      return `<div class="tank-pair ${size}"><div class="tank-pair-nodata">no data</div></div>`;
+    }
+    const release = Number(entry.release);
+    const demand = entry.demand !== null && entry.demand !== undefined ? Number(entry.demand) : null;
+
+    if (demand === null || demand <= 0) {
+      // No demand figure saved for this run - show release alone rather than
+      // fabricate a demand bar that was never recorded.
+      const bars = `<div class="tank-pair ${size}">
+        <div class="pair-bar demand" style="height:0%"></div>
+        <div class="pair-bar release" style="height:100%"></div>
+      </div>`;
+      return big
+        ? `${bars}<div class="pair-caption">${Math.round(release).toLocaleString()} m&sup3; released (demand not recorded)</div>`
+        : bars;
+    }
+
+    const maxVal = Math.max(demand, release, 1);
+    const demandPct = (demand / maxVal) * 100;
+    const releasePct = (release / maxVal) * 100;
+    const over = release > demand;
+    const bars = `<div class="tank-pair ${size}">
+      <div class="pair-bar demand" style="height:${demandPct}%"></div>
+      <div class="pair-bar release ${over ? "over" : ""}" style="height:${releasePct}%"></div>
+    </div>`;
+    if (!big) return bars;
+
+    const caption = over
+      ? `Release ${Math.round(release).toLocaleString()} m&sup3; exceeded demand ${Math.round(demand).toLocaleString()} m&sup3;`
+      : release < demand
+        ? `${Math.round(demand - release).toLocaleString()} m&sup3; unmet (${Math.round(release).toLocaleString()} of ${Math.round(demand).toLocaleString()} m&sup3;)`
+        : `Demand fully met - ${Math.round(release).toLocaleString()} m&sup3;`;
+    return `${bars}
+      <div class="pair-legend">
+        <span><span class="swatch-sq demand"></span>Demand ${Math.round(demand).toLocaleString()} m&sup3;</span>
+        <span><span class="swatch-sq release${over ? " over" : ""}"></span>Release ${Math.round(release).toLocaleString()} m&sup3;</span>
+      </div>
+      <div class="pair-caption">${caption}</div>`;
+  }
+
+  // % of demand met - used by the detail panel's history table (tierClass
+  // below maps it to a color, validated earlier with the dataviz skill's
+  // validate_palette.js: green/amber/red all pairwise pass CVD separation).
+  function satisfactionPct(entry) {
+    if (!entry || entry.release === undefined || entry.release === null) return null;
+    const demand = entry.demand !== null && entry.demand !== undefined ? Number(entry.demand) : null;
+    if (demand === null || demand <= 0) return null;
+    return (Number(entry.release) / demand) * 100;
+  }
+
+  function popupHtml(t) {
+    const date = el("map-date").value;
+    const entry = releasesByDate[date] ? releasesByDate[date][t.tank_id] : undefined;
+    return `<div class="map-popup">
+      <h4>${t.tank_id}</h4>
+      <table>
+        <tr><td class="k">Capacity (S_max)</td><td class="v">${Math.round(t.s_max_m3).toLocaleString()} m&sup3;</td></tr>
+        <tr><td class="k">Command area</td><td class="v">${t.command_area_acres.toFixed(1)} acres</td></tr>
+        <tr><td class="k">Catchment area</td><td class="v">${t.catchment_area_km2.toFixed(2)} km&sup2;</td></tr>
+      </table>
+      <p class="map-popup-label">Release vs. demand${date ? " on " + date : ""}</p>
+      ${releaseDemandBarsHtml(entry, { big: true })}
+    </div>`;
+  }
+
+  function tierClass(pct) {
+    if (pct === null) return "";
+    if (pct >= 90) return "tier-good";
+    if (pct >= 50) return "tier-warn";
+    return "tier-bad";
+  }
+
+  // Full breakdown for one tank, opened in the right-hand panel on click.
+  // Reuses popupHtml's stats + the big paired-bar for the selected date, and
+  // adds a history table across every date currently loaded (releasesByDate
+  // already holds all of them in memory - no extra fetch needed).
+  function showTankDetail(tankId) {
+    selectedTankId = tankId;
+    renderDetailPanel();
+  }
+
+  function renderDetailPanel() {
+    const panel = el("tank-detail-panel");
+    const isOpen = !!(selectedTankId && tanksById[selectedTankId]);
+
+    // The panel takes zero layout space until a tank is picked - the map
+    // stays full-width until then. Toggling it resizes #map-container, so
+    // Leaflet needs an explicit invalidateSize() once the CSS reflow settles,
+    // or it keeps rendering tiles for the old size/position.
+    el("map-row").classList.toggle("panel-open", isOpen);
+    if (map) setTimeout(() => map.invalidateSize(), 50);
+
+    if (!isOpen) {
+      panel.innerHTML = `<div class="detail-placeholder">Click a tank on the map to see its full demand/release breakdown here.</div>`;
+      return;
+    }
+    const t = tanksById[selectedTankId];
+    const date = el("map-date").value;
+    const entry = releasesByDate[date] ? releasesByDate[date][t.tank_id] : undefined;
+
+    const dates = Object.keys(releasesByDate).sort().reverse();
+    const historyRows = dates.map((d) => {
+      const e = releasesByDate[d][t.tank_id];
+      if (!e || e.release === undefined || e.release === null) {
+        return `<tr><td>${d}</td><td colspan="3">no data</td></tr>`;
+      }
+      const pct = satisfactionPct(e);
+      const pctText = pct === null ? "-" : `${Math.round(pct)}%`;
+      return `<tr class="${d === date ? "current-date" : ""}">
+        <td>${d}</td>
+        <td>${Math.round(e.demand ?? 0).toLocaleString()}</td>
+        <td>${Math.round(e.release).toLocaleString()}</td>
+        <td class="${tierClass(pct)}">${pctText}</td>
+      </tr>`;
+    }).join("");
+
+    panel.innerHTML = `<div class="map-popup detail-body">
+      <div class="detail-header">
+        <h4>${t.tank_id.replace(/_/g, " ")}</h4>
+        <button type="button" class="detail-close" title="Close">&times;</button>
+      </div>
+      <table>
+        <tr><td class="k">Capacity (S_max)</td><td class="v">${Math.round(t.s_max_m3).toLocaleString()} m&sup3;</td></tr>
+        <tr><td class="k">Command area</td><td class="v">${t.command_area_acres.toFixed(1)} acres</td></tr>
+        <tr><td class="k">Catchment area</td><td class="v">${t.catchment_area_km2.toFixed(2)} km&sup2;</td></tr>
+      </table>
+      <p class="map-popup-label">Release vs. demand${date ? " on " + date : ""}</p>
+      ${releaseDemandBarsHtml(entry, { big: true })}
+      ${dates.length ? `
+        <p class="map-popup-label">History (${dates.length} date${dates.length > 1 ? "s" : ""} loaded)</p>
+        <table class="detail-history">
+          <thead><tr><th>Date</th><th>Demand</th><th>Release</th><th>% met</th></tr></thead>
+          <tbody>${historyRows}</tbody>
+        </table>
+      ` : ""}
+    </div>`;
+
+    panel.querySelector(".detail-close").addEventListener("click", () => {
+      selectedTankId = null;
+      renderDetailPanel();
+    });
+  }
+
+  function populateDateSelect() {
+    const sel = el("map-date");
+    const dates = Object.keys(releasesByDate).sort();
+    const current = sel.value;
+    sel.innerHTML = "";
+    if (!dates.length) {
+      sel.innerHTML = `<option value="">No release data loaded</option>`;
+      return;
+    }
+    dates.forEach((d) => {
+      const opt = document.createElement("option");
+      opt.value = d;
+      opt.textContent = d;
+      sel.appendChild(opt);
+    });
+    sel.value = dates.includes(current) ? current : dates[dates.length - 1];
+  }
+
+  async function loadReleases(baseUrl) {
+    el("map-hint").textContent = "Loading release data...";
+    try {
+      const res = await fetch(`${baseUrl}/consolidated_mpc_decisions.csv`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const text = await res.text();
+      const parsed = Papa.parse(text, { header: true, dynamicTyping: true, skipEmptyLines: true });
+      releasesByDate = {};
+      parsed.data.forEach((row) => {
+        const d = String(row.date);
+        if (!releasesByDate[d]) releasesByDate[d] = {};
+        releasesByDate[d][row.tank_id] = {
+          release: row.release_m3,
+          demand: row.demand_m3 !== undefined && row.demand_m3 !== null ? row.demand_m3 : null,
+        };
+      });
+      populateDateSelect();
+      el("map-hint").textContent = `${Object.keys(releasesByDate).length} date(s) available`;
+      if (map) renderDetailPanel();
+    } catch (err) {
+      releasesByDate = {};
+      populateDateSelect();
+      el("map-hint").textContent = `No release data yet (${err.message}) - run a job above, or the map still shows tank/command-area sizing without release labels.`;
+    }
+  }
+
+  async function init() {
+    if (initStarted) return;
+    initStarted = true;
+    try {
+      if (typeof L === "undefined") {
+        throw new Error("Leaflet failed to load from the CDN (unpkg.com) - check your network/firewall, or that you have internet access, then click 'Reload map data'");
+      }
+      ensureMap();
+      await fetchGeo();
+      drawStatic();
+    } catch (err) {
+      initStarted = false;   // let "Reload map data" retry instead of being permanently stuck
+      el("map-hint").textContent = `Map failed to load: ${err.message}`;
+      console.error("mapView.init failed:", err);
+    }
+  }
+
+  function onTabShown() {
+    init().then(() => {
+      if (map) setTimeout(() => map.invalidateSize(), 50);
+    });
+  }
+
+  return {
+    onTabShown,
+    loadReleases,
+    reload: () => { geo = null; initStarted = false; init(); },
+    refreshForDate: () => { if (map && geo) renderDetailPanel(); },
+  };
+})();
+
+function wireMapControls() {
+  el("map-date").addEventListener("change", () => mapView.refreshForDate());
+  el("map-reload-btn").addEventListener("click", () => mapView.reload());
 }
 
 wireDailyRun();
@@ -449,4 +848,5 @@ wireStopButton("daily");
 wireStopButton("season");
 wireDataSource();
 wireTabs();
+wireMapControls();
 loadAllTabs("outputs");

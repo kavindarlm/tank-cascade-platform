@@ -21,6 +21,11 @@ Endpoints:
                       &output=my_run&fast_test=1
   GET /api/status?job=<id>
   GET /api/stop?job=<id>
+  GET /api/tanks/geo   - static per-tank geo/sizing data for the map tab
+                         (coordinates, S_max, recovered command area, alpha
+                         connectivity edges) - read-only, no subprocess,
+                         reuses data_loader.load_static_inputs() and
+                         simulation_data.recover_command_area_acres() as-is
 
 Only one job runs at a time (NSGA-II is CPU-heavy; concurrent runs would just
 contend for cores and, for the daily job, clobber the same overwritten
@@ -52,6 +57,68 @@ from urllib.parse import parse_qs, urlparse
 BASE_DIR = Path(__file__).resolve().parent   # Module4/mpc-pipeline/
 LOG_DIR = BASE_DIR / "_api_logs"
 LOG_DIR.mkdir(exist_ok=True)
+
+_tanks_geo_cache = None   # static for the life of the process; see _tanks_geo_payload
+
+
+def _tanks_geo_payload():
+    """
+    Per-tank coordinates + sizing data for the map tab, plus the alpha
+    connectivity edge list. Everything here is read via the existing,
+    unmodified loaders (data_loader.load_static_inputs,
+    simulation_data.recover_command_area_acres) - this function only
+    reshapes their output into JSON, it doesn't compute anything new.
+    Cached after the first call: none of the source files change during a
+    server's lifetime (tank_coordinates.csv, tank_params.csv, demand.csv,
+    Module 2's alpha_matrix.csv are all static or hand-regenerated, never
+    written by a run).
+    """
+    global _tanks_geo_cache
+    if _tanks_geo_cache is not None:
+        return _tanks_geo_cache
+
+    import pandas as pd
+    from module4.config import DEFAULT_CONFIG
+    from module4.data_loader import load_static_inputs
+    from module4.simulation_data import recover_command_area_acres
+
+    static = load_static_inputs(DEFAULT_CONFIG)
+    tank_ids = static["tank_ids"]
+    S_max = static["S_max"]
+    catchment_km2 = static["catchment_km2"]
+    alpha = static["alpha"]
+
+    coords = pd.read_csv(BASE_DIR / "data_" / "tank_coordinates.csv", index_col="tank_id")
+    command_area = recover_command_area_acres()
+
+    tanks = []
+    for i, tid in enumerate(tank_ids):
+        row = coords.loc[tid]
+        tanks.append({
+            "tank_id": tid,
+            "lat": float(row["latitude"]),
+            "lon": float(row["longitude"]),
+            "s_max_m3": float(S_max[i]),
+            "catchment_area_km2": float(catchment_km2[i]),
+            "command_area_acres": float(command_area.get(tid, 0.0)),
+        })
+
+    # alpha[i, j] = fraction of tank j's (column, source) return flow that
+    # arrives at tank i (row, destination) - see state_transition.py's own
+    # docstring ("row = destination, column = source", alpha @ return). So
+    # water flows from=tank_ids[j] to=tank_ids[i] for a given alpha[i, j].
+    edges = []
+    n = len(tank_ids)
+    for i in range(n):
+        for j in range(i + 1, n):
+            a_ij, a_ji = float(alpha[i, j]), float(alpha[j, i])
+            if a_ij >= a_ji and a_ij > 1e-6:
+                edges.append({"from": tank_ids[j], "to": tank_ids[i], "alpha": round(a_ij, 4)})
+            elif a_ji > 1e-6:
+                edges.append({"from": tank_ids[i], "to": tank_ids[j], "alpha": round(a_ji, 4)})
+
+    _tanks_geo_cache = {"tanks": tanks, "edges": edges}
+    return _tanks_geo_cache
 
 _lock = threading.Lock()
 _jobs = {}            # job_id -> job dict
@@ -323,6 +390,13 @@ class MPCHandler(BaseHTTPRequestHandler):
                 self._send({"error": f"unknown job_id {job_id!r}"}, status=404)
                 return
             self._send(_job_status(job))
+            return
+
+        if parsed.path == "/api/tanks/geo":
+            try:
+                self._send(_tanks_geo_payload())
+            except Exception as exc:
+                self._send({"error": str(exc)}, status=500)
             return
 
         if parsed.path == "/api/stop":

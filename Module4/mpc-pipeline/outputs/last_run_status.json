@@ -1,5 +1,5 @@
 {
-  "date": "2026-07-29",
+  "date": "2026-07-30",
   "fast_test": false,
   "feasible": true,
   "output_dir": "outputs/",
@@ -11,18 +11,18 @@
     "consolidated_weights": "outputs/consolidated_topsis_weights_log.csv",
     "consolidated_crosscheck": "outputs/consolidated_module3_crosscheck.csv"
   },
-  "p_drought": 0.2677,
-  "p_overflow": 0.3312,
+  "p_drought": 0.2782,
+  "p_overflow": 0.3682,
   "weights": {
-    "shortage": 0.3624,
-    "overflow": 0.284,
-    "equity": 0.2037,
-    "loss": 0.1499
+    "shortage": 0.3621,
+    "overflow": 0.2889,
+    "equity": 0.2034,
+    "loss": 0.1457
   },
   "c3_tier": "hard",
   "reserve_deficit_m3": null,
   "n_tanks": 32,
-  "total_release_m3": 492216.11,
+  "total_release_m3": 488688.36,
   "top_releases": [
     {
       "tank_id": "Nachchaduwa_Wewa",
@@ -30,19 +30,19 @@
     },
     {
       "tank_id": "Galkulama_Wewa",
-      "release_m3": 7342.2
+      "release_m3": 7340.5
     },
     {
       "tank_id": "Maha_Ittikattiya_Wewa",
-      "release_m3": 5286.39
-    },
-    {
-      "tank_id": "Manakkulama_Wewa",
-      "release_m3": 4515.77
+      "release_m3": 5264.57
     },
     {
       "tank_id": "Marikkaragama_Wewa",
-      "release_m3": 4464.0
+      "release_m3": 4464.22
+    },
+    {
+      "tank_id": "Manakkulama_Wewa",
+      "release_m3": 4127.34
     }
   ]
 }

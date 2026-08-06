@@ -325,6 +325,10 @@ def run_mpc(cfg: Config = DEFAULT_CONFIG, season_length=None, verbose=True):
             "day": t_current,
             "tank_ids": state["tank_ids"],
             "R_today": best["R_today"],
+            "D_today": state["D"][:, 0],   # today's demand - same D the min(R_eff, D)
+                                           # consumption logic uses; saved so the
+                                           # release-vs-demand relationship is
+                                           # visible downstream, not just internal
             "strategy": best,
         })
 
