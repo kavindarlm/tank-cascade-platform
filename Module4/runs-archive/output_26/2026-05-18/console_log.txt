@@ -1,0 +1,247 @@
+Simulation day 79  (2026-05-18)
+
+[36m[1m╔════════════════════════════════════════════════════════════════════════╗[0m
+[36m[1m║[0m[36m[1m MODULE 4  -  MO-MPC RECEDING-HORIZON RUN                               [0m[36m[1m║[0m
+[36m[1m║[0m[2m season=yala  days=1  horizon T=7  K=20  pop=200  gens=300              [0m[36m[1m║[0m
+[36m[1m╚════════════════════════════════════════════════════════════════════════╝[0m
+  [36m▶[0m loading static inputs (tank params, demand, alpha, rainfall) ...
+  [32m✓[0m [32mloading static inputs (tank params, demand, alpha, rainfall)[0m  [2m(0.0s)[0m
+    [2mcascade               [0m: 32 tanks
+    [2mrainfall history      [0m: 552 days
+    [2mstorage mode          [0m: reload tank_storage.csv daily (deployment)
+
+[36m[1m╔════════════════════════════════════════════════════════════════════════╗[0m
+[36m[1m║[0m[36m[1m DAY 1 / 1                                                              [0m[36m[1m║[0m
+[36m[1m║[0m[2m season day 1 of 1 (yala)   |   planning days 1-7                       [0m[36m[1m║[0m
+[36m[1m╚════════════════════════════════════════════════════════════════════════╝[0m
+[34m[1m── OBSERVE ──────────────────────────── Module 1 storage + Module 3 risk [0m
+    [2mhistory window        [0m: 552 days × 32 tanks (C = 0.16)
+    [2mgamma mean range      [0m: 600 m³ … 91,070 m³ /day
+    [2mgamma std range       [0m: 685 m³ … 101,190 m³ /day
+    [2mscenario tensor       [0m: K=20 × N=32 × T=7
+    [2mmean inflow           [0m: 3,521 m³ /tank/day
+    [2mmax sampled inflow    [0m: 287,450 m³ /tank/day
+    [2mdry-day share         [0m: history 54.5%  sampled 53.9%  (wet-day threshold 1 mm)
+[34m[1m── CONSTRAINTS ────────────────────────────── reference-plan feasibility [0m
+    [2mC3 initial-storage diagnostic (all tanks)[0m
+    [1mtank                           S_current         S_min          S_max      C3 floor  % cap  below floor   deficit[0m
+    [2m─────────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
+    Tawalanhalmillewa_Wewa         14,989 m³      2,652 m³      26,525 m³      3,979 m³  56.5%  NO               0 m³
+    Settikulama_Wewa                  159 m³      1,223 m³      12,233 m³      1,835 m³   1.3%  YES          1,676 m³
+    Pansala_Wewa                  176,101 m³     29,612 m³     296,117 m³     44,418 m³  59.5%  NO               0 m³
+    Kudaittikattiya_Wewa                5 m³         58 m³         576 m³         86 m³   0.8%  YES             82 m³
+    Maha_Ittikattiya_Wewa         198,844 m³     36,259 m³     362,588 m³     54,388 m³  54.8%  NO               0 m³
+    Ulankulama_Wewa               116,026 m³     20,974 m³     209,736 m³     31,460 m³  55.3%  NO               0 m³
+    Amane_Wewa                    112,724 m³     13,456 m³     134,564 m³     20,185 m³  83.8%  NO               0 m³
+    Ihala_Amanakkattuwa_Wewa       13,530 m³      3,425 m³      34,252 m³      5,138 m³  39.5%  NO               0 m³
+    Ethiniwetuna_Wewa              36,551 m³      4,915 m³      49,154 m³      7,373 m³  74.4%  NO               0 m³
+    Pahala_Amanakkattuwa_Wewa      16,410 m³      5,958 m³      59,585 m³      8,938 m³  27.5%  NO               0 m³
+    Walagambahuwa_Wewa             90,182 m³     28,386 m³     283,859 m³     42,579 m³  31.8%  NO               0 m³
+    Wendarakulama_Wewa             54,012 m³      9,481 m³      94,807 m³     14,221 m³  57.0%  NO               0 m³
+    Marikkaragama_Wewa             24,389 m³      7,348 m³      73,483 m³     11,022 m³  33.2%  NO               0 m³
+    Periyakulama_Wewa             602,036 m³     98,452 m³     984,524 m³    147,679 m³  61.1%  NO               0 m³
+    Mawatha_Wewa                   48,836 m³     15,784 m³     157,840 m³     23,676 m³  30.9%  NO               0 m³
+    Meegassegama_Wewa             130,934 m³     23,985 m³     239,850 m³     35,978 m³  54.6%  NO               0 m³
+    Mahakanumulla_Wewa            160,381 m³     85,949 m³     859,489 m³    128,923 m³  18.7%  NO               0 m³
+    Manakkulama_Wewa                  705 m³      3,938 m³      39,382 m³      5,907 m³   1.8%  YES          5,202 m³
+    Kuda_Kanumulla_Wewa           102,076 m³     17,087 m³     170,867 m³     25,630 m³  59.7%  NO               0 m³
+    Wagayakulama_Wewa              21,986 m³      4,675 m³      46,749 m³      7,012 m³  47.0%  NO               0 m³
+    Wagayakulama                   21,991 m³      7,039 m³      70,393 m³     10,559 m³  31.2%  NO               0 m³
+    Alittana_Wewa                 121,518 m³     50,173 m³     501,726 m³     75,259 m³  24.2%  NO               0 m³
+    Wannanmaduwa_Wewa             527,693 m³    114,195 m³   1,141,946 m³    171,292 m³  46.2%  NO               0 m³
+    Wellamaduwa_Wewa               73,265 m³     21,416 m³     214,163 m³     32,124 m³  34.2%  NO               0 m³
+    Sembukulama_Wewa              114,475 m³     20,247 m³     202,468 m³     30,370 m³  56.5%  NO               0 m³
+    Hammillakulama_Wewa           154,719 m³     20,057 m³     200,569 m³     30,085 m³  77.1%  NO               0 m³
+    Tirappane_Wewa                216,110 m³     53,347 m³     533,473 m³     80,021 m³  40.5%  NO               0 m³
+    Todamaduwa_Wewa               107,096 m³     68,214 m³     682,139 m³    102,321 m³  15.7%  NO               0 m³
+    Galwaduwawa_Wewa                   40 m³        806 m³       8,057 m³      1,209 m³   0.5%  YES          1,168 m³
+    Galkulama_Wewa                 42,171 m³     18,577 m³     185,774 m³     27,866 m³  22.7%  NO               0 m³
+    Nachchaduwa_Wewa           46,343,610 m³  5,550,133 m³  55,501,330 m³  8,325,199 m³  83.5%  NO               0 m³
+    Irahandaketu_Wewa              57,123 m³      7,369 m³      73,688 m³     11,053 m³  77.5%  NO               0 m³
+    [2mtanks below C3 floor  [0m: 4
+    [2mtotal initial C3 deficit[0m: 8,128 m³
+    [2mworst offending tank  [0m: Manakkulama_Wewa
+    [2mlargest deficit       [0m: 5,202 m³
+    [2mC3 floor is baseline-relative: S(t) >= min(S_base(t), S_min + 5%*S_max)[0m
+    [2mthe no-action plan reproduces S_base, so a feasible plan always exists[0m
+    [2mC3 horizon total below uses optimised tanks only to match the constraint table[0m
+    [2mC3 horizon diagnostic (optimised tanks only, floor = baseline-relative)[0m
+    [1mtank                       Day 1     Day 2   Day 3  Day 4     Day 5     Day 6     Day 7   enforced   absolute  share[0m
+    [2m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
+    Galkulama_Wewa              0 m³      0 m³    0 m³   0 m³  3,185 m³  6,936 m³  9,289 m³  19,409 m³  19,409 m³  61.1%
+    Pahala_Amanakkattuwa_Wewa   0 m³      0 m³    0 m³   0 m³  1,676 m³  2,979 m³  3,304 m³   7,959 m³   7,959 m³  25.1%
+    Manakkulama_Wewa            0 m³  1,354 m³  454 m³   0 m³      0 m³      0 m³      0 m³   1,808 m³   4,382 m³  13.8%
+    Tawalanhalmillewa_Wewa      0 m³      0 m³    0 m³   0 m³      0 m³      0 m³      0 m³       0 m³       0 m³   0.0%
+    Pansala_Wewa                0 m³      0 m³    0 m³   0 m³      0 m³      0 m³      0 m³       0 m³       0 m³   0.0%
+    Maha_Ittikattiya_Wewa       0 m³      0 m³    0 m³   0 m³      0 m³      0 m³      0 m³       0 m³       0 m³   0.0%
+    Ulankulama_Wewa             0 m³      0 m³    0 m³   0 m³      0 m³      0 m³      0 m³       0 m³       0 m³   0.0%
+    Amane_Wewa                  0 m³      0 m³    0 m³   0 m³      0 m³      0 m³      0 m³       0 m³       0 m³   0.0%
+    Ihala_Amanakkattuwa_Wewa    0 m³      0 m³    0 m³   0 m³      0 m³      0 m³      0 m³       0 m³       0 m³   0.0%
+    Ethiniwetuna_Wewa           0 m³      0 m³    0 m³   0 m³      0 m³      0 m³      0 m³       0 m³       0 m³   0.0%
+    Walagambahuwa_Wewa          0 m³      0 m³    0 m³   0 m³      0 m³      0 m³      0 m³       0 m³       0 m³   0.0%
+    Wendarakulama_Wewa          0 m³      0 m³    0 m³   0 m³      0 m³      0 m³      0 m³       0 m³       0 m³   0.0%
+    Marikkaragama_Wewa          0 m³      0 m³    0 m³   0 m³      0 m³      0 m³      0 m³       0 m³       0 m³   0.0%
+    Periyakulama_Wewa           0 m³      0 m³    0 m³   0 m³      0 m³      0 m³      0 m³       0 m³       0 m³   0.0%
+    Mawatha_Wewa                0 m³      0 m³    0 m³   0 m³      0 m³      0 m³      0 m³       0 m³       0 m³   0.0%
+    Meegassegama_Wewa           0 m³      0 m³    0 m³   0 m³      0 m³      0 m³      0 m³       0 m³       0 m³   0.0%
+    Mahakanumulla_Wewa          0 m³      0 m³    0 m³   0 m³      0 m³      0 m³      0 m³       0 m³       0 m³   0.0%
+    Kuda_Kanumulla_Wewa         0 m³      0 m³    0 m³   0 m³      0 m³      0 m³      0 m³       0 m³       0 m³   0.0%
+    Wagayakulama_Wewa           0 m³      0 m³    0 m³   0 m³      0 m³      0 m³      0 m³       0 m³       0 m³   0.0%
+    Wagayakulama                0 m³      0 m³    0 m³   0 m³      0 m³      0 m³      0 m³       0 m³       0 m³   0.0%
+    Alittana_Wewa               0 m³      0 m³    0 m³   0 m³      0 m³      0 m³      0 m³       0 m³       0 m³   0.0%
+    Wannanmaduwa_Wewa           0 m³      0 m³    0 m³   0 m³      0 m³      0 m³      0 m³       0 m³       0 m³   0.0%
+    Wellamaduwa_Wewa            0 m³      0 m³    0 m³   0 m³      0 m³      0 m³      0 m³       0 m³       0 m³   0.0%
+    Sembukulama_Wewa            0 m³      0 m³    0 m³   0 m³      0 m³      0 m³      0 m³       0 m³       0 m³   0.0%
+    Hammillakulama_Wewa         0 m³      0 m³    0 m³   0 m³      0 m³      0 m³      0 m³       0 m³       0 m³   0.0%
+    Tirappane_Wewa              0 m³      0 m³    0 m³   0 m³      0 m³      0 m³      0 m³       0 m³       0 m³   0.0%
+    Todamaduwa_Wewa             0 m³      0 m³    0 m³   0 m³      0 m³      0 m³      0 m³       0 m³       0 m³   0.0%
+    Irahandaketu_Wewa           0 m³      0 m³    0 m³   0 m³      0 m³      0 m³      0 m³       0 m³       0 m³   0.0%
+    [2mTop 10 tanks by ABSOLUTE reserve deficit[0m
+    [1mtank                        enforced   absolute  share[0m
+    [2m──────────────────────────────────────────────────────[0m
+    Galkulama_Wewa             19,409 m³  19,409 m³  61.1%
+    Pahala_Amanakkattuwa_Wewa   7,959 m³   7,959 m³  25.1%
+    Manakkulama_Wewa            1,808 m³   4,382 m³  13.8%
+    Tawalanhalmillewa_Wewa          0 m³       0 m³   0.0%
+    Pansala_Wewa                    0 m³       0 m³   0.0%
+    Maha_Ittikattiya_Wewa           0 m³       0 m³   0.0%
+    Ulankulama_Wewa                 0 m³       0 m³   0.0%
+    Amane_Wewa                      0 m³       0 m³   0.0%
+    Ihala_Amanakkattuwa_Wewa        0 m³       0 m³   0.0%
+    Ethiniwetuna_Wewa               0 m³       0 m³   0.0%
+    [2mC3 violation (enforced)[0m: 29,176 m³
+    [2mreserve deficit (absolute)[0m: 31,751 m³
+    [2mreference plan = min(demand, R_max), i.e. 'release exactly what is asked'[0m
+    [2mconstraints evaluated on the optimised tanks only (terminal sink monitored, not enforced)[0m
+    [1m    constraint             rule                                reference plan  violation[0m
+    [2m────────────────────────────────────────────────────────────────────────────────────────[0m
+    C1  storage bounds         S_min <= S <= S_max                 VIOLATED              325
+    C2  release bounds         0 <= R <= R_max                     satisfied               -
+    C3  seasonal safety floor  S >= min(S_base, S_min + 5%*S_max)  VIOLATED           29,176
+    C4  mass conservation      sum R(t) <= sum S + sum Q(t)        satisfied               -
+    C5  non-negativity         R >= 0 and S >= 0                   satisfied               -
+    [33m[1m![0m [33mbinding on the reference plan: C1 (storage bounds), C3 (seasonal safety floor) -> NSGA-II must trade demand away here[0m
+[34m[1m── OPTIMISE ──────────────────────────────────────────────────── NSGA-II [0m
+  [36m▶[0m searching the Pareto front ...
+    [2msearch space          [0m: 28 tanks x 7 days = 196 decision variables
+    [2mbudget                [0m: 200 individuals x 300 gens = 60,000 evaluations (x 20 scenarios each)
+    gen    1/300  [36m[0m[2m░░░░░░░░░░░░░░░░░░░░[0m   0.3%  front    1  feas   1/200  f1   21.98k  f2   14.39k  eta 5m 41.4s    gen   10/300  [36m█[0m[2m░░░░░░░░░░░░░░░░░░░[0m   3.3%  front    1  feas 200/200  f1   21.98k  f2   14.39k  eta 5m 19.1s    gen   20/300  [36m█[0m[2m░░░░░░░░░░░░░░░░░░░[0m   6.7%  front   53  feas 200/200  f1   21.98k  f2   11.59k  eta 5m 01.1s    gen   30/300  [36m██[0m[2m░░░░░░░░░░░░░░░░░░[0m  10.0%  front  172  feas 200/200  f1   21.98k  f2   10.43k  eta 4m 48.0s    gen   40/300  [36m███[0m[2m░░░░░░░░░░░░░░░░░[0m  13.3%  front  200  feas 200/200  f1   21.98k  f2    9.63k  eta 4m 39.7s    gen   50/300  [36m███[0m[2m░░░░░░░░░░░░░░░░░[0m  16.7%  front  200  feas 200/200  f1   21.98k  f2    9.19k  eta 4m 29.4s    gen   60/300  [36m████[0m[2m░░░░░░░░░░░░░░░░[0m  20.0%  front  200  feas 200/200  f1   21.98k  f2    8.99k  eta 4m 19.5s    gen   70/300  [36m█████[0m[2m░░░░░░░░░░░░░░░[0m  23.3%  front  200  feas 200/200  f1   21.98k  f2    8.83k  eta 4m 08.5s    gen   80/300  [36m█████[0m[2m░░░░░░░░░░░░░░░[0m  26.7%  front  200  feas 200/200  f1   21.98k  f2    8.78k  eta 3m 57.9s    gen   90/300  [36m██████[0m[2m░░░░░░░░░░░░░░[0m  30.0%  front  200  feas 200/200  f1   21.98k  f2    8.76k  eta 3m 48.3s    gen  100/300  [36m███████[0m[2m░░░░░░░░░░░░░[0m  33.3%  front  200  feas 200/200  f1   21.98k  f2    8.71k  eta 3m 37.5s    gen  110/300  [36m███████[0m[2m░░░░░░░░░░░░░[0m  36.7%  front  200  feas 200/200  f1   21.98k  f2    8.70k  eta 3m 27.0s    gen  120/300  [36m████████[0m[2m░░░░░░░░░░░░[0m  40.0%  front  200  feas 200/200  f1   21.98k  f2    8.67k  eta 3m 16.6s    gen  130/300  [36m█████████[0m[2m░░░░░░░░░░░[0m  43.3%  front  200  feas 200/200  f1   21.98k  f2    8.60k  eta 3m 05.6s    gen  140/300  [36m█████████[0m[2m░░░░░░░░░░░[0m  46.7%  front  200  feas 200/200  f1   21.98k  f2    8.57k  eta 2m 54.9s    gen  150/300  [36m██████████[0m[2m░░░░░░░░░░[0m  50.0%  front  200  feas 200/200  f1   21.98k  f2    8.51k  eta 2m 44.3s    gen  160/300  [36m███████████[0m[2m░░░░░░░░░[0m  53.3%  front  200  feas 200/200  f1   21.98k  f2    8.47k  eta 2m 33.1s    gen  170/300  [36m███████████[0m[2m░░░░░░░░░[0m  56.7%  front  200  feas 200/200  f1   21.98k  f2    8.46k  eta 2m 21.8s    gen  180/300  [36m████████████[0m[2m░░░░░░░░[0m  60.0%  front  200  feas 200/200  f1   21.98k  f2    8.45k  eta 2m 10.5s    gen  190/300  [36m█████████████[0m[2m░░░░░░░[0m  63.3%  front  200  feas 200/200  f1   21.50k  f2    8.41k  eta 1m 59.5s    gen  200/300  [36m█████████████[0m[2m░░░░░░░[0m  66.7%  front  200  feas 200/200  f1   21.39k  f2    8.40k  eta 1m 48.5s    gen  210/300  [36m██████████████[0m[2m░░░░░░[0m  70.0%  front  200  feas 200/200  f1   20.94k  f2    8.37k  eta 1m 37.6s    gen  220/300  [36m███████████████[0m[2m░░░░░[0m  73.3%  front  200  feas 200/200  f1   20.94k  f2    8.19k  eta 1m 26.8s    gen  230/300  [36m███████████████[0m[2m░░░░░[0m  76.7%  front  200  feas 200/200  f1   20.68k  f2    8.19k  eta 1m 16.0s    gen  240/300  [36m████████████████[0m[2m░░░░[0m  80.0%  front  200  feas 200/200  f1   20.66k  f2    8.18k  eta 1m 05.2s    gen  250/300  [36m█████████████████[0m[2m░░░[0m  83.3%  front  200  feas 200/200  f1   20.54k  f2    8.09k  eta 54.4s       gen  260/300  [36m█████████████████[0m[2m░░░[0m  86.7%  front  200  feas 200/200  f1   20.54k  f2    8.01k  eta 43.6s    gen  270/300  [36m██████████████████[0m[2m░░[0m  90.0%  front  200  feas 200/200  f1   20.30k  f2    7.96k  eta 32.7s    gen  280/300  [36m███████████████████[0m[2m░[0m  93.3%  front  200  feas 200/200  f1   20.14k  f2    7.92k  eta 21.9s    gen  290/300  [36m███████████████████[0m[2m░[0m  96.7%  front  200  feas 200/200  f1   19.95k  f2    7.90k  eta 10.9s    gen  300/300  [36m████████████████████[0m[2m[0m 100.0%  front  200  feas 200/200  f1   19.65k  f2    7.87k  eta 0.0s 
+    [2mevaluations           [0m: 60,000 candidate release plans
+  [32m✓[0m [32msearching the Pareto front[0m  [2m(5m 28.4s)[0m
+    [2mC3 tier               [0m: hard
+    [2mpareto front          [0m: 200 non-dominated solutions
+    [2mf1 shortage range     [0m: 19,650 m³ … 59,891 m³
+    [2mf2 overflow range     [0m: 7,875 m³ … 15,298 m³
+    [2msearch time           [0m: 5m 28.4s
+[34m[1m── DECIDE ──────────────────────────────────── Option A weights + TOPSIS [0m
+  [32m✓[0m [32mselected rank 1 (closeness 0.8134)[0m
+      [2mf1 shortage           [0m: 23,534 m³
+      [2mf2 overflow           [0m: 12,517 m³
+      [2mf3 equity             [0m: 27.2969
+      [2mf4 water loss         [0m: 9,434 m³
+      [2mtotal release         [0m: 1,399,397 m³
+      [2mtotal consumed        [0m: 1,388,123 m³
+      [2mtotal return flow     [0m: 11,274 m³
+      [2mtotal channel loss    [0m: 1,014 m³
+      [1mTank                           Demand     Release    Consumed  Return Flow  Satisfaction %[0m
+      [2m──────────────────────────────────────────────────────────────────────────────────────────[0m
+      Tawalanhalmillewa_Wewa         8000.3    14035.33     8000.27      6035.06           100.0
+      Settikulama_Wewa              9600.37         0.0         0.0          0.0             0.0
+      Pansala_Wewa                  9600.37     9491.77     9491.05         0.72            98.9
+      Kudaittikattiya_Wewa           8000.3         0.0         0.0          0.0             0.0
+      Maha_Ittikattiya_Wewa        14400.52    14511.36     14400.1       111.26           100.0
+      Ulankulama_Wewa               9600.37     9600.66     9492.51       108.14            98.9
+      Amane_Wewa                   12160.32    12518.35     12154.6       363.75           100.0
+      Ihala_Amanakkattuwa_Wewa      9600.37      9569.8     9555.62        14.17            99.5
+      Ethiniwetuna_Wewa             9600.37     9987.19     9598.89        388.3           100.0
+      Pahala_Amanakkattuwa_Wewa     11200.7     4968.62     4968.62          0.0            44.6
+      Walagambahuwa_Wewa             8960.5     8996.76     8958.46         38.3           100.0
+      Wendarakulama_Wewa            7200.25     7200.32     7200.24         0.08           100.0
+      Marikkaragama_Wewa           12160.32    12094.78    12094.49         0.29            99.5
+      Periyakulama_Wewa              6400.2     6399.36     6393.95          5.4            99.9
+      Mawatha_Wewa                  4000.45     4000.08     4000.08          0.0           100.0
+      Meegassegama_Wewa              6080.5     6063.28     6061.84         1.44            99.7
+      Mahakanumulla_Wewa             7680.2     7678.93     7678.92          0.0           100.0
+      Manakkulama_Wewa              9600.37    10742.12     6890.51       3851.6            71.4
+      Kuda_Kanumulla_Wewa           9600.37      9593.7     9593.51          0.2            99.9
+      Wagayakulama_Wewa             5760.07     6095.28     5758.22       337.06           100.0
+      Wagayakulama                  9600.37     9600.33     9600.21         0.12           100.0
+      Alittana_Wewa                17280.57    17276.97    17272.76         4.21           100.0
+      Wannanmaduwa_Wewa            28801.02    28716.93    28716.27         0.65            99.7
+      Wellamaduwa_Wewa              1279.95     1280.89     1279.81         1.08           100.0
+      Sembukulama_Wewa             12800.45    12614.43    12614.38         0.05            98.5
+      Hammillakulama_Wewa           9280.25     9140.54     9136.27         4.27            98.5
+      Tirappane_Wewa               14400.52    14398.34    14396.63         1.71           100.0
+      Todamaduwa_Wewa               9600.37     9584.35     9579.15          5.2            99.8
+      Galwaduwawa_Wewa               3200.1         0.0         0.0          0.0             0.0
+      Galkulama_Wewa               20001.07     8747.11     8746.53         0.58            44.0
+      Nachchaduwa_Wewa           1120050.12  1120050.12  1120050.12          0.0           100.0
+      Irahandaketu_Wewa              4480.1     4439.18     4439.01         0.17            99.1
+      [1mTank                       Storage Start  Local Inflow  Upstream Inflow     Release    Consumed  Storage End[0m
+      [2m────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
+      Tawalanhalmillewa_Wewa          14989.22       17122.4              0.0    14035.33     8000.27     12693.29
+      Settikulama_Wewa                  159.03      20404.64              0.0         0.0         0.0      12233.4
+      Pansala_Wewa                    176100.9        2376.6          5738.33     9491.77     9491.05    171182.07
+      Kudaittikattiya_Wewa                4.61       7528.28              0.0         0.0         0.0        576.0
+      Maha_Ittikattiya_Wewa          198843.53      31422.04              0.0    14511.36     14400.1     203430.7
+      Ulankulama_Wewa                116025.96      30637.19             0.66     9600.66     9492.51    131253.16
+      Amane_Wewa                     112724.01      25593.89              0.0    12518.35     12154.6    122968.05
+      Ihala_Amanakkattuwa_Wewa        13529.54      12595.32           345.31      9569.8     9555.62     14065.37
+      Ethiniwetuna_Wewa               36550.62      12396.41              0.0     9987.19     9598.89     36098.94
+      Pahala_Amanakkattuwa_Wewa        16409.6       1310.61            48.08     4968.62     4968.62      9684.66
+      Walagambahuwa_Wewa              90182.04      15460.08              0.0     8996.76     8958.46     93530.35
+      Wendarakulama_Wewa               54011.6       8640.04              0.0     7200.32     7200.24     50068.31
+      Marikkaragama_Wewa              24389.11      22487.22              0.0    12094.78    12094.49     30956.05
+      Periyakulama_Wewa               602036.3      40164.73           540.34     6399.36     6393.95    627844.01
+      Mawatha_Wewa                    48835.63      16396.93              0.0     4000.08     4000.08     54151.98
+      Meegassegama_Wewa              130934.12      25371.73             0.08     6063.28     6061.84    148118.14
+      Mahakanumulla_Wewa             160380.72       22404.8              0.0     7678.93     7678.92    169016.59
+      Manakkulama_Wewa                  704.93      24897.79             3.79    10742.12     6890.51       8208.8
+      Kuda_Kanumulla_Wewa            102076.07       8698.09           153.01      9593.7     9593.51     95810.46
+      Wagayakulama_Wewa               21985.87      16521.94              0.0     6095.28     5758.22     26889.53
+      Wagayakulama                    21990.87      12858.47              0.0     9600.33     9600.21     22141.01
+      Alittana_Wewa                  121518.09       7459.44             1.31    17276.97    17272.76    110567.88
+      Wannanmaduwa_Wewa              527693.15      39578.01          3240.93    28716.93    28716.27    508226.66
+      Wellamaduwa_Wewa                73265.23      22309.06              0.0     1280.89     1279.81      86929.4
+      Sembukulama_Wewa               114475.18      21479.92           178.11    12614.43    12614.38    118846.27
+      Hammillakulama_Wewa             154719.0       27546.9              0.0     9140.54     9136.27    168025.86
+      Tirappane_Wewa                 216109.91      32560.72             3.66    14398.34    14396.63    210762.96
+      Todamaduwa_Wewa                107095.85       17093.5             0.52     9584.35     9579.15    106958.02
+      Galwaduwawa_Wewa                   40.28       5726.58              0.0         0.0         0.0      4240.86
+      Galkulama_Wewa                  42170.74       3844.56             0.16     8747.11     8746.53     28203.36
+      Nachchaduwa_Wewa              46343610.3     230828.49             5.66  1120050.12  1120050.12  45034432.83
+      Irahandaketu_Wewa               57122.63       5080.91              0.0     4439.18     4439.01     54082.36
+[34m[1m── CROSS-CHECK ───────────────────────── simulation vs Module 3 forecast [0m
+  [36m▶[0m comparing trajectory shape (ratio basis) ...
+  [32m✓[0m [32mcomparing trajectory shape (ratio basis)[0m  [2m(0.0s)[0m
+    [2mdirection agreement   [0m: 46.9%  (32 tanks, 224 comparisons)
+    [2mmean |ratio diff|     [0m: 0.1964
+    [2mmax  |ratio diff|     [0m: 5.7933
+    [33m[1m![0m [33m6 tank(s) diverge beyond 15%: Galkulama_Wewa, Galwaduwawa_Wewa, Kudaittikattiya_Wewa, Manakkulama_Wewa, Pahala_Amanakkattuwa_Wewa, Settikulama_Wewa[0m
+[34m[1m── ACT ─────────────────────────── day-0 release (days 1..T-1 discarded) [0m
+    [2mtotal release today   [0m: 197,709 m³
+    [2mtanks releasing       [0m: 29 of 32
+    [1mtank                  release  share[0m
+    [2m────────────────────────────────────[0m
+    Nachchaduwa_Wewa   157,992 m³  79.9%
+    Wannanmaduwa_Wewa    3,979 m³   2.0%
+    Galkulama_Wewa       2,822 m³   1.4%
+  [32m✓[0m [32mday 1 complete[0m  [2m(5m 28.5s)[0m
+
+[36m[1m╔════════════════════════════════════════════════════════════════════════╗[0m
+[36m[1m║[0m[36m[1m SEASON SUMMARY                                                         [0m[36m[1m║[0m
+[36m[1m╚════════════════════════════════════════════════════════════════════════╝[0m
+    [2mdays simulated        [0m: 1
+    [2mfeasible decisions    [0m: 1 / 1 (100.0%)
+    [2minfeasible days       [0m: 0
+    [2mC3 hard / relaxed     [0m: 1 / 0
+    [2mcross-checks stored   [0m: 1
+    [2mtotal runtime         [0m: 5m 28.5s
+    [2mmean per day          [0m: 5m 28.5s
+    [2mmean daily release    [0m: 197,709 m³
+    [2mseason release total  [0m: 197,709 m³
+  [36m▶[0m writing CSV outputs ...
+  [32m✓[0m [32mwriting CSV outputs[0m  [2m(0.0s)[0m
+    [2mdecisions             [0m: output\2026-05-18\mpc_decisions.csv
+    [2mweights               [0m: output\2026-05-18\topsis_weights_log.csv
+    [2mcrosscheck            [0m: output\2026-05-18\module3_crosscheck.csv

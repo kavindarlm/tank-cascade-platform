@@ -1,0 +1,106 @@
+{
+  "period": {
+    "start": "2025-04-15",
+    "end": "2025-04-29",
+    "n_days": 15,
+    "n_feasible": 15,
+    "feasibility_rate": 1.0
+  },
+  "storage": {
+    "start_m3": 50072094.71,
+    "end_m3": 50162561.76,
+    "mean_m3": 50020788.84533333,
+    "min_m3": 49178676.83,
+    "max_m3": 50220598.17
+  },
+  "release": {
+    "mean": 1358553.5985113839,
+    "sum": 20378303.97767076,
+    "min": 1334559.1272614712,
+    "max": 1428032.6986234668
+  },
+  "consumed": {
+    "mean": 1346899.642239008,
+    "sum": 20203494.63358512,
+    "min": 1323633.324909322,
+    "max": 1420825.0692017544
+  },
+  "return_flow": {
+    "mean": 11653.956272376161,
+    "sum": 174809.34408564243,
+    "min": 5485.448653477483,
+    "max": 20840.507135031683
+  },
+  "shortage_f1": {
+    "mean": 45375.700666666664,
+    "sum": 680635.51,
+    "min": 39939.88,
+    "max": 48882.14
+  },
+  "overflow_f2": {
+    "mean": 7425.858666666667,
+    "sum": 111387.88,
+    "min": 5681.72,
+    "max": 8949.84
+  },
+  "equity_f3": {
+    "mean": 46.69011333333333,
+    "sum": 700.3516999999999,
+    "min": 35.5007,
+    "max": 71.042
+  },
+  "water_loss_f4": {
+    "mean": 10061.996000000001,
+    "sum": 150929.94,
+    "min": 4234.09,
+    "max": 19376.74
+  },
+  "closeness": {
+    "mean": 0.8545933333333334,
+    "sum": 12.818900000000001,
+    "min": 0.7853,
+    "max": 0.8989
+  },
+  "satisfaction_pct_mean": {
+    "mean": 86.46255760590661,
+    "sum": 1296.9383640885992,
+    "min": 85.26350864290156,
+    "max": 87.34103953481068
+  },
+  "risk": {
+    "p_drought_mean": 0.5345333333333333,
+    "p_overflow_mean": 0.1544333333333333
+  },
+  "crosscheck": {
+    "direction_agreement_rate": {
+      "mean": 0.37793333333333323,
+      "sum": 5.668999999999999,
+      "min": 0.312,
+      "max": 0.594
+    },
+    "mean_abs_ratio_diff": {
+      "mean": 0.17327333333333336,
+      "sum": 2.5991000000000004,
+      "min": 0.1478,
+      "max": 0.2637
+    },
+    "tanks_ever_flagged": [
+      "Alittana_Wewa",
+      "Amane_Wewa",
+      "Ethiniwetuna_Wewa",
+      "Galkulama_Wewa",
+      "Galwaduwawa_Wewa",
+      "Ihala_Amanakkattuwa_Wewa",
+      "Kudaittikattiya_Wewa",
+      "Maha_Ittikattiya_Wewa",
+      "Manakkulama_Wewa",
+      "Marikkaragama_Wewa",
+      "Meegassegama_Wewa",
+      "Pahala_Amanakkattuwa_Wewa",
+      "Sembukulama_Wewa",
+      "Settikulama_Wewa",
+      "Tawalanhalmillewa_Wewa",
+      "Wagayakulama_Wewa"
+    ]
+  }
+}

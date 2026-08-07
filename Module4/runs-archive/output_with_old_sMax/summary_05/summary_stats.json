@@ -1,0 +1,96 @@
+{
+  "period": {
+    "start": "2025-04-30",
+    "end": "2025-05-14",
+    "n_days": 15,
+    "n_feasible": 15,
+    "feasibility_rate": 1.0
+  },
+  "storage": {
+    "start_m3": 51127661.15,
+    "end_m3": 50684697.22,
+    "mean_m3": 51021507.94933334,
+    "min_m3": 50684697.22,
+    "max_m3": 51364948.6
+  },
+  "release": {
+    "mean": 1968579.5036421868,
+    "sum": 29528692.5546328,
+    "min": 1949531.8033565464,
+    "max": 1981158.054548968
+  },
+  "consumed": {
+    "mean": 1955176.1848095781,
+    "sum": 29327642.772143673,
+    "min": 1941675.9575047994,
+    "max": 1968295.077399918
+  },
+  "return_flow": {
+    "mean": 13403.318832608426,
+    "sum": 201049.78248912637,
+    "min": 7855.845851746713,
+    "max": 22869.39629632396
+  },
+  "shortage_f1": {
+    "mean": 87758.62066666667,
+    "sum": 1316379.31,
+    "min": 77849.36,
+    "max": 102112.1
+  },
+  "overflow_f2": {
+    "mean": 897.3966666666666,
+    "sum": 13460.949999999999,
+    "min": 400.69,
+    "max": 1387.1
+  },
+  "equity_f3": {
+    "mean": 61.77712666666666,
+    "sum": 926.6569,
+    "min": 53.3554,
+    "max": 72.941
+  },
+  "water_loss_f4": {
+    "mean": 13529.307333333332,
+    "sum": 202939.61,
+    "min": 7855.75,
+    "max": 22857.34
+  },
+  "closeness": {
+    "mean": 0.7266133333333333,
+    "sum": 10.8992,
+    "min": 0.6856,
+    "max": 0.8001
+  },
+  "satisfaction_pct_mean": {
+    "mean": 83.75789958055212,
+    "sum": 1256.368493708282,
+    "min": 81.14622831641299,
+    "max": 85.71541275303076
+  },
+  "risk": {
+    "p_drought_mean": 0.5722666666666666,
+    "p_overflow_mean": 0.12943333333333332
+  },
+  "crosscheck": {
+    "direction_agreement_rate": {
+      "mean": 0.6064000000000002,
+      "sum": 9.096000000000002,
+      "min": 0.562,
+      "max": 0.688
+    },
+    "mean_abs_ratio_diff": {
+      "mean": 0.08821333333333332,
+      "sum": 1.3232,
+      "min": 0.0791,
+      "max": 0.1012
+    },
+    "tanks_ever_flagged": [
+      "Ihala_Amanakkattuwa_Wewa",
+      "Kudaittikattiya_Wewa",
+      "Maha_Ittikattiya_Wewa",
+      "Manakkulama_Wewa",
+      "Meegassegama_Wewa",
+      "Wendarakulama_Wewa"
+    ]
+  }
+}

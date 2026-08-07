@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "G:\Reserch_Project_Final_Year_Repo\tank-cascade-platform\Module4\mpc-pipeline\module4\simulation_runner.py", line 556, in run_simulation
+    run_one_day(ctx, sim_date, tee, season_start)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "G:\Reserch_Project_Final_Year_Repo\tank-cascade-platform\Module4\mpc-pipeline\module4\simulation_runner.py", line 229, in run_one_day
+    results = run_mpc(day_cfg, season_length=1, verbose=True)
+  File "G:\Reserch_Project_Final_Year_Repo\tank-cascade-platform\Module4\mpc-pipeline\module4\mpc_loop.py", line 126, in run_mpc
+    S_current = load_current_storage(cfg)
+  File "G:\Reserch_Project_Final_Year_Repo\tank-cascade-platform\Module4\mpc-pipeline\module4\data_loader.py", line 189, in load_current_storage
+    raise ValueError("Negative storage detected in tank_storage.csv "
+                     "(check Module 1 output).")
+ValueError: Negative storage detected in tank_storage.csv (check Module 1 output).

@@ -1,0 +1,83 @@
+{
+  "date": "2025-04-19",
+  "day_offset": 49,
+  "status": "complete",
+  "runtime_seconds": 365.29,
+  "feasible": true,
+  "p_drought": 0.5172,
+  "p_overflow": 0.1531,
+  "weights": {
+    "shortage": 0.3874,
+    "overflow": 0.2397,
+    "equity": 0.2151,
+    "loss": 0.1578
+  },
+  "storage": {
+    "total_today_m3": 51367381.09,
+    "per_tank_m3": {
+      "Tawalanhalmillewa_Wewa": 36837.86,
+      "Settikulama_Wewa": 45639.59,
+      "Pansala_Wewa": 52661.21,
+      "Kudaittikattiya_Wewa": 167.98,
+      "Maha_Ittikattiya_Wewa": 38223.12,
+      "Ulankulama_Wewa": 58551.14,
+      "Amane_Wewa": 34393.9,
+      "Ihala_Amanakkattuwa_Wewa": 21468.61,
+      "Ethiniwetuna_Wewa": 20593.57,
+      "Pahala_Amanakkattuwa_Wewa": 86983.92,
+      "Walagambahuwa_Wewa": 76147.16,
+      "Wendarakulama_Wewa": 73782.59,
+      "Marikkaragama_Wewa": 75277.75,
+      "Periyakulama_Wewa": 217504.94,
+      "Mawatha_Wewa": 101052.59,
+      "Meegassegama_Wewa": 30032.15,
+      "Mahakanumulla_Wewa": 137645.46,
+      "Manakkulama_Wewa": 40565.29,
+      "Kuda_Kanumulla_Wewa": 180325.16,
+      "Wagayakulama_Wewa": 106903.27,
+      "Wagayakulama": 55661.67,
+      "Alittana_Wewa": 104680.0,
+      "Wannanmaduwa_Wewa": 990309.59,
+      "Wellamaduwa_Wewa": 221694.56,
+      "Sembukulama_Wewa": 175857.5,
+      "Hammillakulama_Wewa": 137334.16,
+      "Tirappane_Wewa": 702383.65,
+      "Todamaduwa_Wewa": 101017.05,
+      "Galwaduwawa_Wewa": 23414.41,
+      "Galkulama_Wewa": 31545.7,
+      "Nachchaduwa_Wewa": 47315602.05,
+      "Irahandaketu_Wewa": 73123.5
+    }
+  },
+  "selected": {
+    "rank": 1,
+    "closeness": 0.7636,
+    "f1_shortage": 66104.04,
+    "f2_overflow": 868.73,
+    "f3_equity": 50.9413,
+    "f4_water_loss": 14447.83,
+    "total_release": 1987726.2222499605,
+    "total_consumed": 1973429.6309279075,
+    "total_return_flow": 14296.59132205334,
+    "total_channel_loss": 1307.7266807782362,
+    "satisfaction_pct_mean": 88.87071518902331,
+    "satisfaction_pct_min": 0.0,
+    "satisfaction_pct_max": 100.0
+  },
+  "crosscheck": {
+    "mean_abs_ratio_diff": 0.0776,
+    "max_abs_ratio_diff": 2.5937,
+    "direction_agreement_rate": 0.531,
+    "n_tanks_compared": 32,
+    "n_comparisons": 224,
+    "flagged_tanks": [
+      "Kudaittikattiya_Wewa"
+    ],
+    "divergence_threshold": 0.15
+  },
+  "output_files": {
+    "decisions": "output\\2025-04-19\\mpc_decisions.csv",
+    "weights": "output\\2025-04-19\\topsis_weights_log.csv",
+    "crosscheck": "output\\2025-04-19\\module3_crosscheck.csv"
+  }
+}

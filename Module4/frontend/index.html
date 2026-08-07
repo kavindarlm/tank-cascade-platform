@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 4 - MPC Decisions</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-brand">Module 4 - MO-MPC Decision Support</div>
+  <div class="nav-note">standalone (not yet part of the shared platform)</div>
+</nav>
+
+<main class="container">
+  <h1>Tank cascade release decisions</h1>
+  <p class="subtitle">
+    Run the MPC pipeline for one day (live Module 3 forecast) or a date
+    range (season simulation), then browse the results below.
+  </p>
+
+  <section class="run-grid">
+
+    <div class="card">
+      <h2>Run for one day</h2>
+      <p class="hint">Reads Module 3's live forecast for the selected date. That file must already exist (Module3/forecast-service/outputs/forecast_&lt;date&gt;.csv).</p>
+      <div class="field-row">
+        <div class="field">
+          <label for="daily-date">Date</label>
+          <input type="date" id="daily-date" value="2026-07-29">
+        </div>
+        <div class="field checkbox">
+          <input type="checkbox" id="daily-fast-test" checked>
+          <label for="daily-fast-test">Quick test (small NSGA-II, not real results)</label>
+        </div>
+        <button class="primary" id="daily-run-btn">Run daily</button>
+        <button class="ghost stop-btn" id="daily-stop-btn" style="display:none;">Stop</button>
+      </div>
+      <div class="job-status" id="daily-status">
+        <div class="line"><span class="spinner" id="daily-spinner"></span><span id="daily-status-text">-</span></div>
+        <div class="progress-track"><div class="progress-fill" id="daily-progress-fill"></div></div>
+        <div class="run-summary" id="daily-summary"></div>
+        <details class="console-box">
+          <summary>Console output</summary>
+          <pre class="console-log" id="daily-console"></pre>
+        </details>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Run a date range (season)</h2>
+      <p class="hint">Uses a bulk Module 1+3 forecast CSV covering the whole range (research/back-test mode).</p>
+      <div class="field-row">
+        <div class="field">
+          <label for="season-start">Start</label>
+          <input type="date" id="season-start" value="2025-03-01">
+        </div>
+        <div class="field">
+          <label for="season-end">End</label>
+          <input type="date" id="season-end" value="2025-03-05">
+        </div>
+        <div class="field">
+          <label for="season-season">Season</label>
+          <select id="season-season">
+            <option value="yala" selected>Yala (Mar-Aug)</option>
+            <option value="maha">Maha (Oct-Feb)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="season-duration">Duration</label>
+          <select id="season-duration">
+            <option value="135" selected>135 days</option>
+            <option value="105">105 days</option>
+            <option value="90">90 days</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="season-forecast">Forecast file</label>
+          <select id="season-forecast">
+            <option value="data/module4_forecasts_mar_aug_2025.csv" selected>2025 Yala (verified working)</option>
+            <option value="data/module4_forecasts_mar_jul_2026_tft.csv">2026 TFT (currently broken - see README)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="season-output">Output folder name</label>
+          <input type="text" id="season-output" placeholder="auto-generated if blank">
+        </div>
+        <div class="field checkbox">
+          <input type="checkbox" id="season-fast-test" checked>
+          <label for="season-fast-test">Quick test (small NSGA-II, not real results)</label>
+        </div>
+        <button class="primary" id="season-run-btn">Run season</button>
+        <button class="ghost stop-btn" id="season-stop-btn" style="display:none;">Stop</button>
+      </div>
+      <div class="job-status" id="season-status">
+        <div class="line"><span class="spinner" id="season-spinner"></span><span id="season-status-text">-</span></div>
+        <div class="progress-track"><div class="progress-fill" id="season-progress-fill"></div></div>
+        <div class="run-summary" id="season-summary"></div>
+        <details class="console-box">
+          <summary>Console output</summary>
+          <pre class="console-log" id="season-console"></pre>
+        </details>
+      </div>
+    </div>
+
+  </section>
+
+  <section class="card" style="margin-top: 8px;">
+    <h2>Results</h2>
+    <div class="data-source-row">
+      <div class="field">
+        <label for="data-source">Data source folder (relative to mpc-pipeline/)</label>
+        <input type="text" id="data-source" value="outputs">
+      </div>
+      <button class="ghost" id="data-source-load">Load</button>
+      <span class="hint" id="data-source-hint" style="margin:0;"></span>
+    </div>
+
+    <nav class="steps-nav">
+      <button type="button" class="step-item active" data-target="decisions">Release decisions</button>
+      <button type="button" class="step-item" data-target="weights">Feasibility &amp; TOPSIS weights</button>
+      <button type="button" class="step-item" data-target="crosscheck">Module 3 cross-check</button>
+      <button type="button" class="step-item" data-target="map">Map view</button>
+    </nav>
+
+    <section id="panel-decisions" class="view-panel">
+      <div class="filters">
+        <div class="filter-group">
+          <label for="decisions-tank">Tank</label>
+          <select id="decisions-tank"><option value="">All tanks</option></select>
+        </div>
+        <div class="filter-group">
+          <label for="decisions-from">From date</label>
+          <input type="date" id="decisions-from">
+        </div>
+        <div class="filter-group">
+          <label for="decisions-to">To date</label>
+          <input type="date" id="decisions-to">
+        </div>
+        <button class="btn-secondary" data-clear="decisions" type="button">Clear filters</button>
+        <button class="btn-primary" data-download="decisions" type="button">Download CSV</button>
+      </div>
+      <div class="table-info" id="decisions-info">Not loaded yet - click Load above.</div>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Date</th><th>Tank</th><th>Release (m&sup3;)</th></tr></thead>
+          <tbody id="decisions-body"><tr class="empty-row"><td colspan="3">Not loaded</td></tr></tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <button data-prev="decisions" type="button">Prev</button>
+        <span id="decisions-page-indicator">Page 1</span>
+        <button data-next="decisions" type="button">Next</button>
+        <select data-page-size="decisions">
+          <option value="25">25 / page</option>
+          <option value="50" selected>50 / page</option>
+          <option value="100">100 / page</option>
+        </select>
+      </div>
+    </section>
+
+    <section id="panel-weights" class="view-panel" hidden>
+      <div class="filters">
+        <div class="filter-group">
+          <label for="weights-feasible">Feasible</label>
+          <select id="weights-feasible">
+            <option value="">All</option>
+            <option value="True">Yes</option>
+            <option value="False">No</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="weights-from">From date</label>
+          <input type="date" id="weights-from">
+        </div>
+        <div class="filter-group">
+          <label for="weights-to">To date</label>
+          <input type="date" id="weights-to">
+        </div>
+        <button class="btn-secondary" data-clear="weights" type="button">Clear filters</button>
+        <button class="btn-primary" data-download="weights" type="button">Download CSV</button>
+      </div>
+      <div class="table-info" id="weights-info">Not loaded yet - click Load above.</div>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr>
+            <th>Date</th><th>Day</th><th>P(drought)</th><th>P(overflow)</th>
+            <th>w shortage</th><th>w overflow</th><th>w equity</th><th>w loss</th>
+            <th>Feasible</th><th>C3 tier</th><th>Reserve deficit (m&sup3;)</th>
+          </tr></thead>
+          <tbody id="weights-body"><tr class="empty-row"><td colspan="11">Not loaded</td></tr></tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <button data-prev="weights" type="button">Prev</button>
+        <span id="weights-page-indicator">Page 1</span>
+        <button data-next="weights" type="button">Next</button>
+        <select data-page-size="weights">
+          <option value="25">25 / page</option>
+          <option value="50" selected>50 / page</option>
+          <option value="100">100 / page</option>
+        </select>
+      </div>
+    </section>
+
+    <section id="panel-crosscheck" class="view-panel" hidden>
+      <div class="filters">
+        <div class="filter-group">
+          <label for="crosscheck-tank">Tank</label>
+          <select id="crosscheck-tank"><option value="">All tanks</option></select>
+        </div>
+        <div class="filter-group">
+          <label for="crosscheck-from">From date</label>
+          <input type="date" id="crosscheck-from">
+        </div>
+        <div class="filter-group">
+          <label for="crosscheck-to">To date</label>
+          <input type="date" id="crosscheck-to">
+        </div>
+        <button class="btn-secondary" data-clear="crosscheck" type="button">Clear filters</button>
+        <button class="btn-primary" data-download="crosscheck" type="button">Download CSV</button>
+      </div>
+      <div class="table-info" id="crosscheck-info">Not loaded yet - click Load above.</div>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr>
+            <th>Date</th><th>Tank</th><th>Horizon day</th>
+            <th>M4 ratio</th><th>M3 ratio</th><th>Difference</th><th>|Difference|</th>
+          </tr></thead>
+          <tbody id="crosscheck-body"><tr class="empty-row"><td colspan="7">Not loaded</td></tr></tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <button data-prev="crosscheck" type="button">Prev</button>
+        <span id="crosscheck-page-indicator">Page 1</span>
+        <button data-next="crosscheck" type="button">Next</button>
+        <select data-page-size="crosscheck">
+          <option value="25">25 / page</option>
+          <option value="50" selected>50 / page</option>
+          <option value="100">100 / page</option>
+        </select>
+      </div>
+    </section>
+
+    <section id="panel-map" class="view-panel" hidden>
+      <div class="filters">
+        <div class="filter-group">
+          <label for="map-date">Release date shown</label>
+          <select id="map-date"><option value="">Load a run first</option></select>
+        </div>
+        <button class="btn-secondary" id="map-reload-btn" type="button">Reload map data</button>
+        <span class="hint" id="map-hint" style="margin:0;"></span>
+      </div>
+      <p class="hint" style="margin-top:0;">
+        Blue = each tank's storage capacity (symbolic size, larger tank &rarr; larger circle).
+        Green = the command area that tank's demand is calculated from (true ground area).
+        Thin lines with arrows = cascade connectivity and flow direction (Module 2 alpha matrix).
+        Tank names are labeled directly on the map. <strong>Hover</strong> any tank for a quick detail
+        card; <strong>click</strong> a tank to open the full breakdown in the panel on the right.
+      </p>
+      <div class="map-row" id="map-row">
+        <div id="map-container"></div>
+        <div id="tank-detail-panel">
+          <div class="detail-placeholder">Click a tank on the map to see its full demand/release breakdown here.</div>
+        </div>
+      </div>
+    </section>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

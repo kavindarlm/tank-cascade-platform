@@ -1,0 +1,17 @@
+{
+  "date": "2026-06-06",
+  "day_offset": 97,
+  "status": "error",
+  "error": "expected 32 tank rows for 2026-06-06, got 0",
+  "feasible": false,
+  "p_drought": null,
+  "p_overflow": null,
+  "weights": null,
+  "storage": {
+    "total_today_m3": null,
+    "per_tank_m3": {}
+  },
+  "selected": null,
+  "crosscheck": null,
+  "output_files": {}
+}

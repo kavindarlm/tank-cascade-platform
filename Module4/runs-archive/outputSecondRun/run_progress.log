@@ -1,0 +1,12 @@
+
+=== run_simulation starting  2025-03-01 .. 2025-03-01  (completed days are skipped) ===
+tanks: 32   yala demand: season_days=130  duration_class=105
+[2025-03-01] day 1/184  feasible=True    357.1s  total_storage=52,818,236 m3
+[summary_01] 2025-03-01..2025-03-01  1 day(s) aggregated -> output\summary_01
+=== run_simulation stopped/finished at 2025-03-01 ===
+
+=== run_simulation starting  2025-03-01 .. 2025-03-01  (completed days are skipped) ===
+tanks: 32   yala demand: season_days=130  duration_class=105
+[2025-03-01] already complete - skipping
+[summary_01] 2025-03-01..2025-03-01  1 day(s) aggregated -> output\summary_01
+=== run_simulation stopped/finished at 2025-03-01 ===

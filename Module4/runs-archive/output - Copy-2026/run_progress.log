@@ -1,0 +1,169 @@
+
+=== run_simulation starting  2026-03-01 .. 2026-03-01  (completed days are skipped) ===
+*** cfg_overrides active (TESTING ONLY): {'POP_SIZE': 20, 'N_GEN': 10, 'K': 5} ***
+tanks: 32   yala demand: season_days=160  duration_class=135
+[2026-03-01] day 1/138  feasible=True      0.6s  total_storage=50,521,701 m3
+[summary_01] 2026-03-01..2026-03-01  1 day(s) aggregated -> output\summary_01
+=== run_simulation stopped/finished at 2026-03-01 ===
+
+=== run_simulation starting  2026-03-01 .. 2026-07-26  (completed days are skipped) ===
+tanks: 32   yala demand: season_days=160  duration_class=135
+[2026-03-01] already complete - skipping
+[2026-03-02] day 2/138  feasible=True    285.2s  total_storage=51,123,505 m3
+[2026-03-03] day 3/138  feasible=True    299.6s  total_storage=51,385,644 m3
+[2026-03-04] ERROR: ValueError('Negative storage detected in tank_storage.csv (check Module 1 output).')  (see error.txt; day left incomplete so a re-run will retry it)
+[2026-03-05] day 5/138  feasible=True   4605.2s  total_storage=51,764,934 m3
+[2026-03-06] day 6/138  feasible=True    317.2s  total_storage=51,794,838 m3
+[2026-03-07] day 7/138  feasible=True    310.1s  total_storage=51,797,024 m3
+[2026-03-08] day 8/138  feasible=True    323.4s  total_storage=51,754,320 m3
+[2026-03-09] day 9/138  feasible=True    314.3s  total_storage=51,671,851 m3
+[2026-03-10] day 10/138  feasible=True    316.1s  total_storage=51,618,943 m3
+[2026-03-11] day 11/138  feasible=True    319.9s  total_storage=51,706,837 m3
+[2026-03-12] day 12/138  feasible=True    316.1s  total_storage=51,770,607 m3
+[2026-03-13] day 13/138  feasible=True    310.4s  total_storage=51,813,479 m3
+[2026-03-14] day 14/138  feasible=True    308.0s  total_storage=48,215,230 m3
+[2026-03-15] day 15/138  feasible=True    319.6s  total_storage=48,656,732 m3
+[summary_01] 2026-03-01..2026-03-15  15 day(s) aggregated -> output\summary_01
+[2026-03-16] day 16/138  feasible=True    310.9s  total_storage=48,296,718 m3
+[2026-03-17] day 17/138  feasible=True    323.0s  total_storage=48,591,742 m3
+[2026-03-18] day 18/138  feasible=True    311.7s  total_storage=48,635,615 m3
+[2026-03-19] day 19/138  feasible=True    314.9s  total_storage=48,730,681 m3
+[2026-03-20] day 20/138  feasible=True    326.3s  total_storage=48,780,631 m3
+[2026-03-21] day 21/138  feasible=True    320.6s  total_storage=48,776,844 m3
+[2026-03-22] day 22/138  feasible=True    327.4s  total_storage=48,716,514 m3
+[2026-03-23] day 23/138  feasible=True    337.1s  total_storage=48,580,134 m3
+[2026-03-24] day 24/138  feasible=True    347.0s  total_storage=48,494,370 m3
+[2026-03-25] day 25/138  feasible=True    344.2s  total_storage=48,399,784 m3
+[2026-03-26] day 26/138  feasible=True    334.0s  total_storage=44,305,722 m3
+[2026-03-27] day 27/138  feasible=True    337.7s  total_storage=43,308,191 m3
+[2026-03-28] day 28/138  feasible=True    306.9s  total_storage=43,014,683 m3
+[2026-03-29] day 29/138  feasible=True    306.6s  total_storage=43,627,187 m3
+[2026-03-30] day 30/138  feasible=True    305.0s  total_storage=43,668,951 m3
+[summary_02] 2026-03-16..2026-03-30  15 day(s) aggregated -> output\summary_02
+[2026-03-31] day 31/138  feasible=True    303.8s  total_storage=43,667,162 m3
+[2026-04-01] day 32/138  feasible=True    312.6s  total_storage=43,664,633 m3
+[2026-04-02] day 33/138  feasible=True    320.9s  total_storage=43,647,283 m3
+[2026-04-03] day 34/138  feasible=True    304.2s  total_storage=43,787,472 m3
+[2026-04-04] day 35/138  feasible=True    310.3s  total_storage=44,094,631 m3
+[2026-04-05] day 36/138  feasible=True    302.1s  total_storage=44,222,841 m3
+[2026-04-06] day 37/138  feasible=True    309.1s  total_storage=44,144,200 m3
+[2026-04-07] day 38/138  feasible=True    309.7s  total_storage=48,368,407 m3
+[2026-04-08] day 39/138  feasible=True    300.3s  total_storage=49,416,924 m3
+[2026-04-09] day 40/138  feasible=True    299.5s  total_storage=49,648,295 m3
+[2026-04-10] day 41/138  feasible=True    295.7s  total_storage=48,882,910 m3
+[2026-04-11] day 42/138  feasible=True    300.9s  total_storage=48,797,353 m3
+[2026-04-12] day 43/138  feasible=True    308.8s  total_storage=48,805,532 m3
+[2026-04-13] day 44/138  feasible=True    309.4s  total_storage=48,895,736 m3
+[2026-04-14] day 45/138  feasible=True    304.4s  total_storage=49,072,079 m3
+[summary_03] 2026-03-31..2026-04-14  15 day(s) aggregated -> output\summary_03
+[2026-04-15] day 46/138  feasible=True    302.5s  total_storage=49,038,242 m3
+[2026-04-16] day 47/138  feasible=True    325.0s  total_storage=49,099,815 m3
+[2026-04-17] day 48/138  feasible=True    317.2s  total_storage=49,081,389 m3
+[2026-04-18] day 49/138  feasible=True    307.0s  total_storage=48,936,981 m3
+[2026-04-19] day 50/138  feasible=True    342.9s  total_storage=46,594,809 m3
+[2026-04-20] day 51/138  feasible=True    325.0s  total_storage=46,735,570 m3
+[2026-04-21] day 52/138  feasible=True    316.3s  total_storage=46,683,971 m3
+[2026-04-22] day 53/138  feasible=True    311.2s  total_storage=46,988,674 m3
+[2026-04-23] day 54/138  feasible=True    326.2s  total_storage=47,068,028 m3
+[2026-04-24] day 55/138  feasible=True    357.5s  total_storage=47,032,421 m3
+[2026-04-25] day 56/138  feasible=True    317.6s  total_storage=46,994,278 m3
+[2026-04-26] day 57/138  feasible=True    311.0s  total_storage=46,915,047 m3
+[2026-04-27] day 58/138  feasible=True    316.3s  total_storage=46,922,094 m3
+[2026-04-28] day 59/138  feasible=True    311.2s  total_storage=46,872,391 m3
+[2026-04-29] day 60/138  feasible=True    320.1s  total_storage=46,887,772 m3
+[summary_04] 2026-04-15..2026-04-29  15 day(s) aggregated -> output\summary_04
+[2026-04-30] day 61/138  feasible=True    302.5s  total_storage=47,082,171 m3
+[2026-05-01] day 62/138  feasible=True    310.8s  total_storage=45,810,756 m3
+[2026-05-02] day 63/138  feasible=True    333.6s  total_storage=46,088,678 m3
+[2026-05-03] day 64/138  feasible=True    392.5s  total_storage=45,944,983 m3
+[2026-05-04] day 65/138  feasible=True    347.3s  total_storage=45,993,321 m3
+[2026-05-05] day 66/138  feasible=True    336.5s  total_storage=45,963,421 m3
+[2026-05-06] day 67/138  feasible=True    329.2s  total_storage=46,032,428 m3
+[2026-05-07] day 68/138  feasible=True    341.8s  total_storage=46,105,279 m3
+[2026-05-08] day 69/138  feasible=True    332.4s  total_storage=46,165,887 m3
+[2026-05-09] day 70/138  feasible=True    322.8s  total_storage=46,311,514 m3
+[2026-05-10] day 71/138  feasible=True    313.6s  total_storage=46,362,796 m3
+[2026-05-11] day 72/138  feasible=True    319.2s  total_storage=46,577,779 m3
+[2026-05-12] day 73/138  feasible=True    327.2s  total_storage=46,995,076 m3
+[2026-05-13] day 74/138  feasible=True    319.8s  total_storage=48,971,325 m3
+[2026-05-14] day 75/138  feasible=True    312.9s  total_storage=50,433,404 m3
+[summary_05] 2026-04-30..2026-05-14  15 day(s) aggregated -> output\summary_05
+[2026-05-15] day 76/138  feasible=True    324.9s  total_storage=50,492,434 m3
+[2026-05-16] day 77/138  feasible=True    322.6s  total_storage=49,992,941 m3
+[2026-05-17] day 78/138  feasible=True    319.8s  total_storage=49,850,735 m3
+[2026-05-18] day 79/138  feasible=True    328.5s  total_storage=49,700,685 m3
+[2026-05-19] day 80/138  feasible=True    315.5s  total_storage=49,575,968 m3
+[2026-05-20] day 81/138  feasible=True    297.8s  total_storage=49,529,669 m3
+[2026-05-21] day 82/138  feasible=True    307.9s  total_storage=49,436,738 m3
+[2026-05-22] day 83/138  feasible=True    295.8s  total_storage=49,448,479 m3
+[2026-05-23] day 84/138  feasible=True    298.3s  total_storage=49,400,017 m3
+[2026-05-24] day 85/138  feasible=True    297.6s  total_storage=49,623,604 m3
+[2026-05-25] day 86/138  feasible=True    297.2s  total_storage=49,602,606 m3
+[2026-05-26] day 87/138  feasible=True    308.9s  total_storage=49,615,032 m3
+[2026-05-27] day 88/138  feasible=True    323.3s  total_storage=49,611,936 m3
+[2026-05-28] ERROR: ValueError('expected 32 tank rows for 2026-05-28, got 0')  (see error.txt; day left incomplete so a re-run will retry it)
+[2026-05-29] ERROR: ValueError('expected 32 tank rows for 2026-05-29, got 0')  (see error.txt; day left incomplete so a re-run will retry it)
+[summary_06] 2026-05-15..2026-05-29  15 day(s) aggregated -> output\summary_06
+[2026-05-30] ERROR: ValueError('expected 32 tank rows for 2026-05-30, got 0')  (see error.txt; day left incomplete so a re-run will retry it)
+[2026-05-31] ERROR: ValueError('expected 32 tank rows for 2026-05-31, got 0')  (see error.txt; day left incomplete so a re-run will retry it)
+[2026-06-01] ERROR: ValueError('expected 32 tank rows for 2026-06-01, got 0')  (see error.txt; day left incomplete so a re-run will retry it)
+[2026-06-02] ERROR: ValueError('expected 32 tank rows for 2026-06-02, got 0')  (see error.txt; day left incomplete so a re-run will retry it)
+[2026-06-03] ERROR: ValueError('expected 32 tank rows for 2026-06-03, got 0')  (see error.txt; day left incomplete so a re-run will retry it)
+[2026-06-04] ERROR: ValueError('expected 32 tank rows for 2026-06-04, got 0')  (see error.txt; day left incomplete so a re-run will retry it)
+[2026-06-05] ERROR: ValueError('expected 32 tank rows for 2026-06-05, got 0')  (see error.txt; day left incomplete so a re-run will retry it)
+[2026-06-06] ERROR: ValueError('expected 32 tank rows for 2026-06-06, got 0')  (see error.txt; day left incomplete so a re-run will retry it)
+[2026-06-07] day 99/138  feasible=True    348.3s  total_storage=46,729,464 m3
+[2026-06-08] day 100/138  feasible=True    344.9s  total_storage=46,761,483 m3
+[2026-06-09] day 101/138  feasible=True    315.2s  total_storage=46,821,661 m3
+[2026-06-10] day 102/138  feasible=True    314.8s  total_storage=46,840,754 m3
+[2026-06-11] day 103/138  feasible=True    304.6s  total_storage=46,850,922 m3
+[2026-06-12] day 104/138  feasible=True    298.1s  total_storage=46,852,752 m3
+[2026-06-13] day 105/138  feasible=True    305.5s  total_storage=46,969,176 m3
+[summary_07] 2026-05-30..2026-06-13  15 day(s) aggregated -> output\summary_07
+[2026-06-14] day 106/138  feasible=True    295.9s  total_storage=47,014,359 m3
+[2026-06-15] day 107/138  feasible=True    294.4s  total_storage=46,983,209 m3
+[2026-06-16] day 108/138  feasible=True    295.2s  total_storage=46,927,979 m3
+[2026-06-17] day 109/138  feasible=True    296.8s  total_storage=46,827,992 m3
+[2026-06-18] day 110/138  feasible=True    306.2s  total_storage=45,107,189 m3
+[2026-06-19] day 111/138  feasible=True    307.3s  total_storage=44,942,999 m3
+[2026-06-20] day 112/138  feasible=True    314.2s  total_storage=44,840,211 m3
+[2026-06-21] day 113/138  feasible=True    326.9s  total_storage=45,098,727 m3
+[2026-06-22] day 114/138  feasible=True    311.0s  total_storage=45,158,742 m3
+[2026-06-23] day 115/138  feasible=True    316.9s  total_storage=45,131,071 m3
+[2026-06-24] day 116/138  feasible=True    327.4s  total_storage=45,144,472 m3
+[2026-06-25] day 117/138  feasible=True    337.1s  total_storage=45,685,429 m3
+[2026-06-26] day 118/138  feasible=True    313.5s  total_storage=45,976,714 m3
+[2026-06-27] day 119/138  feasible=True    324.6s  total_storage=46,078,390 m3
+[2026-06-28] day 120/138  feasible=True    324.9s  total_storage=46,093,177 m3
+[summary_08] 2026-06-14..2026-06-28  15 day(s) aggregated -> output\summary_08
+[2026-06-29] day 121/138  feasible=True    313.7s  total_storage=46,122,760 m3
+[2026-06-30] day 122/138  feasible=True   1440.3s  total_storage=46,225,830 m3
+[2026-07-01] day 123/138  feasible=True    309.6s  total_storage=46,270,025 m3
+[2026-07-02] day 124/138  feasible=True    306.8s  total_storage=46,319,565 m3
+[2026-07-03] day 125/138  feasible=True    309.1s  total_storage=45,606,351 m3
+[2026-07-04] day 126/138  feasible=True    307.8s  total_storage=45,653,323 m3
+[2026-07-05] day 127/138  feasible=True    314.1s  total_storage=45,716,431 m3
+[2026-07-06] day 128/138  feasible=True    324.2s  total_storage=45,710,143 m3
+[2026-07-07] day 129/138  feasible=True    296.4s  total_storage=40,496,292 m3
+[2026-07-08] day 130/138  feasible=True    310.1s  total_storage=39,089,078 m3
+[2026-07-09] day 131/138  feasible=True    316.3s  total_storage=38,626,551 m3
+[2026-07-10] day 132/138  feasible=True    314.0s  total_storage=39,373,331 m3
+[2026-07-11] day 133/138  feasible=True    310.3s  total_storage=39,381,223 m3
+[2026-07-12] day 134/138  feasible=True    310.1s  total_storage=39,435,024 m3
+[2026-07-13] day 135/138  feasible=True    299.9s  total_storage=39,417,652 m3
+[summary_09] 2026-06-29..2026-07-13  15 day(s) aggregated -> output\summary_09
+[2026-07-14] day 136/138  feasible=True    299.5s  total_storage=39,381,616 m3
+[2026-07-15] day 137/138  feasible=True    300.4s  total_storage=39,351,883 m3
+[2026-07-16] day 138/138  feasible=True    326.8s  total_storage=39,323,147 m3
+[2026-07-17] day 139/138  feasible=True    298.2s  total_storage=39,330,455 m3
+[2026-07-18] day 140/138  feasible=True    304.6s  total_storage=39,319,428 m3
+[2026-07-19] day 141/138  feasible=True    321.6s  total_storage=42,793,001 m3
+[2026-07-20] day 142/138  feasible=True    324.4s  total_storage=42,219,804 m3
+[2026-07-21] day 143/138  feasible=True    317.7s  total_storage=42,470,944 m3
+[2026-07-22] day 144/138  feasible=True    312.9s  total_storage=42,068,193 m3
+[2026-07-23] day 145/138  feasible=True    312.8s  total_storage=42,085,797 m3
+[2026-07-24] day 146/138  feasible=True    310.9s  total_storage=42,034,142 m3
+[2026-07-25] day 147/138  feasible=True    313.4s  total_storage=42,006,969 m3
+[2026-07-26] day 148/138  feasible=True    327.1s  total_storage=42,002,821 m3
+[summary_10] 2026-07-14..2026-07-26  13 day(s) aggregated -> output\summary_10
+=== run_simulation stopped/finished at 2026-07-26 ===
