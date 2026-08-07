@@ -226,6 +226,31 @@
         font-weight: 600;
       }
 
+      .history-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        background: #f3f6fb;
+        border: 1px solid #d8e0ee;
+        border-radius: 8px;
+        padding: 10px 12px;
+        color: #1f2430;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        min-height: 38px;
+      }
+
+      .history-toggle .caret {
+        font-size: 14px;
+        color: #2b6cb0;
+        line-height: 1;
+      }
+
+      .history-card.collapsed .history-content {
+        display: none;
+      }
+
       button.ghost {
         padding: 7px 12px;
         background: #eceef2;
@@ -261,6 +286,10 @@
         background: #faeeda;
         border-color: transparent;
       }
+      .stat.stat-normal {
+        background: #eafaf3;
+        border-color: transparent;
+      }
 
       .stat p.label {
         font-size: 12px;
@@ -274,6 +303,9 @@
       .stat.stat-overflow p.label {
         color: #854f0b;
       }
+      .stat.stat-normal p.label {
+        color: #0f6e56;
+      }
 
       .stat p.value {
         font-size: 20px;
@@ -286,6 +318,9 @@
       }
       .stat.stat-overflow p.value {
         color: #854f0b;
+      }
+      .stat.stat-normal p.value {
+        color: #0f6e56;
       }
 
       .tabs {
@@ -456,7 +491,7 @@
           flex-direction: column;
         }
         .stat-grid {
-          grid-template-columns: repeat(3, 1fr);
+          grid-template-columns: repeat(2, 1fr);
         }
         .request-row {
           flex-direction: column;
@@ -539,30 +574,6 @@
         ></div>
       </div>
 
-      <div class="card" id="history-card">
-        <div class="results-head">
-          <p>Saved forecasts <strong id="history-count"></strong></p>
-          <button class="ghost" id="refresh-history-btn">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              width="14"
-              height="14"
-            >
-              <path d="M21 12a9 9 0 11-2.64-6.36M21 4v6h-6" />
-            </svg>
-            Refresh
-          </button>
-        </div>
-        <div class="tank-list" id="history-list">
-          <div class="empty-state">Loading saved forecasts…</div>
-        </div>
-      </div>
-
       <div id="results" style="display: none">
         <div class="results-head">
           <p>Results for <strong id="result-date">—</strong></p>
@@ -596,6 +607,10 @@
             <p class="label">Overflow risk</p>
             <p class="value" id="overflow-count">0</p>
           </div>
+          <div class="stat stat-normal">
+            <p class="label">Normal tanks</p>
+            <p class="value" id="normal-count">0</p>
+          </div>
         </div>
 
         <div class="tabs">
@@ -620,6 +635,41 @@
         <div class="tank-list" id="tank-list"></div>
       </div>
 
+      <div class="card history-card" id="history-card">
+        <div class="results-head">
+          <button
+            class="history-toggle"
+            id="history-toggle-btn"
+            type="button"
+            aria-expanded="true"
+          >
+            <span>Saved forecasts</span>
+            <strong id="history-count"></strong>
+            <span class="caret">▴</span>
+          </button>
+          <button class="ghost" id="refresh-history-btn">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              width="14"
+              height="14"
+            >
+              <path d="M21 12a9 9 0 11-2.64-6.36M21 4v6h-6" />
+            </svg>
+            Refresh
+          </button>
+        </div>
+        <div class="history-content" id="history-content">
+          <div class="tank-list" id="history-list">
+            <div class="empty-state">Loading saved forecasts…</div>
+          </div>
+        </div>
+      </div>
+
       <footer class="note">
         Forecast generated from the last 14 days of satellite storage
         observations and live weather data.
@@ -631,6 +681,19 @@
       let allRows = [];
       let progressTimer = null;
       let progressValue = 0;
+
+      function setHistoryExpanded(expanded) {
+        const card = document.getElementById("history-card");
+        const btn = document.getElementById("history-toggle-btn");
+        const caret = btn ? btn.querySelector(".caret") : null;
+        if (!card || !btn) return;
+
+        card.classList.toggle("collapsed", !expanded);
+        btn.setAttribute("aria-expanded", String(expanded));
+        if (caret) {
+          caret.textContent = expanded ? "▴" : "▾";
+        }
+      }
 
       function getRisk(rawValue) {
         const value = String(rawValue || "").toLowerCase();
@@ -743,10 +806,12 @@
         document.getElementById("total-count").textContent = allRows.length;
         const droughtRows = allRows.filter((row) => row.risk === "drought");
         const overflowRows = allRows.filter((row) => row.risk === "overflow");
+        const normalRows = allRows.filter((row) => row.risk === "normal");
         document.getElementById("drought-count").textContent =
           droughtRows.length;
         document.getElementById("overflow-count").textContent =
           overflowRows.length;
+        document.getElementById("normal-count").textContent = normalRows.length;
         document.getElementById("results").style.display = "block";
         document.getElementById("loading-row").style.display = "none";
         document.getElementById("generate-btn").disabled = false;
@@ -907,8 +972,7 @@
           document.getElementById("result-date").textContent = date || "—";
           document.getElementById("drought-count").textContent = "0";
           document.getElementById("overflow-count").textContent = "0";
-          const avgConfidenceEl = document.getElementById("avg-confidence");
-          if (avgConfidenceEl) avgConfidenceEl.textContent = "0.00";
+          document.getElementById("normal-count").textContent = "0";
           document.getElementById("total-count").textContent = "0";
         }
       }
@@ -959,6 +1023,7 @@
             btn.addEventListener("click", () => {
               const date = btn.dataset.date;
               document.getElementById("forecast-date").value = date;
+              setHistoryExpanded(false);
               loadForecast(date, { view: true });
             });
           });
@@ -990,8 +1055,7 @@
           document.getElementById("result-date").textContent = "—";
           document.getElementById("drought-count").textContent = "0";
           document.getElementById("overflow-count").textContent = "0";
-          const avgConfidenceEl = document.getElementById("avg-confidence");
-          if (avgConfidenceEl) avgConfidenceEl.textContent = "0.00";
+          document.getElementById("normal-count").textContent = "0";
           document.getElementById("total-count").textContent = "0";
           return;
         }
@@ -1029,9 +1093,20 @@
         .getElementById("refresh-history-btn")
         .addEventListener("click", loadHistory);
 
+      document
+        .getElementById("history-toggle-btn")
+        .addEventListener("click", () => {
+          setHistoryExpanded(
+            document
+              .getElementById("history-card")
+              .classList.contains("collapsed"),
+          );
+        });
+
       window.addEventListener("DOMContentLoaded", () => {
         const today = new Date().toISOString().split("T")[0];
         document.getElementById("forecast-date").value = today;
+        setHistoryExpanded(true);
         loadHistory();
       });
     </script>
