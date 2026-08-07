@@ -1,0 +1,2 @@
+day,p_drought,p_overflow,w_shortage,w_overflow,w_equity,w_loss,feasible
+1,0.3524,0.2069,0.3733,0.2587,0.2088,0.1592,True

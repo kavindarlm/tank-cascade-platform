@@ -1,0 +1,11 @@
+
+=== run_simulation starting  2025-03-01 .. 2025-03-05  (completed days are skipped) ===
+*** cfg_overrides active (TESTING ONLY): {'POP_SIZE': 20, 'N_GEN': 10, 'K': 5} ***
+tanks: 32   yala demand: season_days=160  duration_class=135
+[2025-03-01] day 1/184  feasible=True      0.9s  total_storage=51,047,438 m3
+[2025-03-02] day 2/184  feasible=True      0.9s  total_storage=51,123,349 m3
+[2025-03-03] day 3/184  feasible=True      0.8s  total_storage=51,083,846 m3
+[2025-03-04] day 4/184  feasible=True      1.0s  total_storage=50,989,156 m3
+[2025-03-05] day 5/184  feasible=True      0.8s  total_storage=50,845,939 m3
+[summary_01] 2025-03-01..2025-03-05  5 day(s) aggregated -> outputs_web_20260804_140051\summary_01
+=== run_simulation stopped/finished at 2025-03-05 ===

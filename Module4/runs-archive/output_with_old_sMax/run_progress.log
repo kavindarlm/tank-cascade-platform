@@ -1,0 +1,119 @@
+
+=== run_simulation starting  2025-03-01 .. 2025-03-07  (completed days are skipped) ===
+tanks: 32   yala demand: season_days=130  duration_class=105
+[2025-03-01] day 1/184  feasible=True    366.7s  total_storage=52,818,236 m3
+[2025-03-02] day 2/184  feasible=True    352.3s  total_storage=52,925,264 m3
+[2025-03-03] day 3/184  feasible=True    363.2s  total_storage=52,972,025 m3
+[2025-03-04] day 4/184  feasible=True    363.3s  total_storage=53,028,117 m3
+[2025-03-05] day 5/184  feasible=True    357.0s  total_storage=53,035,468 m3
+[2025-03-06] day 6/184  feasible=True    348.7s  total_storage=52,893,584 m3
+[2025-03-07] day 7/184  feasible=True    353.5s  total_storage=52,906,629 m3
+[summary_01] 2025-03-01..2025-03-07  7 day(s) aggregated -> output\summary_01
+=== run_simulation stopped/finished at 2025-03-07 ===
+
+=== run_simulation starting  2025-03-01 .. 2025-08-31  (completed days are skipped) ===
+tanks: 32   yala demand: season_days=130  duration_class=105
+[2025-03-01] already complete - skipping
+[2025-03-02] already complete - skipping
+[2025-03-03] already complete - skipping
+[2025-03-04] already complete - skipping
+[2025-03-05] already complete - skipping
+[2025-03-06] already complete - skipping
+[2025-03-07] already complete - skipping
+[2025-03-08] day 8/184  feasible=True    344.7s  total_storage=52,846,861 m3
+[2025-03-09] day 9/184  feasible=True    335.4s  total_storage=52,842,045 m3
+[2025-03-10] day 10/184  feasible=True    336.3s  total_storage=52,785,794 m3
+[2025-03-11] day 11/184  feasible=True    335.1s  total_storage=52,568,823 m3
+[2025-03-12] day 12/184  feasible=True    339.7s  total_storage=52,712,465 m3
+[2025-03-13] day 13/184  feasible=True    671.5s  total_storage=53,371,268 m3
+[2025-03-14] day 14/184  feasible=True    334.6s  total_storage=53,240,257 m3
+[2025-03-15] day 15/184  feasible=True    333.6s  total_storage=53,066,735 m3
+[summary_01] 2025-03-01..2025-03-15  15 day(s) aggregated -> output\summary_01
+[2025-03-16] day 16/184  feasible=True    353.9s  total_storage=53,052,682 m3
+[2025-03-17] day 17/184  feasible=True    354.8s  total_storage=52,821,374 m3
+[2025-03-18] day 18/184  feasible=True    679.9s  total_storage=53,091,983 m3
+[2025-03-19] day 19/184  feasible=True    335.5s  total_storage=53,116,246 m3
+[2025-03-20] day 20/184  feasible=True    360.2s  total_storage=53,047,078 m3
+[2025-03-21] day 21/184  feasible=True    348.9s  total_storage=53,024,184 m3
+[2025-03-22] day 22/184  feasible=True    361.0s  total_storage=53,308,921 m3
+[2025-03-23] day 23/184  feasible=True    360.2s  total_storage=53,055,928 m3
+[2025-03-24] day 24/184  feasible=True    363.8s  total_storage=53,190,799 m3
+[2025-03-25] day 25/184  feasible=True    363.0s  total_storage=53,024,759 m3
+[2025-03-26] day 26/184  feasible=True   4311.6s  total_storage=52,876,614 m3
+[2025-03-27] day 27/184  feasible=True    331.0s  total_storage=53,015,072 m3
+[2025-03-28] day 28/184  feasible=True    335.7s  total_storage=52,924,292 m3
+[2025-03-29] day 29/184  feasible=True    344.5s  total_storage=52,989,049 m3
+[2025-03-30] day 30/184  feasible=True    343.1s  total_storage=53,096,691 m3
+[summary_02] 2025-03-16..2025-03-30  15 day(s) aggregated -> output\summary_02
+[2025-03-31] day 31/184  feasible=True    347.9s  total_storage=53,010,756 m3
+[2025-04-01] day 32/184  feasible=True    348.6s  total_storage=51,530,970 m3
+[2025-04-02] day 33/184  feasible=True    345.6s  total_storage=51,316,911 m3
+[2025-04-03] day 34/184  feasible=True    347.6s  total_storage=51,156,400 m3
+[2025-04-04] day 35/184  feasible=True    349.9s  total_storage=51,492,607 m3
+[2025-04-05] day 36/184  feasible=True    340.4s  total_storage=52,049,560 m3
+[2025-04-06] day 37/184  feasible=True    341.4s  total_storage=51,917,454 m3
+[2025-04-07] day 38/184  feasible=True    348.5s  total_storage=52,302,375 m3
+[2025-04-08] day 39/184  feasible=True    342.5s  total_storage=51,940,122 m3
+[2025-04-09] day 40/184  feasible=True    336.0s  total_storage=51,989,571 m3
+[2025-04-10] day 41/184  feasible=True    337.1s  total_storage=51,616,323 m3
+[2025-04-11] day 42/184  feasible=True    335.3s  total_storage=51,314,509 m3
+[2025-04-12] day 43/184  feasible=True    336.4s  total_storage=51,281,324 m3
+[2025-04-13] day 44/184  feasible=True    336.1s  total_storage=51,317,945 m3
+[2025-04-14] day 45/184  feasible=True    341.3s  total_storage=51,209,263 m3
+[summary_03] 2025-03-31..2025-04-14  15 day(s) aggregated -> output\summary_03
+[2025-04-15] day 46/184  feasible=True    337.3s  total_storage=51,273,445 m3
+[2025-04-16] day 47/184  feasible=True    338.4s  total_storage=51,367,746 m3
+[2025-04-17] day 48/184  feasible=True    355.4s  total_storage=51,470,637 m3
+[2025-04-18] day 49/184  feasible=True    384.9s  total_storage=51,364,612 m3
+[2025-04-19] day 50/184  feasible=True    365.3s  total_storage=51,367,381 m3
+[2025-04-20] day 51/184  feasible=True    335.6s  total_storage=51,268,804 m3
+[2025-04-21] day 52/184  feasible=True    328.4s  total_storage=51,236,706 m3
+[2025-04-22] day 53/184  feasible=True    330.2s  total_storage=51,225,216 m3
+[2025-04-23] day 54/184  feasible=True    333.4s  total_storage=51,097,841 m3
+[2025-04-24] day 55/184  feasible=True    335.4s  total_storage=51,085,392 m3
+[2025-04-25] day 56/184  feasible=True    336.3s  total_storage=50,729,879 m3
+[2025-04-26] day 57/184  feasible=True    337.2s  total_storage=50,838,387 m3
+[2025-04-27] day 58/184  feasible=True    343.8s  total_storage=50,991,522 m3
+[2025-04-28] day 59/184  feasible=True    345.0s  total_storage=50,887,472 m3
+[2025-04-29] day 60/184  feasible=True    349.0s  total_storage=51,273,199 m3
+[summary_04] 2025-04-15..2025-04-29  15 day(s) aggregated -> output\summary_04
+[2025-04-30] day 61/184  feasible=True    377.7s  total_storage=51,127,661 m3
+[2025-05-01] day 62/184  feasible=True    359.6s  total_storage=51,064,589 m3
+[2025-05-02] day 63/184  feasible=True    352.1s  total_storage=51,281,071 m3
+[2025-05-03] day 64/184  feasible=True    352.1s  total_storage=51,180,644 m3
+[2025-05-04] day 65/184  feasible=True    357.5s  total_storage=50,960,649 m3
+[2025-05-05] day 66/184  feasible=True    365.2s  total_storage=51,019,194 m3
+[2025-05-06] day 67/184  feasible=True    367.3s  total_storage=51,364,949 m3
+[2025-05-07] day 68/184  feasible=True    364.6s  total_storage=50,958,995 m3
+[2025-05-08] day 69/184  feasible=True    353.0s  total_storage=50,836,677 m3
+[2025-05-09] day 70/184  feasible=True    391.2s  total_storage=50,848,303 m3
+[2025-05-10] day 71/184  feasible=True    358.0s  total_storage=51,114,885 m3
+[2025-05-11] day 72/184  feasible=True    353.2s  total_storage=51,035,327 m3
+[2025-05-12] day 73/184  feasible=True    359.6s  total_storage=51,010,907 m3
+[2025-05-13] day 74/184  feasible=True    394.2s  total_storage=50,834,072 m3
+[2025-05-14] day 75/184  feasible=True    386.3s  total_storage=50,684,697 m3
+[summary_05] 2025-04-30..2025-05-14  15 day(s) aggregated -> output\summary_05
+[2025-05-15] day 76/184  feasible=True    359.7s  total_storage=50,651,136 m3
+[2025-05-16] day 77/184  feasible=True    355.2s  total_storage=50,539,869 m3
+[2025-05-17] day 78/184  feasible=True    353.1s  total_storage=50,502,241 m3
+[2025-05-18] day 79/184  feasible=True    363.4s  total_storage=50,038,054 m3
+[2025-05-19] day 80/184  feasible=True    356.1s  total_storage=49,779,811 m3
+[2025-05-20] day 81/184  feasible=True    361.9s  total_storage=49,858,097 m3
+[2025-05-21] day 82/184  feasible=True    357.3s  total_storage=50,229,243 m3
+[2025-05-22] day 83/184  feasible=True    351.1s  total_storage=50,242,916 m3
+[2025-05-23] day 84/184  feasible=True    354.3s  total_storage=50,334,446 m3
+[2025-05-24] day 85/184  feasible=True    365.1s  total_storage=50,415,793 m3
+[2025-05-25] day 86/184  feasible=True    355.4s  total_storage=50,149,094 m3
+[2025-05-26] day 87/184  feasible=True    350.9s  total_storage=49,986,851 m3
+[2025-05-27] day 88/184  feasible=True    353.4s  total_storage=50,260,721 m3
+[2025-05-28] day 89/184  feasible=True    354.5s  total_storage=50,231,142 m3
+[2025-05-29] day 90/184  feasible=True    364.0s  total_storage=50,422,939 m3
+[summary_06] 2025-05-15..2025-05-29  15 day(s) aggregated -> output\summary_06
+[2025-05-30] day 91/184  feasible=True    395.4s  total_storage=50,342,694 m3
+[2025-05-31] day 92/184  feasible=True   1595.4s  total_storage=49,980,438 m3
+[2025-06-01] day 93/184  feasible=True   4056.5s  total_storage=50,090,143 m3
+[2025-06-02] day 94/184  feasible=True    352.1s  total_storage=50,156,420 m3
+[2025-06-03] day 95/184  feasible=True    367.1s  total_storage=50,138,491 m3
+[2025-06-04] day 96/184  feasible=True    374.1s  total_storage=50,160,650 m3
+[2025-06-05] day 97/184  feasible=True    391.0s  total_storage=50,061,218 m3
+=== run_simulation stopped/finished at 2025-06-06 ===

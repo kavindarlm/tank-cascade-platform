@@ -1,0 +1,105 @@
+{
+  "output_dir": "output",
+  "date_range": [
+    "2026-03-01",
+    "2026-07-26"
+  ],
+  "feasibility": {
+    "total_days": 148,
+    "days_complete": 137,
+    "days_error": 11,
+    "days_feasible": 137,
+    "feasibility_rate_pct": 92.57,
+    "c3_tier_hard": 137,
+    "c3_tier_relaxed": 0,
+    "c3_tier_none_infeasible": 0,
+    "c3_tier_unknown": 0
+  },
+  "delivery": {
+    "total_release_m3": 201943925.2,
+    "total_consumed_m3": 200857241.8,
+    "total_return_flow_m3": 1086683.4,
+    "total_channel_loss_m3_asreported": 235516.8,
+    "total_f1_shortage_m3": 5502386.8,
+    "total_f2_overflow_m3": 1682705.5,
+    "mean_f3_equity": 37.8002,
+    "total_f4_water_loss_m3": 1039100.0,
+    "mean_daily_release_m3": 1474043.2,
+    "season_mean_satisfaction_pct": 81.19,
+    "season_min_satisfaction_pct": 10.64,
+    "season_min_satisfaction_date": "2026-07-07",
+    "season_max_satisfaction_pct": 90.0
+  },
+  "water_balance": {
+    "mass_balance_max_abs_error_m3": 0.0,
+    "mass_balance_mean_abs_error_m3": 0.0,
+    "mass_balance_closes_exactly": true,
+    "conveyance_efficiency_pct": 99.46,
+    "return_flow_share_of_release_pct": 0.54
+  },
+  "channel_loss": {
+    "n_tanks": 32,
+    "n_structural_termini": 2,
+    "structural_termini": [
+      "Nachchaduwa_Wewa",
+      "Kuda_Kanumulla_Wewa"
+    ],
+    "raw_mean_channel_loss_pct_INCLUDING_termini": 23.52,
+    "corrected_mean_channel_loss_pct_EXCLUDING_termini": 22.0,
+    "lowest_capture_non_terminus_tanks": [
+      {
+        "tank_id": "Sembukulama_Wewa",
+        "network_capture_fraction": 0.2154912044036585
+      },
+      {
+        "tank_id": "Hammillakulama_Wewa",
+        "network_capture_fraction": 0.297672368382542
+      },
+      {
+        "tank_id": "Todamaduwa_Wewa",
+        "network_capture_fraction": 0.5094972433222621
+      }
+    ]
+  },
+  "c3_decomposition": {
+    "n_tanks_held_season_majority": 5,
+    "n_tanks_free_season_majority": 27,
+    "n_tanks_held_day1_only": 4,
+    "held_tanks_net_change_m3": -52899.8,
+    "free_tanks_net_change_m3": -8465980.6,
+    "total_net_change_m3": -8518880.5,
+    "held_tank_names_season": [
+      "Galwaduwawa_Wewa",
+      "Kudaittikattiya_Wewa",
+      "Mahakanumulla_Wewa",
+      "Manakkulama_Wewa",
+      "Settikulama_Wewa"
+    ],
+    "note": "held/free now classified by MAJORITY of season days below floor, not day 1 alone - see docstring."
+  },
+  "crosscheck": {
+    "mean_direction_agreement_pct_RAW": 54.39,
+    "last_direction_agreement_pct": 37.5,
+    "mean_abs_ratio_diff_RAW": 0.3086,
+    "tanks_flagged_every_day": [
+      "Settikulama_Wewa"
+    ],
+    "tanks_flagged_ge_75pct_days": [
+      "Galwaduwawa_Wewa",
+      "Kudaittikattiya_Wewa",
+      "Manakkulama_Wewa",
+      "Settikulama_Wewa"
+    ],
+    "anchor_correction": {
+      "threshold": "anchor_storage >= 2.0 * S_min",
+      "n_tank_days_total": 4362,
+      "n_tank_days_excluded_small_anchor": 995,
+      "pct_excluded": 22.8,
+      "direction_agreement_pct_CORRECTED": 47.97,
+      "interpretation": "The RAW figure includes tank-days where the ratio denominator (anchor storage) was small enough to make the ratio numerically unstable, which is a property of the comparison METHOD, not a module-vs-module disagreement. CORRECTED excludes those tank-days."
+    }
+  },
+  "anomalous_tanks": [],
+  "baseline_comparison": null,
+  "external_validation": null
+}

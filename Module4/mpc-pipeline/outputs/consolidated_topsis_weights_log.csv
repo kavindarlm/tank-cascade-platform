@@ -1,0 +1,4 @@
+date,day,p_drought,p_overflow,w_shortage,w_overflow,w_equity,w_loss,feasible,c3_tier,reserve_deficit_m3
+2026-07-29,1,0.2677,0.3312,0.3624,0.284,0.2037,0.1499,True,hard,
+2026-07-30,1,0.2782,0.3682,0.3621,0.2889,0.2034,0.1457,True,hard,
+2026-08-07,1,0.2034,0.4038,0.3547,0.3003,0.2001,0.1449,True,relaxed,

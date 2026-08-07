@@ -1,0 +1,2 @@
+day,p_drought,p_overflow,w_shortage,w_overflow,w_equity,w_loss,feasible,c3_tier,reserve_deficit_m3
+1,0.5588,0.1384,0.3908,0.235,0.2166,0.1576,True,hard,

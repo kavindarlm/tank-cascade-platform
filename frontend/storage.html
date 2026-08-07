@@ -3,7 +3,169 @@
 <head>
 <meta charset="UTF-8">
 <title>Satellite water storage - Tank Cascade Platform</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
 <link rel="stylesheet" href="style.css">
+<style>
+  /* ---- Row -> tank detail drawer ---- */
+  #table-body tr { cursor: pointer; }
+  #table-body tr.row-selected { background: #eff6ff; }
+
+  .tank-drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.35);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 220ms ease;
+    z-index: 40;
+  }
+  .tank-drawer-backdrop.open { opacity: 1; pointer-events: auto; }
+
+  .tank-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: 460px;
+    max-width: 92vw;
+    background: #fff;
+    box-shadow: -8px 0 24px rgba(15, 23, 42, 0.18);
+    transform: translateX(100%);
+    transition: transform 280ms ease;
+    z-index: 41;
+    display: flex;
+    flex-direction: column;
+  }
+  .tank-drawer.open { transform: translateX(0); }
+
+  .tank-drawer-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid #e2e5eb;
+  }
+  .tank-drawer-header h2 { font-size: 17px; margin: 0 0 2px; }
+  .tank-drawer-header .tank-drawer-sub { font-size: 12px; color: #5b6272; }
+  .tank-drawer-close {
+    background: none;
+    border: none;
+    font-size: 22px;
+    line-height: 1;
+    color: #8a8f9c;
+    cursor: pointer;
+    padding: 0 2px;
+  }
+  .tank-drawer-close:hover { color: #1f2430; }
+
+  #tank-drawer-map {
+    height: 300px;
+    width: 100%;
+    background: #eef0f3;
+    border-bottom: 1px solid #e2e5eb;
+    flex: none;
+  }
+  .tank-drawer-body {
+    padding: 16px 20px 24px;
+    overflow-y: auto;
+    flex: 1 1 auto;
+  }
+  .tank-drawer-body .hint { font-size: 12px; color: #5b6272; margin: 0 0 12px; }
+
+  .tank-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 16px;
+  }
+  .tank-detail-grid .item { display: flex; flex-direction: column; gap: 2px; }
+  .tank-detail-grid .k { font-size: 11px; color: #5b6272; }
+  .tank-detail-grid .v { font-size: 14px; font-weight: 600; color: #1f2430; }
+
+  .tank-name-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #14213d;
+    background: rgba(255, 255, 255, 0.85);
+    padding: 1px 5px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 560px) {
+    .tank-drawer { width: 100vw; max-width: 100vw; }
+    .tank-detail-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ---- Table view / tank map (card grid) view toggle ---- */
+  .page-header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .btn-map-view { flex: none; white-space: nowrap; }
+
+  .tank-cards-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .btn-back { display: flex; align-items: center; gap: 6px; }
+
+  .tank-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 16px;
+  }
+
+  .tank-card {
+    background: #fff;
+    border: 1px solid #e2e5eb;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+  }
+
+  .tank-card-thumb {
+    height: 130px;
+    background: #e4edf7;
+    position: relative;
+    overflow: hidden;
+  }
+  .tank-card-thumb .no-boundary {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: #8a9bb5;
+    background: linear-gradient(180deg, #eef4fb 0%, #e4edf7 100%);
+  }
+  /* Non-interactive preview map - no zoom/attribution chrome cluttering a
+     130px-tall thumbnail. */
+  .tank-card-thumb .leaflet-control-container { display: none; }
+
+  .tank-card-body { padding: 12px 14px 14px; }
+  .tank-card-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #1f2430;
+    margin-bottom: 6px;
+    line-height: 1.25;
+  }
+  .tank-card-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    font-size: 11.5px;
+    color: #5b6272;
+  }
+  .tank-card-stats b { color: #1f2430; font-weight: 600; }
+</style>
 </head>
 <body>
 
@@ -14,18 +176,27 @@
     <li><a href="storage.html" class="active">Satellite water storage</a></li>
     <li><a href="connectivity.html">Tank connectivity</a></li>
     <li><a href="forecasting.html">Forecasting</a></li>
+    <li><a href="mpc.html">MPC decisions</a></li>
     <!-- Future tabs go here, e.g.: -->
     <!-- <li><a href="interpolation.html">Interpolation</a></li> -->
   </ul>
 </nav>
 
 <main class="container">
-  <h1>Satellite-based water storage</h1>
-  <p class="subtitle">
-    Tank storage table, updated daily from Sentinel-1/2 detections.
-    Read directly from <code>data/tank_storage.csv</code>.
-  </p>
+  <div class="page-header-row">
+    <div>
+      <h1>Satellite-based water storage</h1>
+      <p class="subtitle">
+        Tank storage table, updated daily from Sentinel-1/2 detections.
+        Read directly from <code>data/tank_storage.csv</code>.
+      </p>
+    </div>
+    <button id="btn-map-view" class="btn-primary btn-map-view" type="button">
+      <span aria-hidden="true">&#128506;&#65039;</span> Tank map view
+    </button>
+  </div>
 
+  <div id="table-view">
   <section class="filters">
     <div class="filter-group">
       <label for="filter-tank">Tank</label>
@@ -88,9 +259,35 @@
       <option value="100">100 / page</option>
     </select>
   </div>
+  </div>
+
+  <section id="tank-cards-view" class="tank-cards-view" hidden>
+    <div class="tank-cards-toolbar">
+      <button id="btn-back-to-table" class="btn-secondary btn-back" type="button">&larr; Back to table</button>
+      <span class="hint" id="tank-cards-hint">Click a tank to see its full boundary map and latest reading.</span>
+    </div>
+    <div class="tank-cards-grid" id="tank-cards-grid"></div>
+  </section>
 </main>
 
+<div id="tank-drawer-backdrop" class="tank-drawer-backdrop"></div>
+<aside id="tank-drawer" class="tank-drawer" aria-hidden="true">
+  <div class="tank-drawer-header">
+    <div>
+      <h2 id="tank-drawer-title">Tank</h2>
+      <div class="tank-drawer-sub" id="tank-drawer-subtitle"></div>
+    </div>
+    <button type="button" class="tank-drawer-close" id="tank-drawer-close" aria-label="Close">&times;</button>
+  </div>
+  <div id="tank-drawer-map"></div>
+  <div class="tank-drawer-body">
+    <p class="hint" id="tank-drawer-hint"></p>
+    <div class="tank-detail-grid" id="tank-drawer-details"></div>
+  </div>
+</aside>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

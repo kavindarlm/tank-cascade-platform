@@ -1,0 +1,48 @@
+{
+  "date": "2026-08-07",
+  "fast_test": false,
+  "feasible": true,
+  "output_dir": "outputs/",
+  "paths": {
+    "decisions": "outputs/mpc_decisions.csv",
+    "weights": "outputs/topsis_weights_log.csv",
+    "crosscheck": "outputs/module3_crosscheck.csv",
+    "consolidated_decisions": "outputs/consolidated_mpc_decisions.csv",
+    "consolidated_weights": "outputs/consolidated_topsis_weights_log.csv",
+    "consolidated_crosscheck": "outputs/consolidated_module3_crosscheck.csv"
+  },
+  "p_drought": 0.2034,
+  "p_overflow": 0.4038,
+  "weights": {
+    "shortage": 0.3547,
+    "overflow": 0.3003,
+    "equity": 0.2001,
+    "loss": 0.1449
+  },
+  "c3_tier": "relaxed",
+  "reserve_deficit_m3": null,
+  "n_tanks": 32,
+  "total_release_m3": 493958.23,
+  "top_releases": [
+    {
+      "tank_id": "Nachchaduwa_Wewa",
+      "release_m3": 411161.0
+    },
+    {
+      "tank_id": "Wagayakulama",
+      "release_m3": 10490.63
+    },
+    {
+      "tank_id": "Hammillakulama_Wewa",
+      "release_m3": 7426.63
+    },
+    {
+      "tank_id": "Sembukulama_Wewa",
+      "release_m3": 5138.04
+    },
+    {
+      "tank_id": "Maha_Ittikattiya_Wewa",
+      "release_m3": 4747.13
+    }
+  ]
+}
