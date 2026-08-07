@@ -1,6 +1,6 @@
 # Module 1 — Satellite-Based Water Resource Monitoring
 
-Water surface area detection and storage volume estimation for 32 village
+Water surface area detection and storage volume estimation for 32  village
 irrigation tanks (Anuradhapura district, Sri Lanka, 2021–present). This
 repo has two parts, kept together so the full trail — from raw satellite
 processing to the daily-updating table other modules read — lives in one
