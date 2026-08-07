@@ -169,6 +169,15 @@ class ForecastHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(REPO_ROOT), **kwargs)
 
+    def end_headers(self):
+        # This is a local dev server, not a CDN - always serve the current
+        # file on disk. Without this, browsers (Edge in particular) can keep
+        # serving a stale cached copy of storage.html/app.js/style.css after
+        # an edit, with no visible sign anything is wrong.
+        self.send_header("Cache-Control", "no-store, must-revalidate")
+        self.send_header("Pragma", "no-cache")
+        super().end_headers()
+
     def _send(self, payload, status=200, content_type="application/json"):
         body = payload if isinstance(payload, bytes) else json.dumps(payload).encode("utf-8")
         self.send_response(status)
@@ -264,7 +273,7 @@ class ForecastHandler(SimpleHTTPRequestHandler):
 
         if parsed.path == "/":
             self.path = "/frontend/index.html"
-        elif parsed.path in {"/index.html", "/storage.html", "/connectivity.html", "/forecasting.html"}:
+        elif parsed.path in {"/index.html", "/storage.html", "/connectivity.html", "/forecasting.html", "/mpc.html"}:
             self.path = f"/frontend{parsed.path}"
 
         return super().do_GET()

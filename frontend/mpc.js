@@ -1,13 +1,15 @@
 // Module 4 interactive dashboard.
 // Two things happen here, kept deliberately separate:
-//   1. Triggering runs via mpc_api.py (http://127.0.0.1:8001) and polling job status.
+//   1. Triggering runs via Module 4's MPC API (mounted in the root main.py
+//      alongside Module 3's forecast API - same origin as this page) and
+//      polling job status.
 //   2. Viewing results by reading the consolidated_*.csv files directly off disk
 //      (same fetch()+PapaParse pattern storage.html/connectivity.html already use) -
 //      the results viewer never goes through the API, it just reads whatever CSVs
 //      are sitting in the chosen output folder.
 
-const API_BASE = "http://127.0.0.1:8001";
-const DATA_ROOT = "../mpc-pipeline"; // relative to this page
+const API_BASE = ""; // same origin - main.py serves this page and the API together
+const DATA_ROOT = "../Module4/mpc-pipeline"; // relative to this page
 
 const el = (id) => document.getElementById(id);
 
@@ -83,17 +85,17 @@ function renderSummary(prefix, result) {
 
 async function pollJob(prefix, jobId, { onDone } = {}) {
   const poll = async () => {
-    let res;
+    let job;
     try {
-      res = await fetch(`${API_BASE}/api/status?job=${encodeURIComponent(jobId)}`);
+      const res = await fetch(`${API_BASE}/api/status?job=${encodeURIComponent(jobId)}`);
+      job = await res.json();
     } catch (err) {
       setJobStatus(prefix, {
-        text: `Cannot reach the Module 4 API at ${API_BASE} (${err.message}). Is mpc_api.py running?`,
+        text: `Cannot reach the Module 4 API (${err.message}). Is main.py running?`,
         cls: "status-error",
       });
       return;
     }
-    const job = await res.json();
 
     if (job.status === "running") {
       let text = "Running...";
@@ -170,21 +172,23 @@ function wireDailyRun() {
     renderSummary("daily", null);
     setJobStatus("daily", { text: "Starting...", percent: 5 });
 
-    const url = new URL(`${API_BASE}/api/run/daily`);
+    const url = new URL(`${API_BASE}/api/run/daily`, window.location.origin);
     url.searchParams.set("date", date);
     if (fastTest) url.searchParams.set("fast_test", "1");
 
-    let res;
+    let payload;
+    let ok;
     try {
-      res = await fetch(url);
+      const res = await fetch(url);
+      ok = res.ok;
+      payload = await res.json();
     } catch (err) {
-      setJobStatus("daily", { text: `Cannot reach the API (${err.message}). Is mpc_api.py running?`, cls: "status-error" });
+      setJobStatus("daily", { text: `Cannot reach the API (${err.message}). Is main.py running?`, cls: "status-error" });
       el("daily-run-btn").disabled = false;
       return;
     }
-    const payload = await res.json();
     el("daily-run-btn").disabled = false;
-    if (!res.ok) {
+    if (!ok) {
       setJobStatus("daily", { text: payload.error || "Could not start run", cls: "status-error" });
       return;
     }
@@ -207,7 +211,7 @@ function wireSeasonRun() {
     renderSummary("season", null);
     setJobStatus("season", { text: "Starting...", percent: 5 });
 
-    const url = new URL(`${API_BASE}/api/run/season`);
+    const url = new URL(`${API_BASE}/api/run/season`, window.location.origin);
     url.searchParams.set("start", start);
     url.searchParams.set("end", end);
     url.searchParams.set("season", el("season-season").value);
@@ -216,17 +220,19 @@ function wireSeasonRun() {
     if (el("season-output").value.trim()) url.searchParams.set("output", el("season-output").value.trim());
     if (el("season-fast-test").checked) url.searchParams.set("fast_test", "1");
 
-    let res;
+    let payload;
+    let ok;
     try {
-      res = await fetch(url);
+      const res = await fetch(url);
+      ok = res.ok;
+      payload = await res.json();
     } catch (err) {
-      setJobStatus("season", { text: `Cannot reach the API (${err.message}). Is mpc_api.py running?`, cls: "status-error" });
+      setJobStatus("season", { text: `Cannot reach the API (${err.message}). Is main.py running?`, cls: "status-error" });
       el("season-run-btn").disabled = false;
       return;
     }
-    const payload = await res.json();
     el("season-run-btn").disabled = false;
-    if (!res.ok) {
+    if (!ok) {
       setJobStatus("season", { text: payload.error || "Could not start run", cls: "status-error" });
       return;
     }

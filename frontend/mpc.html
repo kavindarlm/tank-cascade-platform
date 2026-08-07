@@ -3,15 +3,305 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Module 4 - MPC Decisions</title>
+<title>MPC release decisions - Tank Cascade Platform</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="style.css">
+<style>
+  /* ---- Module 4: MPC release decisions page ---- */
+  h2 { font-size: 17px; margin: 0 0 4px; }
+
+  .card {
+    background: #fff;
+    border: 1px solid #e2e5eb;
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 18px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+  }
+  .card p.hint { font-size: 13px; color: #5b6272; margin: 8px 0 0; }
+
+  .run-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 900px) { .run-grid { grid-template-columns: 1fr; } }
+
+  .field-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-bottom: 10px; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 12px; color: #5b6272; }
+  .field input, .field select {
+    padding: 7px 8px;
+    border: 1px solid #cdd2dc;
+    border-radius: 6px;
+    font-size: 13px;
+    min-width: 130px;
+  }
+  .field.checkbox { flex-direction: row; align-items: center; gap: 6px; }
+  .field.checkbox label { font-size: 13px; color: #1f2430; }
+
+  button.primary {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    border: none;
+    background: #2b6cb0;
+    color: #fff;
+    cursor: pointer;
+  }
+  button.primary:hover { background: #245a92; }
+  button.primary:disabled { background: #8a8f9c; cursor: not-allowed; }
+
+  button.ghost {
+    padding: 7px 12px;
+    background: #eceef2;
+    color: #1f2430;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  button.ghost:hover { background: #dfe2e8; }
+  button.ghost.stop-btn { background: #fff5f5; color: #c53030; }
+  button.ghost.stop-btn:hover { background: #fed7d7; }
+
+  /* ---- Job status / progress ---- */
+  .job-status { margin-top: 12px; font-size: 13px; color: #5b6272; display: none; }
+  .job-status.visible { display: block; }
+  .job-status .line { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+
+  .spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid #e2e5eb;
+    border-top-color: #2b6cb0;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .progress-track { width: 100%; height: 8px; background: #edf2f7; border-radius: 999px; overflow: hidden; }
+  .progress-fill {
+    height: 100%;
+    width: 4%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #2b6cb0 0%, #4f8bc9 100%);
+    transition: width 300ms ease;
+  }
+
+  .job-status.status-done .line { color: #2f855a; }
+  .job-status.status-error .line { color: #c53030; }
+  .job-status.status-stopped .line { color: #b7791f; }
+  .job-status pre.error-log {
+    background: #fff5f5;
+    border: 1px solid #fed7d7;
+    color: #822727;
+    font-size: 11px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    max-height: 160px;
+    overflow: auto;
+    white-space: pre-wrap;
+  }
+
+  .run-summary { margin-top: 10px; font-size: 13px; }
+  .run-summary .stat-row { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 8px; }
+  .run-summary .stat-row span.k { color: #5b6272; }
+  .run-summary .stat-row span.v { font-weight: 600; color: #1f2430; }
+  .run-summary table { font-size: 12px; margin-top: 4px; }
+  .run-summary table th, .run-summary table td { padding: 4px 10px 4px 0; border: none; }
+
+  .console-box { margin-top: 10px; }
+  .console-box summary { cursor: pointer; font-size: 12px; color: #5b6272; }
+  pre.console-log {
+    margin-top: 6px;
+    background: #14213d;
+    color: #d7e0f0;
+    font-size: 11px;
+    line-height: 1.5;
+    padding: 10px 12px;
+    border-radius: 6px;
+    max-height: 320px;
+    overflow: auto;
+    white-space: pre-wrap;
+  }
+
+  /* ---- Results tabs ---- */
+  .steps-nav { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0 16px; }
+  .step-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 7px 14px;
+    border: 1px solid #cfd6e2;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #334155;
+    font: 600 13px/1 "Segoe UI", Arial, sans-serif;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  }
+  .step-item:hover { border-color: #2b6cb0; color: #1d4f91; }
+  .step-item.active { background: #2b6cb0; border-color: #2b6cb0; color: #ffffff; }
+
+  .data-source-row { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 14px; }
+
+  .status-true { color: #2f855a; font-weight: 600; }
+  .status-false { color: #c53030; font-weight: 600; }
+
+  /* ---- Map tab ---- */
+  .map-row { display: flex; gap: 14px; align-items: stretch; }
+
+  /* Full-width map by default. The panel takes no layout space at all until a
+     tank is clicked - .panel-open (added/removed by renderDetailPanel()) is
+     what switches to an even 1/2 + 1/2 split. */
+  #map-container {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    height: 760px;
+    border: 1px solid #e2e5eb;
+    border-radius: 8px;
+    background: #eef0f3;
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04);
+  }
+
+  #tank-detail-panel {
+    display: none;
+    min-width: 0;
+    height: 760px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #e2e5eb;
+    border-radius: 8px;
+    padding: 20px 22px;
+  }
+
+  .map-row.panel-open #map-container { flex: 1 1 0; }
+  .map-row.panel-open #tank-detail-panel { display: block; flex: 1 1 0; }
+
+  .detail-placeholder {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #8a8f9c;
+    font-size: 14px;
+    padding: 0 40px;
+  }
+
+  @media (max-width: 1000px) {
+    .map-row { flex-direction: column; }
+    #map-container, #tank-detail-panel { flex: none; width: 100%; height: 480px; }
+  }
+
+  .map-legend {
+    background: rgba(255, 255, 255, 0.92);
+    padding: 8px 12px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.15);
+    font-size: 12px;
+    color: #1f2430;
+    line-height: 1.7;
+  }
+  .map-legend .swatch {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  /* Always-visible tank name, small and unobtrusive against the satellite
+     imagery - the map was otherwise unreadable (no way to tell tanks apart
+     without hovering each one). */
+  .tank-name-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9), 0 0 3px rgba(0, 0, 0, 0.85);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  /* Release-vs-demand PAIRED bar: two peer columns (demand, release) sharing a
+     baseline, each scaled to that tank's own max(demand, release). */
+  .tank-pair {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    width: 26px;
+    height: 30px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+    padding-bottom: 1px;
+  }
+  .tank-pair.big { width: 110px; height: 70px; gap: 14px; border-bottom-color: #cbd5e1; }
+  .pair-bar { flex: 1; min-height: 3px; border-radius: 2px 2px 0 0; outline: 1px solid rgba(255, 255, 255, 0.5); outline-offset: -1px; }
+  .pair-bar.demand { background: #64748b; }
+  .pair-bar.release { background: #ca8a04; }
+  .pair-bar.release.over { background: #dc2626; }
+  .tank-pair-nodata { align-self: center; font-size: 10px; color: rgba(255, 255, 255, 0.65); text-align: center; }
+  .tank-pair.big .tank-pair-nodata { font-size: 12px; }
+
+  .pair-legend { display: flex; gap: 12px; font-size: 11px; color: #1f2430; margin-top: 8px; }
+  .swatch-sq { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+  .swatch-sq.demand { background: #64748b; }
+  .swatch-sq.release { background: #ca8a04; }
+  .swatch-sq.release.over { background: #dc2626; }
+
+  .pair-caption { font-size: 11px; color: #fff; margin-top: 4px; }
+
+  .map-popup h4 { margin: 0 0 6px; font-size: 13px; }
+  .map-popup table { font-size: 12px; border-collapse: collapse; }
+  .map-popup td { padding: 2px 8px 2px 0; }
+  .map-popup td.k { color: #5b6272; }
+  .map-popup td.v { font-weight: 600; text-align: right; }
+  .map-popup-label { font-size: 11px; color: #5b6272; margin: 10px 0 4px; }
+  .map-popup .pair-caption { color: #1f2430; font-size: 12px; }
+  .map-popup .tank-pair-nodata { color: #8a8f9c; }
+  .map-popup .pair-bar { outline: none; }
+
+  /* Side panel (#tank-detail-panel) reuses .map-popup's own styling for its
+     content - these extend it with the panel-only header/history pieces. */
+  .map-popup.detail-body h4 { font-size: 17px; }
+  .detail-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .detail-close { background: none; border: none; font-size: 20px; line-height: 1; color: #8a8f9c; cursor: pointer; padding: 0 2px; }
+  .detail-close:hover { color: #1f2430; }
+  .detail-history { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 6px; }
+  .detail-history th { text-align: right; font-weight: 600; color: #5b6272; padding: 6px 8px; border-bottom: 1px solid #e2e5eb; }
+  .detail-history th:first-child { text-align: left; }
+  .detail-history td { padding: 6px 8px; text-align: right; border-bottom: 1px solid #eef0f3; }
+  .detail-history td:first-child { text-align: left; color: #5b6272; }
+  .detail-history tr.current-date { background: #eff6ff; }
+  .detail-history .tier-good { color: #059669; font-weight: 600; }
+  .detail-history .tier-warn { color: #ca8a04; font-weight: 600; }
+  .detail-history .tier-bad { color: #dc2626; font-weight: 600; }
+
+  /* Rich hover tooltip - the same detail card the click-popup shows, now also
+     on hover (primary interaction). Popup stays bound too as a touch-device
+     fallback, since hover doesn't exist there. */
+  .leaflet-tooltip.tank-tooltip-rich {
+    background: #fff;
+    border: 1px solid #e2e5eb;
+    border-radius: 10px;
+    padding: 12px 14px;
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.25);
+    opacity: 1;
+  }
+  .leaflet-tooltip.tank-tooltip-rich::before { border-top-color: #e2e5eb; }
+</style>
 </head>
 <body>
 
 <nav class="navbar">
-  <div class="nav-brand">Module 4 - MO-MPC Decision Support</div>
-  <div class="nav-note">standalone (not yet part of the shared platform)</div>
+  <div class="nav-brand">Tank Cascade Platform</div>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="storage.html">Satellite water storage</a></li>
+    <li><a href="connectivity.html">Tank connectivity</a></li>
+    <li><a href="forecasting.html">Forecasting</a></li>
+    <li><a href="mpc.html" class="active">MPC decisions</a></li>
+  </ul>
 </nav>
 
 <main class="container">
@@ -275,6 +565,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
-<script src="app.js"></script>
+<script src="mpc.js"></script>
 </body>
 </html>
