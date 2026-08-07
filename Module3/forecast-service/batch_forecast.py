@@ -57,6 +57,14 @@ FIELDNAMES = [
 # Convert forecast dictionary into Module 4 row
 # ============================================================
 
+def _as_non_negative_percent(value):
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        return 0.0
+    return max(0.0, numeric)
+
+
 def flatten_result(result):
 
     # --------------------------------------------------------
@@ -103,32 +111,32 @@ def flatten_result(result):
             result["storage_forecast_volume"]["t+1"],
 
         "storage_pct":
-            result["storage_forecast"]["t+1"],
+            _as_non_negative_percent(result["storage_forecast"]["t+1"]),
 
         "storage_source":
             result["storage_forecast_source"]["t+1"],
 
         # 7-day forecast (%)
         "t+1":
-            result["storage_forecast"]["t+1"],
+            _as_non_negative_percent(result["storage_forecast"]["t+1"]),
 
         "t+2":
-            result["storage_forecast"]["t+2"],
+            _as_non_negative_percent(result["storage_forecast"]["t+2"]),
 
         "t+3":
-            result["storage_forecast"]["t+3"],
+            _as_non_negative_percent(result["storage_forecast"]["t+3"]),
 
         "t+4":
-            result["storage_forecast"]["t+4"],
+            _as_non_negative_percent(result["storage_forecast"]["t+4"]),
 
         "t+5":
-            result["storage_forecast"]["t+5"],
+            _as_non_negative_percent(result["storage_forecast"]["t+5"]),
 
         "t+6":
-            result["storage_forecast"]["t+6"],
+            _as_non_negative_percent(result["storage_forecast"]["t+6"]),
 
         "t+7":
-            result["storage_forecast"]["t+7"],
+            _as_non_negative_percent(result["storage_forecast"]["t+7"]),
 
         # Risk
         "primary_risk":

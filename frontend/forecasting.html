@@ -118,6 +118,41 @@
         margin: 12px 0 0;
       }
 
+      .tank-row .view-history-btn {
+        padding: 5px 10px;
+        font-size: 12px;
+      }
+
+      .status-message {
+        display: none;
+        margin-top: 12px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        border: 1px solid transparent;
+      }
+
+      .status-message.info {
+        display: block;
+        background: #edf6ff;
+        border-color: #cfe3ff;
+        color: #0f4a8a;
+      }
+
+      .status-message.success {
+        display: block;
+        background: #ebf9f1;
+        border-color: #b7e4c7;
+        color: #1d5c3f;
+      }
+
+      .status-message.error {
+        display: block;
+        background: #fff1f2;
+        border-color: #fecdd3;
+        color: #9f1239;
+      }
+
       .loading-row {
         display: none;
         flex-direction: column;
@@ -340,11 +375,66 @@
         color: #0f6e56;
       }
 
-      .conf {
-        font-size: 12px;
+      .prob-bar-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 120px;
+      }
+
+      .prob-bar {
+        display: flex;
+        width: 120px;
+        height: 8px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: #eceef2;
+      }
+
+      .prob-bar span {
+        height: 100%;
+      }
+
+      .prob-bar .seg-drought {
+        background: #c05621;
+      }
+      .prob-bar .seg-normal {
+        background: #1d8a6a;
+      }
+      .prob-bar .seg-overflow {
+        background: #b7791f;
+      }
+
+      .prob-legend {
+        display: flex;
+        gap: 14px;
+        font-size: 11px;
         color: #5b6272;
-        min-width: 40px;
-        text-align: right;
+        margin: 0 0 10px;
+        flex-wrap: wrap;
+      }
+
+      .prob-legend .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .prob-legend .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+
+      .prob-legend .dot.drought {
+        background: #c05621;
+      }
+      .prob-legend .dot.normal {
+        background: #1d8a6a;
+      }
+      .prob-legend .dot.overflow {
+        background: #b7791f;
       }
 
       .empty-state {
@@ -366,7 +456,7 @@
           flex-direction: column;
         }
         .stat-grid {
-          grid-template-columns: repeat(2, 1fr);
+          grid-template-columns: repeat(3, 1fr);
         }
         .request-row {
           flex-direction: column;
@@ -442,6 +532,35 @@
             <div class="progress-fill" id="loading-bar-fill"></div>
           </div>
         </div>
+        <div
+          id="status-message"
+          class="status-message"
+          aria-live="polite"
+        ></div>
+      </div>
+
+      <div class="card" id="history-card">
+        <div class="results-head">
+          <p>Saved forecasts <strong id="history-count"></strong></p>
+          <button class="ghost" id="refresh-history-btn">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              width="14"
+              height="14"
+            >
+              <path d="M21 12a9 9 0 11-2.64-6.36M21 4v6h-6" />
+            </svg>
+            Refresh
+          </button>
+        </div>
+        <div class="tank-list" id="history-list">
+          <div class="empty-state">Loading saved forecasts…</div>
+        </div>
       </div>
 
       <div id="results" style="display: none">
@@ -477,10 +596,6 @@
             <p class="label">Overflow risk</p>
             <p class="value" id="overflow-count">0</p>
           </div>
-          <div class="stat">
-            <p class="label">Avg confidence</p>
-            <p class="value" id="avg-confidence">0.00</p>
-          </div>
         </div>
 
         <div class="tabs">
@@ -488,6 +603,18 @@
           <button data-filter="drought">Drought</button>
           <button data-filter="overflow">Overflow</button>
           <button data-filter="normal">Normal</button>
+        </div>
+
+        <div class="prob-legend">
+          <span class="legend-item"
+            ><span class="dot drought"></span>Drought prob.</span
+          >
+          <span class="legend-item"
+            ><span class="dot normal"></span>Normal prob.</span
+          >
+          <span class="legend-item"
+            ><span class="dot overflow"></span>Overflow prob.</span
+          >
         </div>
 
         <div class="tank-list" id="tank-list"></div>
@@ -514,7 +641,8 @@
 
       function safeNumber(value) {
         const parsed = Number(value);
-        return Number.isFinite(parsed) ? parsed : 0;
+        if (!Number.isFinite(parsed)) return 0;
+        return Math.max(0, parsed);
       }
 
       function formatPercent(value) {
@@ -535,6 +663,46 @@
         );
       }
 
+      function showStatusMessage(message, type = "info") {
+        const statusMessage = document.getElementById("status-message");
+        if (!statusMessage) return;
+        statusMessage.textContent = message;
+        statusMessage.className = `status-message ${type}`;
+      }
+
+      function clearStatusMessage() {
+        const statusMessage = document.getElementById("status-message");
+        if (!statusMessage) return;
+        statusMessage.textContent = "";
+        statusMessage.className = "status-message";
+      }
+
+      function getUserFriendlyForecastError(error) {
+        const message =
+          (error && error.message) ||
+          String(error || "") ||
+          "Unable to load forecast data.";
+        const lowerMessage = message.toLowerCase();
+
+        if (/failed to fetch|network|load failed|fetch/i.test(lowerMessage)) {
+          return "Network error: the forecast service could not be reached. Please check your connection and try again.";
+        }
+        if (/timed out|timeout/i.test(lowerMessage)) {
+          return "The forecast request timed out. Please try again.";
+        }
+        if (
+          /500|internal server error|server error|forecast generation failed/i.test(
+            lowerMessage,
+          )
+        ) {
+          return "The forecast service is temporarily unavailable. Please try again in a moment.";
+        }
+        if (/date|required|select/i.test(lowerMessage)) {
+          return "Please select a valid forecast date before generating the forecast.";
+        }
+        return message.length > 180 ? message.slice(0, 180) + "…" : message;
+      }
+
       function setLoadingProgress(percent, text) {
         const loadingRow = document.getElementById("loading-row");
         const loadingText = document.getElementById("loading-text");
@@ -545,6 +713,7 @@
         loadingText.textContent = text;
         loadingPercentage.textContent = `${Math.round(percent)}%`;
         loadingBarFill.style.width = `${Math.max(4, percent)}%`;
+        showStatusMessage(text, "info");
       }
 
       function startLoading() {
@@ -578,13 +747,6 @@
           droughtRows.length;
         document.getElementById("overflow-count").textContent =
           overflowRows.length;
-        const avgConfidence = allRows.length
-          ? (
-              allRows.reduce((sum, row) => sum + row.confidence, 0) /
-              allRows.length
-            ).toFixed(2)
-          : "0.00";
-        document.getElementById("avg-confidence").textContent = avgConfidence;
         document.getElementById("results").style.display = "block";
         document.getElementById("loading-row").style.display = "none";
         document.getElementById("generate-btn").disabled = false;
@@ -600,6 +762,38 @@
           .scrollIntoView({ behavior: "smooth", block: "nearest" });
         document.getElementById("loading-text").textContent =
           `${source === "generated" ? "Generated" : "Loaded"} forecast data`;
+        loadHistory();
+        showStatusMessage(
+          source === "generated"
+            ? "Forecast generated successfully."
+            : "Forecast data loaded successfully.",
+          "success",
+        );
+      }
+
+      function formatProbPct(value) {
+        return `${Math.round(Number(value || 0) * 100)}%`;
+      }
+
+      function buildProbBar(row) {
+        const d = Math.max(0, Number(row.probDrought || 0)) * 100;
+        const n = Math.max(0, Number(row.probNormal || 0)) * 100;
+        const o = Math.max(0, Number(row.probOverflow || 0)) * 100;
+        const total = d + n + o || 1;
+        const dPct = (d / total) * 100;
+        const nPct = (n / total) * 100;
+        const oPct = (o / total) * 100;
+        const title = `Drought ${formatProbPct(row.probDrought)} · Normal ${formatProbPct(row.probNormal)} · Overflow ${formatProbPct(row.probOverflow)}`;
+
+        return `
+          <div class="prob-bar-wrap" title="${escapeHtml(title)}">
+            <div class="prob-bar">
+              <span class="seg-drought" style="width:${dPct}%"></span>
+              <span class="seg-normal" style="width:${nPct}%"></span>
+              <span class="seg-overflow" style="width:${oPct}%"></span>
+            </div>
+          </div>
+        `;
       }
 
       function renderTanks(filter) {
@@ -608,7 +802,7 @@
 
         const filteredRows =
           filter === "all"
-            ? allRows.filter((row) => row.risk !== "normal")
+            ? [...allRows]
             : allRows.filter((row) => row.risk === filter);
 
         if (!filteredRows.length) {
@@ -625,41 +819,48 @@
           <p class="name">${escapeHtml(row.tank_name)}</p>
           <p class="meta">${formatPercent(row.storage_pct)} storage · ${escapeHtml(row.note)}</p>
         </div>
-        <span class="conf">${row.confidence.toFixed(2)}</span>
+        ${buildProbBar(row)}
         <span class="risk-badge ${row.risk}">${row.risk.charAt(0).toUpperCase() + row.risk.slice(1)}</span>
       `;
           list.appendChild(el);
         });
-
-        if (filter === "all") {
-          const normalCount = allRows.filter(
-            (row) => row.risk === "normal",
-          ).length;
-          if (normalCount) {
-            const note = document.createElement("div");
-            note.className = "tank-row collapsed-note";
-            note.textContent = `${normalCount} more tanks are currently in the normal range`;
-            list.appendChild(note);
-          }
-        }
       }
 
-      async function loadForecast(date, { force = false } = {}) {
+      async function loadForecast(date, { force = false, view = false } = {}) {
         const button = document.getElementById("generate-btn");
         const loadingRow = document.getElementById("loading-row");
-        const loadingText = document.getElementById("loading-text");
         const results = document.getElementById("results");
 
+        console.info(
+          `[forecast_ui] Starting forecast request for ${date}, force=${force}, view=${view}`,
+        );
         button.disabled = true;
         results.style.display = "none";
+        clearStatusMessage();
         startLoading();
+        if (view) {
+          document.getElementById("loading-text").textContent =
+            "Loading saved forecast…";
+        }
 
         try {
-          const url = `${apiBase}?date=${encodeURIComponent(date)}${force ? "&force=1" : ""}`;
+          const url = `${apiBase}?date=${encodeURIComponent(date)}${force ? "&force=1" : ""}${view ? "&view=1" : ""}`;
+          console.info(`[forecast_ui] Fetching ${url}`);
           const response = await fetch(url, { cache: "no-store" });
           if (!response.ok) {
-            const errorPayload = await response.json().catch(() => ({}));
-            throw new Error(errorPayload.error || "Forecast request failed");
+            let errorPayload = {};
+            try {
+              errorPayload = await response.json();
+            } catch (parseError) {
+              console.warn(
+                "[forecast_ui] Failed to parse forecast error JSON",
+                parseError,
+              );
+            }
+            const message =
+              errorPayload.error ||
+              `Forecast request failed (${response.status})`;
+            throw new Error(message);
           }
 
           const payload = await response.json();
@@ -669,6 +870,11 @@
             storage_pct: safeNumber(row.storage_pct_value ?? row.storage_pct),
             risk: getRisk(row.primary_risk || row.classifier_risk),
             confidence: safeNumber(row.confidence_value ?? row.confidence),
+            probDrought: safeNumber(row.prob_drought_value ?? row.prob_drought),
+            probNormal: safeNumber(row.prob_normal_value ?? row.prob_normal),
+            probOverflow: safeNumber(
+              row.prob_overflow_value ?? row.prob_overflow,
+            ),
             note:
               row.primary_risk === "drought"
                 ? "below the drought threshold"
@@ -680,21 +886,86 @@
           stopLoading(
             payload.source === "generated"
               ? "Generated forecast data"
-              : "Loaded forecast data",
+              : view
+                ? "Loaded saved forecast"
+                : "Loaded forecast data",
+          );
+          console.info(
+            `[forecast_ui] Forecast request succeeded: ${payload.count} rows`,
           );
           renderSummary(date, payload.source || "cached");
         } catch (error) {
+          const friendlyMessage = getUserFriendlyForecastError(error);
+          console.error("[forecast_ui] Forecast request failed:", error);
           stopLoading("Request failed");
           loadingRow.style.display = "none";
           button.disabled = false;
           results.style.display = "block";
+          showStatusMessage(friendlyMessage, "error");
           document.getElementById("tank-list").innerHTML =
-            `<div class="empty-state">${escapeHtml(error.message || "Unable to load forecast data.")}</div>`;
+            `<div class="empty-state">${escapeHtml(friendlyMessage)}</div>`;
           document.getElementById("result-date").textContent = date || "—";
           document.getElementById("drought-count").textContent = "0";
           document.getElementById("overflow-count").textContent = "0";
-          document.getElementById("avg-confidence").textContent = "0.00";
+          const avgConfidenceEl = document.getElementById("avg-confidence");
+          if (avgConfidenceEl) avgConfidenceEl.textContent = "0.00";
           document.getElementById("total-count").textContent = "0";
+        }
+      }
+
+      async function loadHistory() {
+        const list = document.getElementById("history-list");
+        const countLabel = document.getElementById("history-count");
+
+        if (!list || !countLabel) return;
+        list.innerHTML =
+          '<div class="empty-state">Loading saved forecasts…</div>';
+
+        try {
+          const response = await fetch(`${apiBase}/history`, {
+            cache: "no-store",
+          });
+          if (!response.ok) {
+            throw new Error(
+              `Failed to load saved forecasts (${response.status})`,
+            );
+          }
+
+          const payload = await response.json();
+          const files = payload.files || [];
+          countLabel.textContent = files.length ? `(${files.length})` : "";
+
+          if (!files.length) {
+            list.innerHTML =
+              '<div class="empty-state">No saved forecasts found yet.</div>';
+            return;
+          }
+
+          list.innerHTML = "";
+          files.forEach((file) => {
+            const el = document.createElement("div");
+            el.className = "tank-row";
+            el.innerHTML = `
+              <div class="tank-info">
+                <p class="name">${escapeHtml(file.date)}</p>
+                <p class="meta">Generated ${escapeHtml(file.generated_at)} · ${escapeHtml(file.size_label)} · ${file.row_count} tanks</p>
+              </div>
+              <button class="ghost view-history-btn" data-date="${escapeHtml(file.date)}">View</button>
+            `;
+            list.appendChild(el);
+          });
+
+          list.querySelectorAll(".view-history-btn").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              const date = btn.dataset.date;
+              document.getElementById("forecast-date").value = date;
+              loadForecast(date, { view: true });
+            });
+          });
+        } catch (error) {
+          const friendlyMessage = getUserFriendlyForecastError(error);
+          list.innerHTML = `<div class="empty-state">${escapeHtml(friendlyMessage)}</div>`;
+          countLabel.textContent = "";
         }
       }
 
@@ -711,13 +982,16 @@
       document.getElementById("generate-btn").addEventListener("click", () => {
         const date = document.getElementById("forecast-date").value;
         if (!date) {
+          const validationMessage = "Please select a forecast date first.";
+          showStatusMessage(validationMessage, "error");
           document.getElementById("tank-list").innerHTML =
-            '<div class="empty-state">Please select a forecast date first.</div>';
+            `<div class="empty-state">${escapeHtml(validationMessage)}</div>`;
           document.getElementById("results").style.display = "block";
           document.getElementById("result-date").textContent = "—";
           document.getElementById("drought-count").textContent = "0";
           document.getElementById("overflow-count").textContent = "0";
-          document.getElementById("avg-confidence").textContent = "0.00";
+          const avgConfidenceEl = document.getElementById("avg-confidence");
+          if (avgConfidenceEl) avgConfidenceEl.textContent = "0.00";
           document.getElementById("total-count").textContent = "0";
           return;
         }
@@ -729,22 +1003,36 @@
         .addEventListener("click", async () => {
           const date = document.getElementById("forecast-date").value;
           const url = `${apiBase}?date=${encodeURIComponent(date)}&download=1`;
-          const response = await fetch(url, { cache: "no-store" });
-          if (!response.ok) {
-            alert("Unable to download the forecast CSV.");
-            return;
+
+          try {
+            const response = await fetch(url, { cache: "no-store" });
+            if (!response.ok) {
+              const message = `Unable to download the forecast CSV. ${response.statusText || "Please try again."}`;
+              showStatusMessage(message, "error");
+              return;
+            }
+            const blob = await response.blob();
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `forecast_${date}.csv`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+            showStatusMessage("Forecast CSV download started.", "success");
+          } catch (error) {
+            const friendlyMessage = getUserFriendlyForecastError(error);
+            console.error("[forecast_ui] Forecast CSV download failed:", error);
+            showStatusMessage(friendlyMessage, "error");
           }
-          const blob = await response.blob();
-          const link = document.createElement("a");
-          link.href = URL.createObjectURL(blob);
-          link.download = `forecast_${date}.csv`;
-          link.click();
-          URL.revokeObjectURL(link.href);
         });
+
+      document
+        .getElementById("refresh-history-btn")
+        .addEventListener("click", loadHistory);
 
       window.addEventListener("DOMContentLoaded", () => {
         const today = new Date().toISOString().split("T")[0];
         document.getElementById("forecast-date").value = today;
+        loadHistory();
       });
     </script>
   </body>
