@@ -27,7 +27,8 @@ import mpc_api
 
 # Module 4's routes; everything else (Module 3's /health, /api/forecast*,
 # and static frontend files) is handled by forecast_api.ForecastHandler.
-_MPC_PATHS = {"/api/run/daily", "/api/run/season", "/api/status", "/api/tanks/geo", "/api/stop"}
+_MPC_PATHS = {"/api/run/daily", "/api/run/season", "/api/status", "/api/tanks/geo",
+              "/api/config", "/api/stop"}
 
 
 class PlatformHandler(forecast_api.ForecastHandler):

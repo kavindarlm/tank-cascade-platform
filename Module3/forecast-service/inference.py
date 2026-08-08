@@ -401,6 +401,23 @@ def run_forecast(tank_id, target_date):
             return "overflow"
         return "normal"
 
+    n_horizon = len(storage_forecast)
+    drought_duration_days = int((storage_forecast < drought_thresh).sum())
+    overflow_duration_days = int((storage_forecast > overflow_thresh).sum())
+    normal_duration_days = n_horizon - drought_duration_days - overflow_duration_days
+
+    # Risk probabilities are derived from the storage regression forecast
+    # itself (fraction of the 7-day horizon spent in each band) instead
+    # of the separate storage-excluded classifier. The classifier head
+    # has no visibility into the actual forecasted storage level, so its
+    # softmax output could contradict a forecast sitting at or near 0%
+    # storage (e.g. prob_overflow=0.73 on an empty tank). Deriving the
+    # probabilities from the same array already shown in t+1..t+7 makes
+    # that contradiction impossible by construction.
+    prob_drought = drought_duration_days / n_horizon
+    prob_overflow = overflow_duration_days / n_horizon
+    prob_normal = normal_duration_days / n_horizon
+
     primary_risk = classify(storage_forecast[0])
     classifier_risk = ["drought", "normal", "overflow"][int(np.argmax(risk_probs))]
 
@@ -414,15 +431,15 @@ def run_forecast(tank_id, target_date):
         },
         "storage_forecast_source": storage_forecast_source,
         "primary_risk": primary_risk,
-        "classifier_risk": classifier_risk,
+        "classifier_risk": classifier_risk,  # kept as a diagnostic only — no longer feeds risk_probabilities
         "agreement": primary_risk == classifier_risk,
         "risk_probabilities": {
-            "drought": round(float(risk_probs[0]), 3),
-            "normal": round(float(risk_probs[1]), 3),
-            "overflow": round(float(risk_probs[2]), 3),
+            "drought": round(float(prob_drought), 3),
+            "normal": round(float(prob_normal), 3),
+            "overflow": round(float(prob_overflow), 3),
         },
-        "drought_duration_days": int((storage_forecast < drought_thresh).sum()),
-        "overflow_duration_days": int((storage_forecast > overflow_thresh).sum()),
+        "drought_duration_days": drought_duration_days,
+        "overflow_duration_days": overflow_duration_days,
         "confidence": round(max(0.0, 1.0 - days_gap / INPUT_DAYS), 2),
         "days_gap": days_gap,
     }

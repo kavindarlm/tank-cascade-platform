@@ -71,6 +71,19 @@ class Config:
     # without waiting for the system clock.
     RUN_DATE: Optional[str] = "2026-07-29"
 
+    # Calendar date the CURRENT cultivation season began - the anchor
+    # run_daily_cli.py uses to convert RUN_DATE into "day N of the season"
+    # for demand lookup (crop water demand varies hugely across a season;
+    # without this anchor there is no way to know which day of the CWR curve
+    # a given RUN_DATE falls on). Same convention run_simulation.py's --start
+    # already uses for the season/backtest path (e.g. the original 2025 Yala
+    # run started 2025-03-01). None here is fine - run_daily_cli.py falls
+    # back to a best-effort default (most recent Mar 1 / Oct 1) and this
+    # field is not read anywhere else, so DEFAULT_CONFIG below (used by
+    # callers that never touch demand slicing, e.g. the /api/tanks/geo map
+    # endpoint) keeps constructing without needing one.
+    SEASON_START_DATE: Optional[str] = None
+
     MODULE3_FORECAST_OUTPUTS_DIR: str = _MODULE3_FORECAST_OUTPUTS_DIR
 
     T: int = 7                    # planning horizon in days (receding-horizon window)

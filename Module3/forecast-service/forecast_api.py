@@ -17,6 +17,13 @@ REPO_ROOT = BASE_DIR.parent.parent
 OUTPUT_DIR = BASE_DIR / "outputs"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
+# HTML pages are requested at root (e.g. "/storage.html") so their
+# same-directory relative links (href="style.css", src="app.js") resolve to
+# root paths too ("/style.css", "/app.js"). Recognize every top-level file
+# actually present in frontend/ so those requests get rewritten to
+# "/frontend/<file>" the same way the page requests are.
+_FRONTEND_ASSETS = {f"/{path.name}" for path in (REPO_ROOT / "frontend").iterdir() if path.is_file()}
+
 
 def _log(message, level="INFO"):
     print(f"[forecast_api][{level}] {message}", flush=True)
@@ -273,7 +280,7 @@ class ForecastHandler(SimpleHTTPRequestHandler):
 
         if parsed.path == "/":
             self.path = "/frontend/index.html"
-        elif parsed.path in {"/index.html", "/storage.html", "/connectivity.html", "/forecasting.html", "/mpc.html"}:
+        elif parsed.path in _FRONTEND_ASSETS:
             self.path = f"/frontend{parsed.path}"
 
         return super().do_GET()

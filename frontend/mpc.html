@@ -147,6 +147,260 @@
   .status-true { color: #2f855a; font-weight: 600; }
   .status-false { color: #c53030; font-weight: 600; }
 
+  /* ==================================================================
+     Plain-language result views (Overview / Water delivery / Why this
+     plan / Forecast agreement). The pipeline's own vocabulary - TOPSIS,
+     C3, w_shortage, volume ratio - is kept out of the headline reading
+     path and moved into .info tooltips and the .explainer boxes, so the
+     page answers "what happened and why" first and stays auditable
+     underneath via the collapsed .raw-block tables.
+     ================================================================== */
+
+  /* ---- Shared date bar (one selector drives every tab) ---- */
+  .date-bar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+    background: #f0f4fa; border: 1px solid #d8e2f0;
+    border-radius: 10px; padding: 12px 16px; margin-bottom: 16px;
+  }
+  .date-bar label { font-size: 13px; color: #5b6272; font-weight: 600; }
+  .date-bar select {
+    padding: 7px 10px; border: 1px solid #cdd2dc; border-radius: 6px;
+    font-size: 14px; font-weight: 600; color: #1f2430; background: #fff; min-width: 170px;
+  }
+  .date-bar .hint { margin: 0; font-size: 12px; color: #5b6272; }
+
+  /* ---- Glossary tooltip: every technical term keeps a one-line gloss ---- */
+  .info {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 15px; height: 15px; border-radius: 50%;
+    background: #cfd8e6; color: #2b4a70;
+    font: 700 10px/1 "Segoe UI", Arial, sans-serif; font-style: normal;
+    cursor: help; margin-left: 5px; vertical-align: middle; position: relative;
+  }
+  .info:hover { background: #2b6cb0; color: #fff; }
+  .info::after {
+    content: attr(data-tip);
+    position: absolute; bottom: 145%; left: 50%; transform: translateX(-50%);
+    width: 260px; padding: 9px 11px;
+    background: #14213d; color: #e8eefb;
+    font: 400 12px/1.55 "Segoe UI", Arial, sans-serif; text-align: left;
+    border-radius: 7px; box-shadow: 0 6px 18px rgba(15, 23, 42, 0.3);
+    opacity: 0; visibility: hidden; transition: opacity 120ms ease; z-index: 900;
+  }
+  .info:hover::after { opacity: 1; visibility: visible; }
+
+  /* ---- Headline stat tiles ---- */
+  .stat-tiles {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
+    gap: 12px; margin-bottom: 16px;
+  }
+  .tile {
+    background: #fff; border: 1px solid #e2e5eb; border-top: 3px solid #2b6cb0;
+    border-radius: 10px; padding: 14px 16px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  }
+  .tile .tile-value { font-size: 26px; font-weight: 700; line-height: 1.15; color: #1f2430; }
+  .tile .tile-label { font-size: 12px; color: #5b6272; margin-top: 4px; }
+  .tile .tile-sub { font-size: 11px; color: #8a8f9c; margin-top: 5px; }
+  .tile.good { border-top-color: #059669; } .tile.good .tile-value { color: #059669; }
+  .tile.warn { border-top-color: #ca8a04; } .tile.warn .tile-value { color: #ca8a04; }
+  .tile.bad  { border-top-color: #dc2626; } .tile.bad  .tile-value { color: #dc2626; }
+
+  /* ---- Plain-English verdict ---- */
+  .verdict {
+    background: #fff; border: 1px solid #e2e5eb; border-left: 4px solid #2b6cb0;
+    border-radius: 10px; padding: 14px 18px; margin-bottom: 18px;
+    font-size: 14px; line-height: 1.7; color: #1f2430;
+  }
+  .verdict.good { border-left-color: #059669; }
+  .verdict.warn { border-left-color: #ca8a04; }
+  .verdict.bad  { border-left-color: #dc2626; }
+
+  .sec-title { font-size: 14px; font-weight: 700; color: #1f2430; margin: 22px 0 10px; }
+  .sec-title:first-child { margin-top: 0; }
+  .sec-note { font-size: 12.5px; color: #5b6272; margin: 0 0 12px; line-height: 1.6; }
+
+  /* ---- Network-wide vs. village-tanks-only comparison ----
+     One tank can be so much bigger than the rest that a network-wide %
+     mostly reflects that one tank, not the small tanks most people mean by
+     "village tanks". Only rendered when a real size outlier exists - see
+     largeReservoirIds() - so it stays silent on datasets without one. */
+  .scale-box {
+    background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 18px;
+  }
+  .scale-box .sec-note { margin-bottom: 12px; }
+  .scale-compare { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .scale-block {
+    background: #fff; border: 1px solid #e2e5eb; border-radius: 10px;
+    padding: 12px 20px; text-align: center; min-width: 160px; flex: 1 1 160px;
+  }
+  .scale-block .scale-value { font-size: 25px; font-weight: 700; color: #1f2430; }
+  .scale-block .scale-label { font-size: 11.5px; color: #5b6272; margin-top: 4px; line-height: 1.5; }
+  .scale-block.good .scale-value { color: #059669; }
+  .scale-block.warn .scale-value { color: #ca8a04; }
+  .scale-block.bad  .scale-value { color: #dc2626; }
+  .scale-arrow { font-size: 20px; color: #c2703d; flex: 0 0 auto; }
+
+  /* ---- Stacked distribution bar (how the 32 tanks split) ---- */
+  .dist-bar {
+    display: flex; height: 30px; border-radius: 7px; overflow: hidden;
+    border: 1px solid #e2e5eb; background: #eef1f6;
+  }
+  .dist-seg {
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 12px; font-weight: 700; min-width: 0;
+    transition: flex-grow 220ms ease;
+  }
+  .dist-seg.served   { background: #059669; }
+  .dist-seg.partial  { background: #ca8a04; }
+  .dist-seg.critical { background: #dc2626; }
+  .dist-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; font-size: 12px; color: #5b6272; }
+  .dist-legend .swatch-sq { width: 10px; height: 10px; border-radius: 2px; }
+  .dist-legend .swatch-sq.served   { background: #059669; }
+  .dist-legend .swatch-sq.partial  { background: #ca8a04; }
+  .dist-legend .swatch-sq.critical { background: #dc2626; }
+
+  /* ---- Status pills ---- */
+  .pill {
+    display: inline-block; padding: 3px 10px; border-radius: 999px;
+    font-size: 11.5px; font-weight: 700; white-space: nowrap;
+  }
+  .pill.served   { background: #d1fae5; color: #065f46; }
+  .pill.partial  { background: #fef3c7; color: #854d0e; }
+  .pill.critical { background: #fee2e2; color: #991b1b; }
+  .pill.nodata   { background: #eef0f3; color: #5b6272; }
+
+  /* ---- Filter chips ---- */
+  .chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .chip {
+    padding: 6px 13px; border: 1px solid #cfd6e2; border-radius: 999px;
+    background: #fff; font: 600 12.5px "Segoe UI", Arial, sans-serif;
+    color: #334155; cursor: pointer;
+  }
+  .chip:hover { border-color: #2b6cb0; color: #1d4f91; }
+  .chip.active { background: #2b6cb0; border-color: #2b6cb0; color: #fff; }
+
+  /* ---- Water delivery: one ranked row per tank ---- */
+  .delivery-list { background: #fff; border: 1px solid #e2e5eb; border-radius: 10px; overflow: hidden; }
+  .drow {
+    display: grid; grid-template-columns: 200px 1fr 168px 56px 108px;
+    gap: 14px; align-items: center; padding: 11px 16px; border-bottom: 1px solid #eef0f3;
+  }
+  .drow:last-child { border-bottom: none; }
+  .drow:hover { background: #f7f9fc; }
+  .drow.head {
+    background: #f0f2f6; font-size: 11.5px; font-weight: 600;
+    color: #333a47; text-transform: uppercase; letter-spacing: .3px;
+  }
+  .drow .dname { font-size: 13px; font-weight: 600; color: #1f2430; overflow: hidden; text-overflow: ellipsis; }
+  .drow .dnums { font-size: 12.5px; color: #5b6272; text-align: right; font-variant-numeric: tabular-nums; }
+  .drow .dpct { font-size: 13.5px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+  .drow .dpct.served { color: #059669; }
+  .drow .dpct.partial { color: #ca8a04; }
+  .drow .dpct.critical { color: #dc2626; }
+
+  /* Track = that tank's full demand, so every row is directly comparable.
+     A release beyond demand can't grow the bar past the track - the exact
+     figure (which can read over 100%) still shows next to it, but a tank
+     that received more than it needed still counts as served: its demand
+     was met, which is what this status answers. */
+  .meter { position: relative; height: 19px; background: #eef1f6; border-radius: 4px; overflow: hidden; }
+  .meter-fill { height: 100%; border-radius: 4px; transition: width 240ms ease; }
+  .meter-fill.served   { background: #059669; }
+  .meter-fill.partial  { background: #ca8a04; }
+  .meter-fill.critical { background: #dc2626; }
+
+  .empty-state { padding: 30px; text-align: center; color: #8a8f9c; font-size: 13.5px; }
+
+  /* ---- Why this plan: priority mix + risk inputs ---- */
+  .weight-bar {
+    display: flex; height: 40px; border-radius: 8px; overflow: hidden;
+    border: 1px solid #e2e5eb;
+  }
+  .wseg {
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 12px; font-weight: 700; min-width: 0; overflow: hidden;
+    transition: flex-grow 240ms ease;
+  }
+  .wseg.shortage { background: #2b6cb0; }
+  .wseg.overflow { background: #0891b2; }
+  .wseg.equity   { background: #7c3aed; }
+  .wseg.loss     { background: #64748b; }
+
+  .weight-legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-top: 12px; }
+  .wlegend-item {
+    display: flex; align-items: flex-start; gap: 8px;
+    background: #f7f9fc; border: 1px solid #e2e5eb; border-radius: 8px; padding: 10px 12px;
+  }
+  .wlegend-item .swatch-sq { width: 11px; height: 11px; border-radius: 2px; margin-top: 3px; flex: none; }
+  .wlegend-item .swatch-sq.shortage { background: #2b6cb0; }
+  .wlegend-item .swatch-sq.overflow { background: #0891b2; }
+  .wlegend-item .swatch-sq.equity   { background: #7c3aed; }
+  .wlegend-item .swatch-sq.loss     { background: #64748b; }
+  .wlegend-item .wl-name { font-size: 13px; font-weight: 600; color: #1f2430; }
+  .wlegend-item .wl-val { font-size: 17px; font-weight: 700; color: #1f2430; margin-top: 3px; font-variant-numeric: tabular-nums; }
+  .wlegend-item .wl-desc { font-size: 11.5px; color: #8a8f9c; margin-top: 3px; line-height: 1.5; }
+  .delta { font-weight: 700; font-size: 11.5px; }
+  .delta.up { color: #b45309; } .delta.down { color: #0369a1; } .delta.flat { color: #8a8f9c; }
+
+  .risk-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+  .risk-card { background: #fff; border: 1px solid #e2e5eb; border-radius: 10px; padding: 14px 16px; }
+  .risk-card .rk-name { font-size: 12.5px; color: #5b6272; }
+  .risk-card .rk-val { font-size: 23px; font-weight: 700; color: #1f2430; margin: 3px 0 8px; }
+  .risk-track { height: 8px; background: #eef1f6; border-radius: 999px; overflow: hidden; }
+  .risk-fill { height: 100%; border-radius: 999px; transition: width 240ms ease; }
+  .risk-fill.drought { background: #d97706; }
+  .risk-fill.overflow { background: #0891b2; }
+
+  .kv-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+  .kv-card { background: #fff; border: 1px solid #e2e5eb; border-radius: 10px; padding: 13px 15px; }
+  .kv-card .kv-k { font-size: 12px; color: #5b6272; }
+  .kv-card .kv-v { font-size: 15px; font-weight: 700; color: #1f2430; margin-top: 4px; }
+
+  /* ---- Forecast agreement ---- */
+  .agree-list { background: #fff; border: 1px solid #e2e5eb; border-radius: 10px; overflow: hidden; }
+  .arow {
+    display: grid; grid-template-columns: 210px 120px 1fr 110px;
+    gap: 14px; align-items: center; padding: 11px 16px; border-bottom: 1px solid #eef0f3;
+  }
+  .arow:last-child { border-bottom: none; }
+  .arow:hover { background: #f7f9fc; }
+  .arow.head {
+    background: #f0f2f6; font-size: 11.5px; font-weight: 600;
+    color: #333a47; text-transform: uppercase; letter-spacing: .3px;
+  }
+  .arow .aname { font-size: 13px; font-weight: 600; color: #1f2430; }
+  .arow .aval { font-size: 12.5px; color: #5b6272; font-variant-numeric: tabular-nums; }
+  .spark { display: block; }
+  .spark-legend { display: flex; gap: 16px; font-size: 12px; color: #5b6272; margin-top: 10px; }
+  .spark-legend .ln { display: inline-block; width: 16px; height: 0; border-top: 2px solid; margin-right: 5px; vertical-align: middle; }
+
+  /* ---- Collapsed escape hatches: raw tables + method explainers ---- */
+  .raw-block { margin-top: 22px; border-top: 1px dashed #d8dce4; padding-top: 14px; }
+  .raw-block > summary,
+  .explainer > summary { cursor: pointer; font-size: 13px; font-weight: 600; color: #2b6cb0; }
+  .raw-block > summary:hover,
+  .explainer > summary:hover { color: #1d4f91; }
+  .raw-block > div { margin-top: 14px; }
+  .explainer {
+    background: #f7f9fc; border: 1px solid #e2e5eb; border-radius: 10px;
+    padding: 15px 18px; margin-top: 18px;
+  }
+  .explainer .body { margin-top: 12px; font-size: 13.5px; line-height: 1.75; color: #333a47; }
+  .explainer .body p { margin: 0 0 10px; }
+  .explainer .body p:last-child { margin-bottom: 0; }
+  .explainer .body code {
+    background: #eef1f6; padding: 1px 5px; border-radius: 4px;
+    font-size: 12.5px; color: #1f2430;
+  }
+
+  @media (max-width: 860px) {
+    .drow { grid-template-columns: 1fr 70px; grid-auto-rows: min-content; row-gap: 6px; }
+    .drow .dnums, .drow .meter { grid-column: 1 / -1; text-align: left; }
+    .arow { grid-template-columns: 1fr 1fr; row-gap: 8px; }
+  }
+
   /* ---- Map tab ---- */
   .map-row { display: flex; gap: 14px; align-items: stretch; }
 
@@ -410,138 +664,237 @@
       <span class="hint" id="data-source-hint" style="margin:0;"></span>
     </div>
 
+    <div class="date-bar">
+      <label for="global-date">Showing results for</label>
+      <select id="global-date"><option value="">Load a run first</option></select>
+      <span class="hint" id="global-date-hint"></span>
+    </div>
+
     <nav class="steps-nav">
-      <button type="button" class="step-item active" data-target="decisions">Release decisions</button>
-      <button type="button" class="step-item" data-target="weights">Feasibility &amp; TOPSIS weights</button>
-      <button type="button" class="step-item" data-target="crosscheck">Module 3 cross-check</button>
+      <button type="button" class="step-item active" data-target="overview">Overview</button>
+      <button type="button" class="step-item" data-target="delivery">Water delivery</button>
+      <button type="button" class="step-item" data-target="why">Why this plan</button>
+      <button type="button" class="step-item" data-target="agreement">Forecast agreement</button>
       <button type="button" class="step-item" data-target="map">Map view</button>
     </nav>
 
-    <section id="panel-decisions" class="view-panel">
-      <div class="filters">
-        <div class="filter-group">
-          <label for="decisions-tank">Tank</label>
-          <select id="decisions-tank"><option value="">All tanks</option></select>
-        </div>
-        <div class="filter-group">
-          <label for="decisions-from">From date</label>
-          <input type="date" id="decisions-from">
-        </div>
-        <div class="filter-group">
-          <label for="decisions-to">To date</label>
-          <input type="date" id="decisions-to">
-        </div>
-        <button class="btn-secondary" data-clear="decisions" type="button">Clear filters</button>
-        <button class="btn-primary" data-download="decisions" type="button">Download CSV</button>
-      </div>
-      <div class="table-info" id="decisions-info">Not loaded yet - click Load above.</div>
-      <div class="table-wrapper">
-        <table>
-          <thead><tr><th>Date</th><th>Tank</th><th>Release (m&sup3;)</th></tr></thead>
-          <tbody id="decisions-body"><tr class="empty-row"><td colspan="3">Not loaded</td></tr></tbody>
-        </table>
-      </div>
-      <div class="pagination">
-        <button data-prev="decisions" type="button">Prev</button>
-        <span id="decisions-page-indicator">Page 1</span>
-        <button data-next="decisions" type="button">Next</button>
-        <select data-page-size="decisions">
-          <option value="25">25 / page</option>
-          <option value="50" selected>50 / page</option>
-          <option value="100">100 / page</option>
-        </select>
-      </div>
+    <!-- ============ Overview: the answer before the data ============ -->
+    <section id="panel-overview" class="view-panel">
+      <div class="stat-tiles" id="overview-tiles"></div>
+      <div class="verdict" id="overview-verdict">Loading results...</div>
+
+      <div id="overview-scale"></div>
+
+      <div class="sec-title">How the 32 tanks were served</div>
+      <p class="sec-note">
+        Each tank is grouped by how much of its water demand the plan actually delivered
+        on the selected date. Hover the Water delivery tab for the tank-by-tank breakdown.
+      </p>
+      <div id="overview-dist"></div>
+
+      <div class="sec-title">Needs attention</div>
+      <div id="overview-concerns"></div>
     </section>
 
-    <section id="panel-weights" class="view-panel" hidden>
-      <div class="filters">
-        <div class="filter-group">
-          <label for="weights-feasible">Feasible</label>
-          <select id="weights-feasible">
-            <option value="">All</option>
-            <option value="True">Yes</option>
-            <option value="False">No</option>
-          </select>
+    <!-- ============ Water delivery: ranked, worst first ============ -->
+    <section id="panel-delivery" class="view-panel" hidden>
+      <p class="sec-note">
+        One row per tank, <strong>most under-served first</strong>. The bar shows how much of
+        that tank's demand was met - a full bar means demand was fully covered.
+      </p>
+      <div class="chip-row" id="delivery-chips"></div>
+      <div class="delivery-list" id="delivery-list"></div>
+
+      <details class="raw-block" id="raw-decisions">
+        <summary>Show raw data table (all dates, filterable, downloadable)</summary>
+        <div>
+          <div class="filters">
+            <div class="filter-group">
+              <label for="decisions-tank">Tank</label>
+              <select id="decisions-tank"><option value="">All tanks</option></select>
+            </div>
+            <div class="filter-group">
+              <label for="decisions-from">From date</label>
+              <input type="date" id="decisions-from">
+            </div>
+            <div class="filter-group">
+              <label for="decisions-to">To date</label>
+              <input type="date" id="decisions-to">
+            </div>
+            <button class="btn-secondary" data-clear="decisions" type="button">Clear filters</button>
+            <button class="btn-primary" data-download="decisions" type="button">Download CSV</button>
+          </div>
+          <div class="table-info" id="decisions-info">Not loaded yet - click Load above.</div>
+          <div class="table-wrapper">
+            <table>
+              <thead><tr><th>Date</th><th>Tank</th><th>Release (m&sup3;)</th></tr></thead>
+              <tbody id="decisions-body"><tr class="empty-row"><td colspan="3">Not loaded</td></tr></tbody>
+            </table>
+          </div>
+          <div class="pagination">
+            <button data-prev="decisions" type="button">Prev</button>
+            <span id="decisions-page-indicator">Page 1</span>
+            <button data-next="decisions" type="button">Next</button>
+            <select data-page-size="decisions">
+              <option value="25">25 / page</option>
+              <option value="50" selected>50 / page</option>
+              <option value="100">100 / page</option>
+            </select>
+          </div>
         </div>
-        <div class="filter-group">
-          <label for="weights-from">From date</label>
-          <input type="date" id="weights-from">
-        </div>
-        <div class="filter-group">
-          <label for="weights-to">To date</label>
-          <input type="date" id="weights-to">
-        </div>
-        <button class="btn-secondary" data-clear="weights" type="button">Clear filters</button>
-        <button class="btn-primary" data-download="weights" type="button">Download CSV</button>
-      </div>
-      <div class="table-info" id="weights-info">Not loaded yet - click Load above.</div>
-      <div class="table-wrapper">
-        <table>
-          <thead><tr>
-            <th>Date</th><th>Day</th><th>P(drought)</th><th>P(overflow)</th>
-            <th>w shortage</th><th>w overflow</th><th>w equity</th><th>w loss</th>
-            <th>Feasible</th><th>C3 tier</th><th>Reserve deficit (m&sup3;)</th>
-          </tr></thead>
-          <tbody id="weights-body"><tr class="empty-row"><td colspan="11">Not loaded</td></tr></tbody>
-        </table>
-      </div>
-      <div class="pagination">
-        <button data-prev="weights" type="button">Prev</button>
-        <span id="weights-page-indicator">Page 1</span>
-        <button data-next="weights" type="button">Next</button>
-        <select data-page-size="weights">
-          <option value="25">25 / page</option>
-          <option value="50" selected>50 / page</option>
-          <option value="100">100 / page</option>
-        </select>
-      </div>
+      </details>
     </section>
 
-    <section id="panel-crosscheck" class="view-panel" hidden>
-      <div class="filters">
-        <div class="filter-group">
-          <label for="crosscheck-tank">Tank</label>
-          <select id="crosscheck-tank"><option value="">All tanks</option></select>
+    <!-- ============ Why this plan: the weights, translated ============ -->
+    <section id="panel-why" class="view-panel" hidden>
+      <div class="sec-title">What the plan was trying to achieve</div>
+      <p class="sec-note">
+        Every day the system balances four competing goals. The wider a band, the more that
+        goal influenced the release decision for this date.
+      </p>
+      <div id="why-weights"></div>
+
+      <div class="sec-title">Why these priorities</div>
+      <div id="why-reason"></div>
+
+      <div class="sec-title">Was the plan safe to apply?</div>
+      <div id="why-status"></div>
+
+      <details class="explainer">
+        <summary>How the plan is chosen (technical detail)</summary>
+        <div class="body">
+          <p>
+            For each day the optimiser (NSGA-II) produces a <em>Pareto front</em> - many
+            release plans, none strictly better than the others, each trading the four goals
+            off differently. Something must pick one.
+          </p>
+          <p>
+            That choice is made by <strong>TOPSIS</strong> (Technique for Order Preference by
+            Similarity to Ideal Solution). It scores every candidate plan by how close it sits
+            to the theoretical best on all four goals at once, and how far it sits from the
+            theoretical worst. The plan with the best ratio wins.
+          </p>
+          <p>
+            The four goals are weighted, and the weights are not fixed - they shift with
+            Module 3's risk forecast. High drought risk raises <code>shortage</code> and
+            <code>equity</code>; high overflow risk raises <code>overflow</code> and lowers
+            <code>loss</code>. Every weight is floored so no goal is ever ignored entirely,
+            then renormalised to sum to 1. That is the "Why these priorities" section above.
+          </p>
+          <p>
+            <strong>Feasible</strong> means the winning plan satisfied every physical
+            constraint: storage stayed within each tank's safe range (C1), releases stayed
+            within valve limits (C2), and the seasonal reserve floor held (C3).
+          </p>
         </div>
-        <div class="filter-group">
-          <label for="crosscheck-from">From date</label>
-          <input type="date" id="crosscheck-from">
+      </details>
+
+      <details class="raw-block" id="raw-weights">
+        <summary>Show raw data table (all dates, filterable, downloadable)</summary>
+        <div>
+          <div class="filters">
+            <div class="filter-group">
+              <label for="weights-feasible">Feasible</label>
+              <select id="weights-feasible">
+                <option value="">All</option>
+                <option value="True">Yes</option>
+                <option value="False">No</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="weights-from">From date</label>
+              <input type="date" id="weights-from">
+            </div>
+            <div class="filter-group">
+              <label for="weights-to">To date</label>
+              <input type="date" id="weights-to">
+            </div>
+            <button class="btn-secondary" data-clear="weights" type="button">Clear filters</button>
+            <button class="btn-primary" data-download="weights" type="button">Download CSV</button>
+          </div>
+          <div class="table-info" id="weights-info">Not loaded yet - click Load above.</div>
+          <div class="table-wrapper">
+            <table>
+              <thead><tr>
+                <th>Date</th><th>Day</th><th>P(drought)</th><th>P(overflow)</th>
+                <th>w shortage</th><th>w overflow</th><th>w equity</th><th>w loss</th>
+                <th>Feasible</th><th>C3 tier</th><th>Reserve deficit (m&sup3;)</th>
+              </tr></thead>
+              <tbody id="weights-body"><tr class="empty-row"><td colspan="11">Not loaded</td></tr></tbody>
+            </table>
+          </div>
+          <div class="pagination">
+            <button data-prev="weights" type="button">Prev</button>
+            <span id="weights-page-indicator">Page 1</span>
+            <button data-next="weights" type="button">Next</button>
+            <select data-page-size="weights">
+              <option value="25">25 / page</option>
+              <option value="50" selected>50 / page</option>
+              <option value="100">100 / page</option>
+            </select>
+          </div>
         </div>
-        <div class="filter-group">
-          <label for="crosscheck-to">To date</label>
-          <input type="date" id="crosscheck-to">
+      </details>
+    </section>
+
+    <!-- ============ Forecast agreement: a verdict, not 609 rows ============ -->
+    <section id="panel-agreement" class="view-panel" hidden>
+      <p class="sec-note">
+        Module 4 simulates where each tank's water level will go over the next 7 days.
+        Module 3 forecasts the same thing independently. If the two disagree badly for a
+        tank, that tank's plan deserves a second look.
+      </p>
+      <div id="agreement-summary"></div>
+
+      <div class="sec-title">Tank-by-tank comparison</div>
+      <div class="chip-row" id="agreement-chips"></div>
+      <div id="agreement-list"></div>
+
+      <details class="raw-block" id="raw-crosscheck">
+        <summary>Show raw data table (all dates, filterable, downloadable)</summary>
+        <div>
+          <div class="filters">
+            <div class="filter-group">
+              <label for="crosscheck-tank">Tank</label>
+              <select id="crosscheck-tank"><option value="">All tanks</option></select>
+            </div>
+            <div class="filter-group">
+              <label for="crosscheck-from">From date</label>
+              <input type="date" id="crosscheck-from">
+            </div>
+            <div class="filter-group">
+              <label for="crosscheck-to">To date</label>
+              <input type="date" id="crosscheck-to">
+            </div>
+            <button class="btn-secondary" data-clear="crosscheck" type="button">Clear filters</button>
+            <button class="btn-primary" data-download="crosscheck" type="button">Download CSV</button>
+          </div>
+          <div class="table-info" id="crosscheck-info">Not loaded yet - click Load above.</div>
+          <div class="table-wrapper">
+            <table>
+              <thead><tr>
+                <th>Date</th><th>Tank</th><th>Horizon day</th>
+                <th>M4 ratio</th><th>M3 ratio</th><th>Difference</th><th>|Difference|</th>
+              </tr></thead>
+              <tbody id="crosscheck-body"><tr class="empty-row"><td colspan="7">Not loaded</td></tr></tbody>
+            </table>
+          </div>
+          <div class="pagination">
+            <button data-prev="crosscheck" type="button">Prev</button>
+            <span id="crosscheck-page-indicator">Page 1</span>
+            <button data-next="crosscheck" type="button">Next</button>
+            <select data-page-size="crosscheck">
+              <option value="25">25 / page</option>
+              <option value="50" selected>50 / page</option>
+              <option value="100">100 / page</option>
+            </select>
+          </div>
         </div>
-        <button class="btn-secondary" data-clear="crosscheck" type="button">Clear filters</button>
-        <button class="btn-primary" data-download="crosscheck" type="button">Download CSV</button>
-      </div>
-      <div class="table-info" id="crosscheck-info">Not loaded yet - click Load above.</div>
-      <div class="table-wrapper">
-        <table>
-          <thead><tr>
-            <th>Date</th><th>Tank</th><th>Horizon day</th>
-            <th>M4 ratio</th><th>M3 ratio</th><th>Difference</th><th>|Difference|</th>
-          </tr></thead>
-          <tbody id="crosscheck-body"><tr class="empty-row"><td colspan="7">Not loaded</td></tr></tbody>
-        </table>
-      </div>
-      <div class="pagination">
-        <button data-prev="crosscheck" type="button">Prev</button>
-        <span id="crosscheck-page-indicator">Page 1</span>
-        <button data-next="crosscheck" type="button">Next</button>
-        <select data-page-size="crosscheck">
-          <option value="25">25 / page</option>
-          <option value="50" selected>50 / page</option>
-          <option value="100">100 / page</option>
-        </select>
-      </div>
+      </details>
     </section>
 
     <section id="panel-map" class="view-panel" hidden>
       <div class="filters">
-        <div class="filter-group">
-          <label for="map-date">Release date shown</label>
-          <select id="map-date"><option value="">Load a run first</option></select>
-        </div>
         <button class="btn-secondary" id="map-reload-btn" type="button">Reload map data</button>
         <span class="hint" id="map-hint" style="margin:0;"></span>
       </div>

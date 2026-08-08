@@ -1,17 +1,168 @@
 // Module 4 interactive dashboard.
-// Two things happen here, kept deliberately separate:
+// Three things happen here, kept deliberately separate:
 //   1. Triggering runs via Module 4's MPC API (mounted in the root main.py
 //      alongside Module 3's forecast API - same origin as this page) and
 //      polling job status.
-//   2. Viewing results by reading the consolidated_*.csv files directly off disk
-//      (same fetch()+PapaParse pattern storage.html/connectivity.html already use) -
-//      the results viewer never goes through the API, it just reads whatever CSVs
-//      are sitting in the chosen output folder.
+//   2. Loading the consolidated_*.csv files off disk ONCE into `store` (same
+//      fetch()+PapaParse pattern storage.html/connectivity.html already use) -
+//      the results viewer never goes through the API, it just reads whatever
+//      CSVs are sitting in the chosen output folder.
+//   3. Rendering that one store into plain-language views. The pipeline's
+//      vocabulary (TOPSIS, C3, w_shortage, volume ratio) is deliberately kept
+//      out of the headline reading path: each tab answers a question, and the
+//      raw table that backs it stays one click away for auditing.
 
 const API_BASE = ""; // same origin - main.py serves this page and the API together
 const DATA_ROOT = "../Module4/mpc-pipeline"; // relative to this page
 
 const el = (id) => document.getElementById(id);
+
+// ---------------------------------------------------------------------
+// Shared state
+// ---------------------------------------------------------------------
+
+const store = {
+  decisions: [],     // {date, tank_id, release_m3, demand_m3}
+  weights: [],       // {date, p_drought, p_overflow, w_*, feasible, c3_tier, ...}
+  crosscheck: [],    // {date, tank_id, day, m4_volume_ratio, m3_volume_ratio, ...}
+  dates: [],         // sorted unique dates present in the loaded run
+  selectedDate: "",  // drives every tab; set by the one date bar at the top
+  deliveryFilter: "all",
+  agreementFilter: "all",
+};
+
+// Fallback only. The live values come from /api/config (mpc_api.py's
+// _ui_config_payload) so that retuning module4/config.py can never leave the
+// page quoting a threshold the pipeline no longer uses - the Forecast
+// agreement tab's tolerance in particular. base_weights is no longer rendered
+// anywhere (the weight cards show the applied % on its own), but is kept as
+// the sanity check that /api/config returned a real payload.
+let uiConfig = {
+  base_weights: { shortage: 0.35, overflow: 0.25, equity: 0.2, loss: 0.2 },
+  crosscheck_divergence_threshold: 0.15,
+  horizon_days: 7,
+};
+
+// The four optimiser objectives, in the order the CSV columns appear, with the
+// plain-language name each one is shown under. objectives.py defines them as
+// costs (lower is better); users think in terms of the goal, not the cost, so
+// the label names the goal.
+const GOALS = [
+  { key: "shortage", col: "w_shortage", name: "Meeting demand",      desc: "Avoid leaving fields without water" },
+  { key: "overflow", col: "w_overflow", name: "Preventing overflow", desc: "Avoid water spilling over the tank bund" },
+  { key: "equity",   col: "w_equity",   name: "Fair sharing",        desc: "Spread any shortage evenly between tanks" },
+  { key: "loss",     col: "w_loss",     name: "Avoiding waste",      desc: "Don't release more water than is needed" },
+];
+
+const TIER_LABEL = {
+  served: "Fully served",
+  partial: "Partly served",
+  critical: "Critically short",
+  nodata: "No data",
+};
+
+const esc = (s) =>
+  String(s ?? "").replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const n0 = (v) => Math.round(Number(v) || 0).toLocaleString();
+const tankLabel = (id) => String(id ?? "").replace(/_/g, " ");
+
+function prettyDate(iso) {
+  const d = new Date(`${iso}T00:00:00`);
+  if (isNaN(d)) return iso;
+  return d.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+}
+
+// Mutually exclusive buckets, so the counts always sum to the tank total.
+// Anything >= 90% (including over 100%) counts as "served" - a tank that
+// got more than it asked for still had its demand fully met, which is what
+// this status is answering ("was this tank's need satisfied?"), not "did
+// the release exactly equal demand?".
+function classify(pct) {
+  if (pct === null || pct === undefined || !isFinite(pct)) return "nodata";
+  if (pct >= 90) return "served";
+  if (pct >= 50) return "partial";
+  return "critical";
+}
+
+function satisfactionPctOf(row) {
+  const demand = Number(row.demand_m3);
+  if (!isFinite(demand) || demand <= 0) return null;
+  return (Number(row.release_m3) / demand) * 100;
+}
+
+function decisionsForDate(date) {
+  return store.decisions
+    .filter((r) => String(r.date) === date && r.tank_id)
+    .map((r) => {
+      const pct = satisfactionPctOf(r);
+      return {
+        tank_id: r.tank_id,
+        release: Number(r.release_m3) || 0,
+        demand: Number(r.demand_m3),
+        pct,
+        tier: classify(pct),
+      };
+    });
+}
+
+function weightsForDate(date) {
+  return store.weights.find((r) => String(r.date) === date) || null;
+}
+
+/** Network-level totals for one date. */
+function summarise(rows) {
+  const counts = { served: 0, partial: 0, critical: 0, nodata: 0 };
+  let totalDemand = 0;
+  let totalRelease = 0;
+  let covered = 0; // min(release, demand) - demand actually met, ignoring overshoot
+
+  rows.forEach((r) => {
+    counts[r.tier] += 1;
+    totalRelease += r.release;
+    if (isFinite(r.demand) && r.demand > 0) {
+      totalDemand += r.demand;
+      covered += Math.min(r.release, r.demand);
+    }
+  });
+
+  return {
+    n: rows.length,
+    counts,
+    totalDemand,
+    totalRelease,
+    covered,
+    // Coverage counts only water that met a real need. Using
+    // totalRelease/totalDemand instead would let a tank given 3x its demand
+    // paper over a neighbour that got nothing.
+    coveragePct: totalDemand > 0 ? (covered / totalDemand) * 100 : null,
+  };
+}
+
+// A network-wide "% of demand met" is a demand-weighted average, so one tank
+// that is far larger than the rest can single-handedly decide the headline
+// number even when every small "village" tank is going short - a genuinely
+// misleading read of "is the network okay?". Flag tanks whose CAPACITY
+// (s_max_m3, a fixed physical property, not something that shifts day to
+// day like demand does) is a large multiple of the median tank's capacity.
+// Threshold picked from this cascade's real spread: the biggest reservoir
+// here sits at ~300x the median tank, the next-biggest step is only ~6x -
+// 20x cleanly isolates a genuine outlier without catching an ordinarily
+// bigger village tank.
+const LARGE_RESERVOIR_MEDIAN_MULTIPLE = 20;
+
+function largeReservoirIds(tanksById) {
+  const caps = Object.values(tanksById).map((t) => t.s_max_m3).filter((v) => isFinite(v) && v > 0).sort((a, b) => a - b);
+  if (!caps.length) return new Set();
+  const median = caps[Math.floor(caps.length / 2)];
+  if (!median) return new Set();
+  return new Set(
+    Object.values(tanksById)
+      .filter((t) => t.s_max_m3 > median * LARGE_RESERVOIR_MEDIAN_MULTIPLE)
+      .map((t) => t.tank_id)
+  );
+}
 
 // ---------------------------------------------------------------------
 // Run triggering + polling
@@ -66,20 +217,21 @@ function renderSummary(prefix, result) {
   }
   const w = result.weights || {};
   const rows = (result.top_releases || [])
-    .map((r) => `<tr><td>${r.tank_id}</td><td>${r.release_m3.toLocaleString()} m&sup3;</td></tr>`)
+    .map((r) => `<tr><td>${esc(tankLabel(r.tank_id))}</td><td>${n0(r.release_m3)} m&sup3;</td></tr>`)
     .join("");
   box.innerHTML = `
     <div class="stat-row">
-      <span><span class="k">Feasible:</span> <span class="v">${result.feasible}</span></span>
-      <span><span class="k">P(drought):</span> <span class="v">${fmt(result.p_drought, 3)}</span></span>
-      <span><span class="k">P(overflow):</span> <span class="v">${fmt(result.p_overflow, 3)}</span></span>
-      <span><span class="k">C3 tier:</span> <span class="v">${result.c3_tier ?? "-"}</span></span>
-      <span><span class="k">Total release:</span> <span class="v">${(result.total_release_m3 ?? 0).toLocaleString()} m&sup3; across ${result.n_tanks ?? "?"} tanks</span></span>
+      <span><span class="k">Plan usable:</span> <span class="v">${result.feasible ? "yes" : "no"}</span></span>
+      <span><span class="k">Drought risk:</span> <span class="v">${Math.round((result.p_drought ?? 0) * 100)}%</span></span>
+      <span><span class="k">Overflow risk:</span> <span class="v">${Math.round((result.p_overflow ?? 0) * 100)}%</span></span>
+      <span><span class="k">Total release:</span> <span class="v">${n0(result.total_release_m3)} m&sup3; across ${result.n_tanks ?? "?"} tanks</span></span>
     </div>
     <div class="stat-row">
-      <span><span class="k">Weights:</span> <span class="v">shortage ${fmt(w.shortage, 3)} &middot; overflow ${fmt(w.overflow, 3)} &middot; equity ${fmt(w.equity, 3)} &middot; loss ${fmt(w.loss, 3)}</span></span>
+      <span><span class="k">Priorities:</span> <span class="v">${GOALS.map(
+        (g) => `${g.name} ${Math.round((w[g.key] ?? 0) * 100)}%`
+      ).join(" &middot; ")}</span></span>
     </div>
-    ${rows ? `<table><thead><tr><th>Top releases</th><th></th></tr></thead><tbody>${rows}</tbody></table>` : ""}
+    ${rows ? `<table><thead><tr><th>Largest releases</th><th></th></tr></thead><tbody>${rows}</tbody></table>` : ""}
   `;
 }
 
@@ -112,7 +264,7 @@ async function pollJob(prefix, jobId, { onDone } = {}) {
     activeJobIdByPrefix[prefix] = null;
 
     if (job.status === "done") {
-      const feasibleNote = job.result ? ` - feasible: ${job.result.feasible}` : "";
+      const feasibleNote = job.result ? ` - plan usable: ${job.result.feasible ? "yes" : "no"}` : "";
       setJobStatus(prefix, {
         text: `Done${feasibleNote}`,
         percent: 100,
@@ -135,7 +287,6 @@ async function pollJob(prefix, jobId, { onDone } = {}) {
       return;
     }
 
-    // error
     setJobStatus(prefix, {
       text: "Run failed - see log below",
       percent: 100,
@@ -196,7 +347,9 @@ function wireDailyRun() {
     pollJob("daily", payload.job_id, {
       onDone: () => {
         el("data-source").value = "outputs";
-        loadAllTabs("outputs");
+        // Land on the date that was just computed, not whatever was selected
+        // before the run - otherwise a finished run appears to change nothing.
+        loadAllTabs("outputs", { preferDate: date });
       },
     });
   });
@@ -247,7 +400,10 @@ function wireSeasonRun() {
 }
 
 // ---------------------------------------------------------------------
-// Results viewer - generic table for the 3 consolidated CSVs
+// Raw data tables - the auditable escape hatch behind each summary view.
+// Rows are handed in from `store` (fetched once in loadAllTabs) rather than
+// re-fetched here, and these keep their own independent date filters so the
+// full run stays reachable regardless of the date bar at the top.
 // ---------------------------------------------------------------------
 
 function fmt(v, digits) {
@@ -256,7 +412,7 @@ function fmt(v, digits) {
   return v;
 }
 
-function createTableView({ prefix, csvFile, colCount, renderRow, filterFn, tankField, extraSelectField }) {
+function createTableView({ prefix, csvFile, colCount, renderRow, filterFn, tankField }) {
   let allRows = [];
   let filteredRows = [];
   let currentPage = 1;
@@ -303,28 +459,20 @@ function createTableView({ prefix, csvFile, colCount, renderRow, filterFn, tankF
     el(`${prefix}-page-indicator`).textContent = `Page ${currentPage} of ${totalPages}`;
   }
 
-  async function load(baseUrl) {
-    const path = `${baseUrl}/${csvFile}`;
-    el(`${prefix}-info`).textContent = "Loading...";
-    try {
-      const res = await fetch(path);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const text = await res.text();
-      const parsed = Papa.parse(text, { header: true, dynamicTyping: true, skipEmptyLines: true });
-      allRows = parsed.data;
-      if (tankField) fillSelect(`${prefix}-tank`, uniqueSorted(tankField), "All tanks");
-      applyFilters();
-    } catch (err) {
-      allRows = [];
-      el(`${prefix}-info`).textContent =
-        `Could not load ${path} (${err.message}). Run something above first, or check the data source folder name.`;
+  function setRows(rows, errorMessage) {
+    allRows = rows || [];
+    if (errorMessage) {
+      el(`${prefix}-info`).textContent = errorMessage;
       el(`${prefix}-body`).innerHTML = `<tr class="empty-row"><td colspan="${colCount}">No data loaded</td></tr>`;
+      return;
     }
+    if (tankField) fillSelect(`${prefix}-tank`, uniqueSorted(tankField), "All tanks");
+    applyFilters();
   }
 
   document.querySelectorAll(`[data-clear="${prefix}"]`).forEach((btn) =>
     btn.addEventListener("click", () => {
-      document.querySelectorAll(`#panel-${prefix} .filter-group input, #panel-${prefix} .filter-group select`)
+      document.querySelectorAll(`#raw-${prefix} .filter-group input, #raw-${prefix} .filter-group select`)
         .forEach((f) => (f.value = ""));
       applyFilters();
     })
@@ -352,10 +500,10 @@ function createTableView({ prefix, csvFile, colCount, renderRow, filterFn, tankF
   document.querySelectorAll(`[data-page-size="${prefix}"]`).forEach((sel) =>
     sel.addEventListener("change", (e) => { pageSize = parseInt(e.target.value, 10); currentPage = 1; render(); })
   );
-  document.querySelectorAll(`#panel-${prefix} .filter-group input, #panel-${prefix} .filter-group select`)
+  document.querySelectorAll(`#raw-${prefix} .filter-group input, #raw-${prefix} .filter-group select`)
     .forEach((f) => f.addEventListener("change", applyFilters));
 
-  return { load };
+  return { setRows };
 }
 
 const decisionsView = createTableView({
@@ -372,7 +520,7 @@ const decisionsView = createTableView({
     if (to && String(r.date) > to) return false;
     return true;
   },
-  renderRow: (r) => `<tr><td>${fmt(r.date)}</td><td>${fmt(r.tank_id)}</td><td>${fmt(r.release_m3, 2)}</td></tr>`,
+  renderRow: (r) => `<tr><td>${fmt(r.date)}</td><td>${esc(r.tank_id)}</td><td>${fmt(r.release_m3, 2)}</td></tr>`,
 });
 
 const weightsView = createTableView({
@@ -416,25 +564,531 @@ const crosscheckView = createTableView({
     return true;
   },
   renderRow: (r) => `<tr>
-    <td>${fmt(r.date)}</td><td>${fmt(r.tank_id)}</td><td>${fmt(r.day)}</td>
+    <td>${fmt(r.date)}</td><td>${esc(r.tank_id)}</td><td>${fmt(r.day)}</td>
     <td>${fmt(r.m4_volume_ratio, 4)}</td><td>${fmt(r.m3_volume_ratio, 4)}</td>
     <td>${fmt(r.ratio_difference, 4)}</td><td>${fmt(r.abs_ratio_difference, 4)}</td>
   </tr>`,
 });
 
-function loadAllTabs(folder) {
+// ---------------------------------------------------------------------
+// Overview - the answer before the data
+// ---------------------------------------------------------------------
+
+function tile(value, label, sub, cls) {
+  return `<div class="tile ${cls || ""}">
+    <div class="tile-value">${value}</div>
+    <div class="tile-label">${label}</div>
+    ${sub ? `<div class="tile-sub">${sub}</div>` : ""}
+  </div>`;
+}
+
+function renderOverview() {
+  const tiles = el("overview-tiles");
+  const verdict = el("overview-verdict");
+  const scale = el("overview-scale");
+  const dist = el("overview-dist");
+  const concerns = el("overview-concerns");
+
+  const rows = decisionsForDate(store.selectedDate);
+  if (!rows.length) {
+    tiles.innerHTML = "";
+    if (scale) scale.innerHTML = "";
+    verdict.className = "verdict";
+    verdict.innerHTML = store.dates.length
+      ? "No release decisions recorded for this date."
+      : "No results loaded yet. Run a day or a season above, or point the data source folder at an existing run and click Load.";
+    dist.innerHTML = "";
+    concerns.innerHTML = "";
+    return;
+  }
+
+  const s = summarise(rows);
+  const w = weightsForDate(store.selectedDate);
+  const cov = s.coveragePct === null ? null : Math.round(s.coveragePct);
+  const fullyServed = s.counts.served;
+  const feasible = w ? String(w.feasible) === "True" : null;
+
+  const covCls = cov === null ? "" : cov >= 90 ? "good" : cov >= 60 ? "warn" : "bad";
+  const critCls = s.counts.critical === 0 ? "good" : s.counts.critical > s.n / 4 ? "bad" : "warn";
+
+  tiles.innerHTML = [
+    tile(
+      cov === null ? "-" : `${cov}%`,
+      `of water demand delivered <i class="info" data-tip="Water that met a real need, divided by total demand. Water released beyond a tank's demand is not counted here - it can't make up for a different tank going short.">i</i>`,
+      `${n0(s.covered)} of ${n0(s.totalDemand)} m&sup3;`,
+      covCls
+    ),
+    tile(`${fullyServed} <span style="font-size:15px;color:#8a8f9c">of ${s.n}</span>`,
+      "tanks got enough water", "received 90% or more of their demand", fullyServed === s.n ? "good" : ""),
+    tile(String(s.counts.critical), "tanks critically short", "received under half their demand", critCls),
+    tile(
+      feasible === null ? "-" : feasible ? "Usable" : "Unusable",
+      `plan status <i class="info" data-tip="Usable means the chosen plan respected every physical limit: tank storage stayed inside its safe range, releases stayed within valve capacity, and the seasonal reserve floor held.">i</i>`,
+      feasible === null ? "no record for this date" : feasible ? "all physical limits respected" : "a physical limit was breached",
+      feasible === null ? "" : feasible ? "good" : "bad"
+    ),
+    tile(n0(s.totalRelease), "m&sup3; released in total", `across ${s.n} tanks`),
+  ].join("");
+
+  // Verdict sentence - the same numbers, read as prose.
+  const parts = [];
+  parts.push(`On <strong>${prettyDate(store.selectedDate)}</strong> the plan delivered <strong>${cov === null ? "an unknown share of" : cov + "% of"}</strong> the network's water demand.`);
+  const clauses = [];
+  if (s.counts.served) clauses.push(`<strong>${s.counts.served}</strong> ${s.counts.served === 1 ? "tank" : "tanks"} had ${s.counts.served === 1 ? "its" : "their"} demand fully met`);
+  if (s.counts.partial) clauses.push(`<strong>${s.counts.partial}</strong> ${s.counts.partial === 1 ? "was" : "were"} partly served`);
+  if (s.counts.critical) clauses.push(`<strong>${s.counts.critical}</strong> fell below half their requirement`);
+  if (clauses.length) parts.push(`${clauses.join(", ")}.`);
+  if (feasible === true) parts.push("All physical constraints were satisfied, so this plan is safe to apply.");
+  else if (feasible === false) parts.push("<strong>A physical constraint was breached</strong> - review before applying this plan.");
+
+  verdict.className = `verdict ${feasible === false || (cov !== null && cov < 60) ? "bad" : s.counts.critical ? "warn" : "good"}`;
+  verdict.innerHTML = parts.join(" ");
+
+  // Village tanks vs. the network-wide figure. A demand-weighted average is
+  // dominated by whichever tank has the most demand - if one reservoir is
+  // far bigger than the rest, the headline % mostly describes THAT tank,
+  // not the small village tanks most people mean by "is the network okay?".
+  // Only rendered when a genuine size outlier exists (largeReservoirIds()),
+  // so this stays silent for a dataset without one.
+  if (scale) {
+    const tanksById = mapView.getTanksById ? mapView.getTanksById() : {};
+    const largeIds = largeReservoirIds(tanksById);
+    const largeRows = rows.filter((r) => largeIds.has(r.tank_id));
+    if (largeRows.length) {
+      const villageRows = rows.filter((r) => !largeIds.has(r.tank_id));
+      const villageStats = summarise(villageRows);
+      const vCov = villageStats.coveragePct === null ? null : Math.round(villageStats.coveragePct);
+      const vCls = vCov === null ? "" : vCov >= 90 ? "good" : vCov >= 60 ? "warn" : "bad";
+      const names = largeRows.map((r) => tankLabel(r.tank_id)).join(", ");
+      const largeDemand = largeRows.reduce((a, r) => a + (isFinite(r.demand) && r.demand > 0 ? r.demand : 0), 0);
+      const largeShare = s.totalDemand > 0 ? Math.round((largeDemand / s.totalDemand) * 100) : null;
+      scale.innerHTML = `
+        <div class="scale-box">
+          <p class="sec-note" style="margin-bottom:12px;">
+            <strong>${esc(names)}</strong> ${largeRows.length === 1 ? "is" : "are"} far larger than every other tank in
+            this cascade${largeShare !== null ? ` - alone ${largeRows.length === 1 ? "it accounts" : "they account"} for
+            <strong>${largeShare}%</strong> of total network demand` : ""}. That means the network-wide figure above
+            mostly reflects ${largeRows.length === 1 ? "that one tank" : "those tanks"} - excluding
+            ${largeRows.length === 1 ? "it" : "them"} shows how the smaller village tanks are actually doing.
+          </p>
+          <div class="scale-compare">
+            <div class="scale-block ${covCls}">
+              <div class="scale-value">${cov === null ? "-" : cov + "%"}</div>
+              <div class="scale-label">Network-wide<br>(all ${s.n} tanks)</div>
+            </div>
+            <div class="scale-arrow">&rarr;</div>
+            <div class="scale-block ${vCls}">
+              <div class="scale-value">${vCov === null ? "-" : vCov + "%"}</div>
+              <div class="scale-label">Village tanks only<br>(${villageStats.n} tanks, excluding ${esc(names)})</div>
+            </div>
+          </div>
+        </div>`;
+    } else {
+      scale.innerHTML = "";
+    }
+  }
+
+  // Distribution bar
+  const order = ["served", "partial", "critical"];
+  const segs = order
+    .filter((k) => s.counts[k] > 0)
+    .map((k) => `<div class="dist-seg ${k}" style="flex-grow:${s.counts[k]}" title="${TIER_LABEL[k]}: ${s.counts[k]} tanks">${s.counts[k]}</div>`)
+    .join("");
+  dist.innerHTML = `
+    <div class="dist-bar">${segs || '<div class="dist-seg" style="flex-grow:1"></div>'}</div>
+    <div class="dist-legend">
+      ${order.map((k) => `<span><span class="swatch-sq ${k}"></span> ${TIER_LABEL[k]} - ${s.counts[k]}</span>`).join("")}
+    </div>`;
+
+  // Worst offenders, so "what do I do about it" has an answer on this screen.
+  const worst = rows
+    .filter((r) => r.tier === "critical" || r.tier === "partial")
+    .sort((a, b) => a.pct - b.pct)
+    .slice(0, 5);
+
+  concerns.innerHTML = worst.length
+    ? `<div class="delivery-list">
+        <div class="drow head"><div>Tank</div><div>Demand met</div><div>Delivered / needed</div><div>%</div><div>Status</div></div>
+        ${worst.map(deliveryRow).join("")}
+      </div>
+      ${s.counts.critical + s.counts.partial > worst.length
+        ? `<p class="sec-note" style="margin-top:10px;">Showing the 5 worst of ${s.counts.critical + s.counts.partial} under-served tanks - see the Water delivery tab for the full list.</p>`
+        : ""}`
+    : `<div class="delivery-list"><div class="empty-state">Every tank received at least 90% of its demand on this date.</div></div>`;
+}
+
+// ---------------------------------------------------------------------
+// Water delivery - ranked, worst first
+// ---------------------------------------------------------------------
+
+function deliveryRow(r) {
+  const pctText = r.pct === null ? "-" : `${Math.round(r.pct)}%`;
+  const fillPct = r.pct === null ? 0 : Math.min(100, r.pct);
+  const needed = isFinite(r.demand) && r.demand > 0 ? `${n0(r.release)} / ${n0(r.demand)} m&sup3;` : `${n0(r.release)} m&sup3; (no demand recorded)`;
+  return `<div class="drow">
+    <div class="dname" title="${esc(tankLabel(r.tank_id))}">${esc(tankLabel(r.tank_id))}</div>
+    <div class="meter"><div class="meter-fill ${r.tier}" style="width:${fillPct}%"></div></div>
+    <div class="dnums">${needed}</div>
+    <div class="dpct ${r.tier}">${pctText}</div>
+    <div><span class="pill ${r.tier}">${TIER_LABEL[r.tier]}</span></div>
+  </div>`;
+}
+
+function renderDelivery() {
+  const chips = el("delivery-chips");
+  const list = el("delivery-list");
+  const rows = decisionsForDate(store.selectedDate);
+
+  if (!rows.length) {
+    chips.innerHTML = "";
+    list.innerHTML = `<div class="empty-state">No release decisions recorded for this date.</div>`;
+    return;
+  }
+
+  const counts = { all: rows.length, critical: 0, partial: 0, served: 0 };
+  rows.forEach((r) => { if (counts[r.tier] !== undefined) counts[r.tier] += 1; });
+
+  const chipDefs = [
+    { key: "all", label: "All tanks" },
+    { key: "critical", label: TIER_LABEL.critical },
+    { key: "partial", label: TIER_LABEL.partial },
+    { key: "served", label: TIER_LABEL.served },
+  ];
+  chips.innerHTML = chipDefs
+    .map((c) => `<button type="button" class="chip ${store.deliveryFilter === c.key ? "active" : ""}" data-filter="${c.key}">${c.label} (${counts[c.key]})</button>`)
+    .join("");
+  chips.querySelectorAll(".chip").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      store.deliveryFilter = btn.dataset.filter;
+      renderDelivery();
+    })
+  );
+
+  // Worst first - that is the order someone acts on. nodata sinks to the end.
+  const shown = rows
+    .filter((r) => store.deliveryFilter === "all" || r.tier === store.deliveryFilter)
+    .sort((a, b) => {
+      if (a.pct === null) return 1;
+      if (b.pct === null) return -1;
+      return a.pct - b.pct;
+    });
+
+  list.innerHTML = shown.length
+    ? `<div class="drow head"><div>Tank</div><div>Demand met</div><div>Delivered / needed</div><div>%</div><div>Status</div></div>
+       ${shown.map(deliveryRow).join("")}`
+    : `<div class="empty-state">No tanks in this category on ${esc(prettyDate(store.selectedDate))}.</div>`;
+}
+
+// ---------------------------------------------------------------------
+// Why this plan - the four weights, translated into goals
+// ---------------------------------------------------------------------
+
+function renderWhy() {
+  const weightsBox = el("why-weights");
+  const reasonBox = el("why-reason");
+  const statusBox = el("why-status");
+
+  const w = weightsForDate(store.selectedDate);
+  if (!w) {
+    weightsBox.innerHTML = `<div class="delivery-list"><div class="empty-state">No decision record for this date.</div></div>`;
+    reasonBox.innerHTML = "";
+    statusBox.innerHTML = "";
+    return;
+  }
+
+  const vals = GOALS.map((g) => ({ ...g, value: Number(w[g.col]) || 0 }));
+  const total = vals.reduce((a, b) => a + b.value, 0) || 1;
+
+  weightsBox.innerHTML = `
+    <div class="weight-bar">
+      ${vals.map((v) => {
+        const pct = (v.value / total) * 100;
+        return `<div class="wseg ${v.key}" style="flex-grow:${v.value}" title="${v.name}: ${pct.toFixed(0)}%">${pct >= 12 ? `${pct.toFixed(0)}%` : ""}</div>`;
+      }).join("")}
+    </div>
+    <div class="weight-legend">
+      ${vals.map((v) => {
+        const pct = (v.value / total) * 100;
+        return `<div class="wlegend-item">
+          <span class="swatch-sq ${v.key}"></span>
+          <div>
+            <div class="wl-name">${v.name}</div>
+            <div class="wl-val">${pct.toFixed(0)}%</div>
+            <div class="wl-desc">${v.desc}</div>
+          </div>
+        </div>`;
+      }).join("")}
+    </div>`;
+
+  // The risk forecast that drove the priorities above.
+  const pd = Number(w.p_drought) || 0;
+  const po = Number(w.p_overflow) || 0;
+
+  reasonBox.innerHTML = `
+    <div class="risk-row">
+      <div class="risk-card">
+        <div class="rk-name">Chance of drought <i class="info" data-tip="Module 3's forecast probability that the network moves into drought conditions. It is the only place Module 3's risk enters Module 4.">i</i></div>
+        <div class="rk-val">${Math.round(pd * 100)}%</div>
+        <div class="risk-track"><div class="risk-fill drought" style="width:${Math.min(100, pd * 100)}%"></div></div>
+      </div>
+      <div class="risk-card">
+        <div class="rk-name">Chance of overflow <i class="info" data-tip="Module 3's forecast probability that tanks spill over their bunds. High values push the plan to release water earlier.">i</i></div>
+        <div class="rk-val">${Math.round(po * 100)}%</div>
+        <div class="risk-track"><div class="risk-fill overflow" style="width:${Math.min(100, po * 100)}%"></div></div>
+      </div>
+    </div>`;
+
+  // Plan status, in words rather than flag names.
+  const feasible = String(w.feasible) === "True";
+  const tier = String(w.c3_tier || "").toLowerCase();
+  const tierText = tier === "hard" ? "Strict" : tier === "relaxed" ? "Relaxed" : (w.c3_tier || "-");
+  const tierExplain = tier === "hard"
+    ? "Tanks were held to the full seasonal reserve level."
+    : tier === "relaxed"
+      ? "Tanks already below the seasonal reserve were only required not to fall further than doing nothing would have."
+      : "No reserve rule recorded for this date.";
+  const deficit = w.reserve_deficit_m3;
+  const hasDeficit = deficit !== null && deficit !== undefined && deficit !== "" && Number(deficit) > 0;
+
+  statusBox.innerHTML = `<div class="kv-grid">
+    <div class="kv-card">
+      <div class="kv-k">Plan usable</div>
+      <div class="kv-v" style="color:${feasible ? "#059669" : "#dc2626"}">${feasible ? "Yes - all limits respected" : "No - a limit was breached"}</div>
+      <div class="wl-desc">${feasible
+        ? "Storage stayed in range, releases stayed within valve limits, and the reserve floor held."
+        : "At least one physical constraint could not be satisfied. Treat these releases as advisory."}</div>
+    </div>
+    <div class="kv-card">
+      <div class="kv-k">Reserve rule <i class="info" data-tip="Constraint C3: the seasonal reserve each tank must keep back. It relaxes to a do-no-harm floor when a tank already starts below that level, so the optimiser is never handed an impossible problem.">i</i></div>
+      <div class="kv-v">${esc(tierText)}</div>
+      <div class="wl-desc">${tierExplain}</div>
+    </div>
+    <div class="kv-card">
+      <div class="kv-k">Reserve shortfall</div>
+      <div class="kv-v" style="color:${hasDeficit ? "#ca8a04" : "#059669"}">${hasDeficit ? `${n0(deficit)} m&sup3;` : "None"}</div>
+      <div class="wl-desc">${hasDeficit
+        ? "Storage sits below the absolute seasonal reserve by this volume."
+        : "No tank ended below its absolute seasonal reserve."}</div>
+    </div>
+  </div>`;
+}
+
+// ---------------------------------------------------------------------
+// Forecast agreement - a verdict, not 600 rows
+// ---------------------------------------------------------------------
+
+/**
+ * Two-line sparkline of Module 4 vs Module 3 volume ratio over the horizon.
+ *
+ * The Y-axis floor is never narrower than the divergence tolerance band. Pure
+ * auto-scaling (fit tightly to each tank's own min/max) made an in-tolerance
+ * tank's few-percent noise stretch to fill the whole chart height, looking
+ * exactly as dramatic as a tank genuinely outside tolerance - there was no
+ * way to tell "meaningless wobble" from "real divergence" by shape alone.
+ * Flooring the range at +/-2x threshold means a tank that's actually fine
+ * renders as a near-flat line (the honest picture), while a real outlier
+ * still expands the scale and visibly blows past it.
+ */
+function sparkline(days, threshold) {
+  const W = 150, H = 34, PAD = 3;
+  const vals = days.flatMap((d) => [d.m4, d.m3]).filter((v) => isFinite(v));
+  if (vals.length < 2) return "";
+  const band = Math.max(Number(threshold) || 0, 0.01) * 2;
+  let lo = Math.min(...vals, 1 - band), hi = Math.max(...vals, 1 + band);
+  if (hi - lo < 1e-6) { lo -= 0.05; hi += 0.05; }
+  const x = (i) => PAD + (i / Math.max(1, days.length - 1)) * (W - 2 * PAD);
+  const y = (v) => PAD + (1 - (v - lo) / (hi - lo)) * (H - 2 * PAD);
+  const path = (key) => days.map((d, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(d[key]).toFixed(1)}`).join(" ");
+  return `<svg class="spark" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img"
+      aria-label="Module 4 versus Module 3 projected water level over ${days.length} days">
+    <line x1="${PAD}" y1="${y(1).toFixed(1)}" x2="${W - PAD}" y2="${y(1).toFixed(1)}" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="2 2"/>
+    <path d="${path("m3")}" fill="none" stroke="#64748b" stroke-width="1.6" stroke-dasharray="3 2"/>
+    <path d="${path("m4")}" fill="none" stroke="#2b6cb0" stroke-width="1.8"/>
+  </svg>`;
+}
+
+function renderAgreement() {
+  const summaryBox = el("agreement-summary");
+  const chips = el("agreement-chips");
+  const listBox = el("agreement-list");
+
+  const rows = store.crosscheck.filter((r) => String(r.date) === store.selectedDate && r.tank_id);
+  if (!rows.length) {
+    summaryBox.innerHTML = `<div class="verdict">No cross-check data recorded for this date.</div>`;
+    chips.innerHTML = "";
+    listBox.innerHTML = "";
+    return;
+  }
+
+  const threshold = uiConfig.crosscheck_divergence_threshold;
+  const byTank = new Map();
+  rows.forEach((r) => {
+    if (!byTank.has(r.tank_id)) byTank.set(r.tank_id, []);
+    byTank.get(r.tank_id).push(r);
+  });
+
+  const tanks = [...byTank.entries()].map(([tank_id, rs]) => {
+    const diffs = rs.map((r) => Math.abs(Number(r.abs_ratio_difference) || 0));
+    const mean = diffs.reduce((a, b) => a + b, 0) / (diffs.length || 1);
+    const days = rs
+      .slice()
+      .sort((a, b) => Number(a.day) - Number(b.day))
+      .map((r) => ({ m4: Number(r.m4_volume_ratio), m3: Number(r.m3_volume_ratio) }));
+    return { tank_id, mean, max: Math.max(...diffs), days };
+  }).sort((a, b) => b.mean - a.mean);
+
+  const overall = tanks.reduce((a, t) => a + t.mean, 0) / (tanks.length || 1);
+  const flagged = tanks.filter((t) => t.mean > threshold);
+  const ok = flagged.length === 0;
+
+  summaryBox.innerHTML = `
+    <div class="stat-tiles">
+      ${tile(overall.toFixed(3),
+        `average disagreement <i class="info" data-tip="Mean absolute difference between the two modules' projected water level, expressed as a ratio of each tank's starting volume. 0 means perfect agreement.">i</i>`,
+        `tolerance is ${threshold}`, overall <= threshold ? "good" : "bad")}
+      ${tile(String(tanks.length), "tanks compared", `over ${uiConfig.horizon_days} forecast days`)}
+    </div>
+    <div class="verdict ${ok ? "good" : "warn"}">
+      ${ok
+        ? `<strong>Good agreement.</strong> Module 4's simulation and Module 3's forecast track each other closely for all ${tanks.length} tanks on ${prettyDate(store.selectedDate)} - average difference ${overall.toFixed(3)}, well inside the ${threshold} tolerance. The release plan is consistent with the independent forecast.`
+        : `<strong>${flagged.length} of ${tanks.length} tanks diverge.</strong> For these tanks Module 4 expects the water level to move differently from Module 3's forecast by more than the ${threshold} tolerance. That does not make either wrong, but their release plans are the ones worth reviewing first.`}
+    </div>`;
+
+  const chipDefs = [
+    { key: "all", label: "All tanks", count: tanks.length },
+    { key: "flagged", label: "Disagreeing", count: flagged.length },
+  ];
+  chips.innerHTML = chipDefs
+    .map((c) => `<button type="button" class="chip ${store.agreementFilter === c.key ? "active" : ""}" data-filter="${c.key}">${c.label} (${c.count})</button>`)
+    .join("");
+  chips.querySelectorAll(".chip").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      store.agreementFilter = btn.dataset.filter;
+      renderAgreement();
+    })
+  );
+
+  // "all" shows every compared tank, worst-first (tanks is already sorted
+  // that way); "flagged" narrows to just the ones outside tolerance.
+  const shown = store.agreementFilter === "flagged" ? flagged : tanks;
+  listBox.innerHTML = shown.length
+    ? `<div class="agree-list">
+        <div class="arow head">
+          <div>Tank</div><div>Avg difference</div><div>Projected water level (7 days)</div><div>Status</div>
+        </div>
+        ${shown.map((t) => `<div class="arow">
+          <div class="aname">${esc(tankLabel(t.tank_id))}</div>
+          <div class="aval">${t.mean.toFixed(3)} <span style="color:#8a8f9c">(max ${t.max.toFixed(3)})</span></div>
+          <div>${sparkline(t.days, threshold)}</div>
+          <div><span class="pill ${t.mean > threshold ? "partial" : "served"}">${t.mean > threshold ? "Diverging" : "In tolerance"}</span></div>
+        </div>`).join("")}
+      </div>
+      <div class="spark-legend">
+        <span><span class="ln" style="border-color:#2b6cb0"></span>Module 4 (this plan)</span>
+        <span><span class="ln" style="border-color:#64748b;border-top-style:dashed"></span>Module 3 (forecast)</span>
+        <span><span class="ln" style="border-color:#cbd5e1;border-top-style:dashed"></span>Starting level</span>
+      </div>`
+    : `<div class="agree-list"><div class="empty-state">No tanks are outside tolerance for this date.</div></div>`;
+}
+
+// ---------------------------------------------------------------------
+// Loading + wiring
+// ---------------------------------------------------------------------
+
+async function fetchCsv(path) {
+  try {
+    const res = await fetch(path);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const parsed = Papa.parse(await res.text(), { header: true, dynamicTyping: true, skipEmptyLines: true });
+    return { rows: parsed.data.filter((r) => r && r.date), error: null };
+  } catch (err) {
+    return { rows: [], error: `Could not load ${path} (${err.message}). Run something above first, or check the data source folder name.` };
+  }
+}
+
+function renderAll() {
+  renderOverview();
+  renderDelivery();
+  renderWhy();
+  renderAgreement();
+  mapView.refreshForDate();
+}
+
+function populateGlobalDate(preferDate) {
+  const sel = el("global-date");
+  const previous = sel.value;
+  sel.innerHTML = "";
+  if (!store.dates.length) {
+    sel.innerHTML = `<option value="">No results loaded</option>`;
+    store.selectedDate = "";
+    return;
+  }
+  store.dates.forEach((d) => {
+    const opt = document.createElement("option");
+    opt.value = d;
+    opt.textContent = prettyDate(d);
+    sel.appendChild(opt);
+  });
+  // Prefer the date just computed, then whatever was already selected, then
+  // the most recent date in the run.
+  const pick = [preferDate, previous].find((d) => d && store.dates.includes(d)) || store.dates[store.dates.length - 1];
+  sel.value = pick;
+  store.selectedDate = pick;
+}
+
+async function loadAllTabs(folder, { preferDate } = {}) {
   const baseUrl = `${DATA_ROOT}/${folder}`;
-  el("data-source-hint").textContent = `Loading from ${baseUrl}/`;
-  decisionsView.load(baseUrl);
-  weightsView.load(baseUrl);
-  crosscheckView.load(baseUrl);
-  mapView.loadReleases(baseUrl);
+  el("data-source-hint").textContent = `Loading from ${baseUrl}/ ...`;
+
+  const [decisions, weights, crosscheck] = await Promise.all([
+    fetchCsv(`${baseUrl}/consolidated_mpc_decisions.csv`),
+    fetchCsv(`${baseUrl}/consolidated_topsis_weights_log.csv`),
+    fetchCsv(`${baseUrl}/consolidated_module3_crosscheck.csv`),
+  ]);
+
+  store.decisions = decisions.rows;
+  store.weights = weights.rows;
+  store.crosscheck = crosscheck.rows;
+  store.dates = [...new Set(store.decisions.map((r) => String(r.date)))].filter(Boolean).sort();
+
+  decisionsView.setRows(decisions.rows, decisions.error);
+  weightsView.setRows(weights.rows, weights.error);
+  crosscheckView.setRows(crosscheck.rows, crosscheck.error);
+
+  populateGlobalDate(preferDate);
+  mapView.setReleases(store.decisions);
+
+  el("data-source-hint").textContent = decisions.error
+    ? decisions.error
+    : `${store.dates.length} date${store.dates.length === 1 ? "" : "s"} loaded from ${baseUrl}/`;
+
+  renderAll();
+}
+
+async function loadUiConfig() {
+  try {
+    const res = await fetch(`${API_BASE}/api/config`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const cfg = await res.json();
+    if (cfg && cfg.base_weights) uiConfig = { ...uiConfig, ...cfg };
+  } catch (err) {
+    // Keep the built-in defaults; they match config.py as shipped. Only the
+    // "vs baseline" comparisons would be affected if the pipeline was retuned.
+    console.warn("Could not load /api/config, using built-in defaults:", err.message);
+  }
 }
 
 function wireDataSource() {
   el("data-source-load").addEventListener("click", () => {
     const folder = el("data-source").value.trim() || "outputs";
     loadAllTabs(folder);
+  });
+}
+
+function wireGlobalDate() {
+  el("global-date").addEventListener("change", (e) => {
+    store.selectedDate = e.target.value;
+    renderAll();
   });
 }
 
@@ -453,11 +1107,11 @@ function wireTabs() {
 
 // ---------------------------------------------------------------------
 // Map tab - satellite view of tank capacity (blue), command area (green),
-// cascade connectivity (thin lines) and the release decision for a chosen
-// date. Geo/sizing data comes from mpc_api.py's /api/tanks/geo (reuses the
-// existing loaders server-side, no hydrology math duplicated here);
-// release-by-date comes from whatever consolidated_mpc_decisions.csv the
-// "Data source folder" box above already points at.
+// cascade connectivity (thin lines) and the release decision for the date
+// chosen in the shared date bar. Geo/sizing data comes from mpc_api.py's
+// /api/tanks/geo (reuses the existing loaders server-side, no hydrology math
+// duplicated here); release-by-date comes from the same `store` every other
+// tab reads, so the map can never show a different date than the page header.
 // ---------------------------------------------------------------------
 
 const mapView = (() => {
@@ -603,7 +1257,7 @@ const mapView = (() => {
       const nameLabel = L.marker([t.lat, t.lon], {
         icon: L.divIcon({
           className: "tank-name-label",
-          html: t.tank_id.replace(/_/g, " "),
+          html: esc(tankLabel(t.tank_id)),
           iconSize: null,
           iconAnchor: [-6, -4],   // small offset up-right, clear of the click target at center
         }),
@@ -638,7 +1292,7 @@ const mapView = (() => {
         <div class="pair-bar release" style="height:100%"></div>
       </div>`;
       return big
-        ? `${bars}<div class="pair-caption">${Math.round(release).toLocaleString()} m&sup3; released (demand not recorded)</div>`
+        ? `${bars}<div class="pair-caption">${n0(release)} m&sup3; released (demand not recorded)</div>`
         : bars;
     }
 
@@ -653,14 +1307,14 @@ const mapView = (() => {
     if (!big) return bars;
 
     const caption = over
-      ? `Release ${Math.round(release).toLocaleString()} m&sup3; exceeded demand ${Math.round(demand).toLocaleString()} m&sup3;`
+      ? `Release ${n0(release)} m&sup3; exceeded demand ${n0(demand)} m&sup3;`
       : release < demand
-        ? `${Math.round(demand - release).toLocaleString()} m&sup3; unmet (${Math.round(release).toLocaleString()} of ${Math.round(demand).toLocaleString()} m&sup3;)`
-        : `Demand fully met - ${Math.round(release).toLocaleString()} m&sup3;`;
+        ? `${n0(demand - release)} m&sup3; unmet (${n0(release)} of ${n0(demand)} m&sup3;)`
+        : `Demand fully met - ${n0(release)} m&sup3;`;
     return `${bars}
       <div class="pair-legend">
-        <span><span class="swatch-sq demand"></span>Demand ${Math.round(demand).toLocaleString()} m&sup3;</span>
-        <span><span class="swatch-sq release${over ? " over" : ""}"></span>Release ${Math.round(release).toLocaleString()} m&sup3;</span>
+        <span><span class="swatch-sq demand"></span>Demand ${n0(demand)} m&sup3;</span>
+        <span><span class="swatch-sq release${over ? " over" : ""}"></span>Release ${n0(release)} m&sup3;</span>
       </div>
       <div class="pair-caption">${caption}</div>`;
   }
@@ -676,16 +1330,16 @@ const mapView = (() => {
   }
 
   function popupHtml(t) {
-    const date = el("map-date").value;
+    const date = store.selectedDate;
     const entry = releasesByDate[date] ? releasesByDate[date][t.tank_id] : undefined;
     return `<div class="map-popup">
-      <h4>${t.tank_id}</h4>
+      <h4>${esc(tankLabel(t.tank_id))}</h4>
       <table>
-        <tr><td class="k">Capacity (S_max)</td><td class="v">${Math.round(t.s_max_m3).toLocaleString()} m&sup3;</td></tr>
+        <tr><td class="k">Capacity (S_max)</td><td class="v">${n0(t.s_max_m3)} m&sup3;</td></tr>
         <tr><td class="k">Command area</td><td class="v">${t.command_area_acres.toFixed(1)} acres</td></tr>
         <tr><td class="k">Catchment area</td><td class="v">${t.catchment_area_km2.toFixed(2)} km&sup2;</td></tr>
       </table>
-      <p class="map-popup-label">Release vs. demand${date ? " on " + date : ""}</p>
+      <p class="map-popup-label">Release vs. demand${date ? " on " + prettyDate(date) : ""}</p>
       ${releaseDemandBarsHtml(entry, { big: true })}
     </div>`;
   }
@@ -722,7 +1376,7 @@ const mapView = (() => {
       return;
     }
     const t = tanksById[selectedTankId];
-    const date = el("map-date").value;
+    const date = store.selectedDate;
     const entry = releasesByDate[date] ? releasesByDate[date][t.tank_id] : undefined;
 
     const dates = Object.keys(releasesByDate).sort().reverse();
@@ -735,23 +1389,23 @@ const mapView = (() => {
       const pctText = pct === null ? "-" : `${Math.round(pct)}%`;
       return `<tr class="${d === date ? "current-date" : ""}">
         <td>${d}</td>
-        <td>${Math.round(e.demand ?? 0).toLocaleString()}</td>
-        <td>${Math.round(e.release).toLocaleString()}</td>
+        <td>${n0(e.demand ?? 0)}</td>
+        <td>${n0(e.release)}</td>
         <td class="${tierClass(pct)}">${pctText}</td>
       </tr>`;
     }).join("");
 
     panel.innerHTML = `<div class="map-popup detail-body">
       <div class="detail-header">
-        <h4>${t.tank_id.replace(/_/g, " ")}</h4>
+        <h4>${esc(tankLabel(t.tank_id))}</h4>
         <button type="button" class="detail-close" title="Close">&times;</button>
       </div>
       <table>
-        <tr><td class="k">Capacity (S_max)</td><td class="v">${Math.round(t.s_max_m3).toLocaleString()} m&sup3;</td></tr>
+        <tr><td class="k">Capacity (S_max)</td><td class="v">${n0(t.s_max_m3)} m&sup3;</td></tr>
         <tr><td class="k">Command area</td><td class="v">${t.command_area_acres.toFixed(1)} acres</td></tr>
         <tr><td class="k">Catchment area</td><td class="v">${t.catchment_area_km2.toFixed(2)} km&sup2;</td></tr>
       </table>
-      <p class="map-popup-label">Release vs. demand${date ? " on " + date : ""}</p>
+      <p class="map-popup-label">Release vs. demand${date ? " on " + prettyDate(date) : ""}</p>
       ${releaseDemandBarsHtml(entry, { big: true })}
       ${dates.length ? `
         <p class="map-popup-label">History (${dates.length} date${dates.length > 1 ? "s" : ""} loaded)</p>
@@ -768,48 +1422,22 @@ const mapView = (() => {
     });
   }
 
-  function populateDateSelect() {
-    const sel = el("map-date");
-    const dates = Object.keys(releasesByDate).sort();
-    const current = sel.value;
-    sel.innerHTML = "";
-    if (!dates.length) {
-      sel.innerHTML = `<option value="">No release data loaded</option>`;
-      return;
-    }
-    dates.forEach((d) => {
-      const opt = document.createElement("option");
-      opt.value = d;
-      opt.textContent = d;
-      sel.appendChild(opt);
+  /** Rebuild the by-date lookup from the rows loadAllTabs already parsed. */
+  function setReleases(rows) {
+    releasesByDate = {};
+    rows.forEach((row) => {
+      const d = String(row.date);
+      if (!releasesByDate[d]) releasesByDate[d] = {};
+      releasesByDate[d][row.tank_id] = {
+        release: row.release_m3,
+        demand: row.demand_m3 !== undefined && row.demand_m3 !== null ? row.demand_m3 : null,
+      };
     });
-    sel.value = dates.includes(current) ? current : dates[dates.length - 1];
-  }
-
-  async function loadReleases(baseUrl) {
-    el("map-hint").textContent = "Loading release data...";
-    try {
-      const res = await fetch(`${baseUrl}/consolidated_mpc_decisions.csv`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const text = await res.text();
-      const parsed = Papa.parse(text, { header: true, dynamicTyping: true, skipEmptyLines: true });
-      releasesByDate = {};
-      parsed.data.forEach((row) => {
-        const d = String(row.date);
-        if (!releasesByDate[d]) releasesByDate[d] = {};
-        releasesByDate[d][row.tank_id] = {
-          release: row.release_m3,
-          demand: row.demand_m3 !== undefined && row.demand_m3 !== null ? row.demand_m3 : null,
-        };
-      });
-      populateDateSelect();
-      el("map-hint").textContent = `${Object.keys(releasesByDate).length} date(s) available`;
-      if (map) renderDetailPanel();
-    } catch (err) {
-      releasesByDate = {};
-      populateDateSelect();
-      el("map-hint").textContent = `No release data yet (${err.message}) - run a job above, or the map still shows tank/command-area sizing without release labels.`;
-    }
+    const count = Object.keys(releasesByDate).length;
+    el("map-hint").textContent = count
+      ? `${count} date(s) available`
+      : "No release data yet - run a job above. The map still shows tank and command-area sizing.";
+    if (map) renderDetailPanel();
   }
 
   async function init() {
@@ -837,14 +1465,19 @@ const mapView = (() => {
 
   return {
     onTabShown,
-    loadReleases,
+    setReleases,
     reload: () => { geo = null; initStarted = false; init(); },
     refreshForDate: () => { if (map && geo) renderDetailPanel(); },
+    // Tank sizing (s_max_m3) is useful outside the map too (see
+    // largeReservoirIds() / the Overview "village tanks" comparison) -
+    // exposed here rather than fetched a second time, since fetchGeo()
+    // already caches it and has no Leaflet dependency of its own.
+    ensureGeo: fetchGeo,
+    getTanksById: () => tanksById,
   };
 })();
 
 function wireMapControls() {
-  el("map-date").addEventListener("change", () => mapView.refreshForDate());
   el("map-reload-btn").addEventListener("click", () => mapView.reload());
 }
 
@@ -853,6 +1486,18 @@ wireSeasonRun();
 wireStopButton("daily");
 wireStopButton("season");
 wireDataSource();
+wireGlobalDate();
 wireTabs();
 wireMapControls();
-loadAllTabs("outputs");
+
+// Config first so the "vs baseline" comparisons in Why-this-plan are right on
+// the very first render, then the run data.
+loadUiConfig().then(() => loadAllTabs("outputs"));
+
+// Tank capacity (for the Overview "village tanks" comparison) fetched
+// eagerly rather than waiting for the Map tab - runs in parallel with the
+// run data above, so whichever finishes second re-renders Overview to pick
+// up whatever the other one was missing.
+mapView.ensureGeo()
+  .then(() => { if (store.dates.length) renderOverview(); })
+  .catch((err) => console.warn("Could not load tank sizing for the village-tanks comparison:", err.message));

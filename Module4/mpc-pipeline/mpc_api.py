@@ -120,6 +120,30 @@ def _tanks_geo_payload():
     _tanks_geo_cache = {"tanks": tanks, "edges": edges}
     return _tanks_geo_cache
 
+def _ui_config_payload():
+    """
+    The handful of config.py constants the dashboard needs to EXPLAIN a
+    decision rather than just print it: the baseline weights it compares each
+    day's risk-adjusted weights against ("overflow weighted up to 30%, from a
+    25% baseline"), and the divergence threshold below which it calls Module 3
+    and Module 4 agreement "good". Served from config.py instead of being
+    duplicated in mpc.js so retuning the pipeline can never leave the
+    dashboard telling the user a baseline that is no longer real.
+    """
+    from module4.config import DEFAULT_CONFIG as c
+    return {
+        "base_weights": {
+            "shortage": c.W_SHORTAGE_BASE,
+            "overflow": c.W_OVERFLOW_BASE,
+            "equity": c.W_EQUITY_BASE,
+            "loss": c.W_LOSS_BASE,
+        },
+        "weight_floor": c.WEIGHT_FLOOR,
+        "crosscheck_divergence_threshold": c.CROSSCHECK_DIVERGENCE_THRESHOLD,
+        "horizon_days": int(c.T),
+    }
+
+
 _lock = threading.Lock()
 _jobs = {}            # job_id -> job dict
 _active_job_id = None
@@ -395,6 +419,13 @@ class MPCHandler(BaseHTTPRequestHandler):
         if parsed.path == "/api/tanks/geo":
             try:
                 self._send(_tanks_geo_payload())
+            except Exception as exc:
+                self._send({"error": str(exc)}, status=500)
+            return
+
+        if parsed.path == "/api/config":
+            try:
+                self._send(_ui_config_payload())
             except Exception as exc:
                 self._send({"error": str(exc)}, status=500)
             return
